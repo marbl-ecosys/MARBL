@@ -796,14 +796,14 @@
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractoy)",
+         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractory)",
          "units": "mmol/m^3"
       },
       "DO14Ctot": {
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractoy)",
+         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractory)",
          "units": "mmol/m^3"
       },
       "DOC": {

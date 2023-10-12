@@ -17,13 +17,11 @@
 #                          Surface forcing diagnostics                         #
 ################################################################################
 
-###############
-# Base module #
-###############
+####################
+# Always Available #
+####################
 
 ECOSYS_IFRAC :
-   dependencies :
-      base_bio_on : .true.
    longname : Ice Fraction for base biotic tracer fluxes # Want more consistent capitalization
    units : fraction
    vertical_grid : none
@@ -34,8 +32,6 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
-   dependencies :
-      base_bio_on : .true.
    longname : XKW for base biotic tracer fluxes # Want more consistent capitalization
    units : cm/s
    vertical_grid : none
@@ -46,13 +42,28 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
-   dependencies :
-      base_bio_on : .true.
    longname : Atmospheric Pressure for base biotic tracer fluxes # Want more consistent capitalization
    units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
+PV_CO2 :
+   longname : CO2 Piston Velocity for base biotic tracer fluxes
+   units : cm/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+SCHMIDT_CO2 :
+   longname : CO2 Schmidt Number for base biotic tracers fluxes
+   units : 1
+   vertical_grid : none
+   frequency : medium
+   operator : average
+
+###############
+# Base module #
+###############
+
 PV_O2 :
    dependencies :
       base_bio_on : .true.
@@ -87,7 +98,7 @@ CO2STAR : &CO2STAR
    operator : average
 CO2STAR_ALT_CO2 :
    << : *CO2STAR
-   longname : CO2 Star, Alternate CO2
+   longname : CO2 Star, Alternative CO2
 DCO2STAR : &DCO2STAR
    dependencies :
       base_bio_on : .true.
@@ -129,22 +140,6 @@ DpCO2_ALT_CO2 :
    longname : D pCO2, Alternative CO2
    frequency : medium
    operator : average
-PV_CO2 :
-   dependencies :
-      base_bio_on : .true.
-   longname : CO2 Piston Velocity for base biotic tracer fluxes
-   units : cm/s
-   vertical_grid : none
-   frequency : never
-   operator : average
-SCHMIDT_CO2 :
-   dependencies :
-      base_bio_on : .true.
-   longname : CO2 Schmidt Number for base biotic tracers fluxes
-   units : 1
-   vertical_grid : none
-   frequency : medium
-   operator : average
 FG_CO2 : &FG_CO2 # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    dependencies :
       base_bio_on : .true.
@@ -176,14 +171,14 @@ PH_ALT_CO2 :
 ATM_CO2 : &ATM_CO2
    dependencies :
       base_bio_on : .true.
-   longname : Atomspheric CO2
+   longname : Atmospheric CO2
    units : ppmv
    vertical_grid : none
    frequency : medium
    operator : average
 ATM_ALT_CO2 :
    << : *ATM_CO2
-   longname : Atomspheric CO2
+   longname : Atmospheric Alternative CO2
 IRON_FLUX :
    dependencies :
       base_bio_on : .true.
@@ -502,7 +497,7 @@ O2_ZMIN :
 O2_ZMIN_DEPTH :
    dependencies :
       base_bio_on : .true.
-   longname : Vertical Minimum of O2
+   longname : Depth of Vertical Minimum of O2
    units : cm
    vertical_grid : none
    frequency : medium
@@ -1035,8 +1030,8 @@ Lig_loss :
 Lig_scavenge :
    dependencies :
       base_bio_on : .true.
-   longname : Fe not bound to Ligand
-   units : mmol/m^3
+   longname : Loss of Fe-binding Ligand from Scavenging
+   units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
@@ -1972,7 +1967,7 @@ graze_((autotroph_sname))_((zooplankton_sname))_zint_100m :
                  #       thought is that we don't need these diagnostics with
                  #       fixed P:C so I'd like to update the fortran as well
       lvariable_PtoC : .true.
-   longname : ((autotroph_lname))
+   longname : ((autotroph_lname)) P:C ratio
    units : 1
    vertical_grid : layer_avg
    truncate : true
@@ -2084,7 +2079,7 @@ graze_((autotroph_sname))_((zooplankton_sname)) :
    frequency : never
    operator : average
 ((autotroph_sname))_agg :
-   longname : ((autotroph_lname)) Aggregate
+   longname : ((autotroph_lname)) Aggregation
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true
@@ -2237,7 +2232,7 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    dependencies :
       ciso_on : .true.
    longname : ((autotroph_lname)) instanteous growth rate over [CO2*]
-   units : m^3/mmol/s
+   units : (mmol/m^3)^-1 s^-1
    vertical_grid : layer_avg
    frequency : medium
    operator : average
@@ -2338,13 +2333,13 @@ graze_((zooplankton_sname))_doc_zint_100m :
    frequency : never
    operator : average
 graze_((zooplankton_sname))_((zooplankton_sname))_zint :
-   longname : ((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral
+   longname : ((zooplankton_lname1)) Grazing to ((zooplankton_lname2)) Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
    operator : average
 graze_((zooplankton_sname))_((zooplankton_sname))_zint_100m :
-   longname : ((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral, 0-100m
+   longname : ((zooplankton_lname1)) Grazing to ((zooplankton_lname2)) Vertical Integral, 0-100m
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : never
@@ -2418,7 +2413,7 @@ graze_((zooplankton_sname))_zootot :
    frequency : never
    operator : average
 graze_((zooplankton_sname))_((zooplankton_sname)) :
-   longname : ((zooplankton_lname)) grazing loss to ((zooplankton_lname))
+   longname : ((zooplankton_lname1)) grazing loss to ((zooplankton_lname2))
    units : mmol/m^3/s
    vertical_grid : layer_avg
    truncate : true

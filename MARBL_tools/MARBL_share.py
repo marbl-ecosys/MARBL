@@ -78,7 +78,11 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
             fill_source = 'zoo_graze_zoo'
     elif template == '((particulate_flux_ref_depth_str))':
         fill_source = 'strings'
-        particulate_flux_ref_depth = MARBL_settings.settings_dict['particulate_flux_ref_depth']['value']
+        try:
+            particulate_flux_ref_depth = MARBL_settings.settings_dict['particulate_flux_ref_depth']['value']
+        except:
+            # If base_biotic_on is False, we don't need particulate_flux_ref_depth
+            particulate_flux_ref_depth = 0
         if unit_system == 'cgs':
             particulate_flux_ref_depth = particulate_flux_ref_depth / 100.
         particulate_flux_ref_depth_str = '%dm' % particulate_flux_ref_depth
@@ -136,8 +140,8 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
             zoo_ind2 = (item-1) // zooplankton_cnt + 1
             zoo_prefix2 = "zooplankton_settings(%d)%%" % zoo_ind2
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix1 + "sname"]['value'].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix2 + "sname"]['value'].strip('"')
-            template_fill_dict['((zooplankton_lname))1'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"]['value'].strip('"')
-            template_fill_dict['((zooplankton_lname))2'] = MARBL_settings.settings_dict[zoo_prefix2 + "lname"]['value'].strip('"')
+            template_fill_dict['((zooplankton_lname1))'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"]['value'].strip('"')
+            template_fill_dict['((zooplankton_lname2))'] = MARBL_settings.settings_dict[zoo_prefix2 + "lname"]['value'].strip('"')
         elif fill_source == 'strings':
             key_fill_val = item
             template_fill_dict[template] = item
@@ -158,9 +162,6 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
                     else:
                         template2 = re.findall('\(\(.*?\)\)', unprocessed_dict[key])
                         try:
-                            if (len(template2)==2) and (template2[0] == template2[1]):
-                                template2[0] = template2[0]+'1'
-                                template2[1] = template2[1]+'2'
                             replacement_text = [template_fill_dict[i] for i in template2]
                         except:
                             logger.error("Can not replace '%s'" % template2)

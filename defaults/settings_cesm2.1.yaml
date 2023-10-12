@@ -156,7 +156,7 @@ _tracer_list :
    DO13Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-13 (semi-labile+refractoy)
+      long_name : Dissolved Organic Carbon-13 (semi-labile+refractory)
       units : mmol/m^3
    DI14C :
       dependencies :
@@ -166,7 +166,7 @@ _tracer_list :
    DO14Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-14 (semi-labile+refractoy)
+      long_name : Dissolved Organic Carbon-14 (semi-labile+refractory)
       units : mmol/m^3
 
    # Per-autotroph tracers

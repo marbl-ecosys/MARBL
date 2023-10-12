@@ -114,7 +114,7 @@
          "lvariable_PtoC": ".true."
       },
       "frequency": "medium",
-      "longname": "((autotroph_lname))",
+      "longname": "((autotroph_lname)) P:C ratio",
       "operator": "average",
       "truncate": true,
       "units": 1,
@@ -142,7 +142,7 @@
    },
    "((autotroph_sname))_agg": {
       "frequency": "medium",
-      "longname": "((autotroph_lname)) Aggregate",
+      "longname": "((autotroph_lname)) Aggregation",
       "operator": "average",
       "truncate": true,
       "units": "mmol/m^3/s",
@@ -483,7 +483,7 @@
          "base_bio_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atomspheric CO2",
+      "longname": "Atmospheric Alternative CO2",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -493,7 +493,7 @@
          "base_bio_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atomspheric CO2",
+      "longname": "Atmospheric CO2",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -1003,7 +1003,7 @@
       "frequency": "medium",
       "longname": "((autotroph_lname)) instanteous growth rate over [CO2*]",
       "operator": "average",
-      "units": "m^3/mmol/s",
+      "units": "(mmol/m^3)^-1 s^-1",
       "vertical_grid": "layer_avg"
    },
    "CISO_photo13C_((autotroph_sname))": {
@@ -1123,7 +1123,7 @@
          "base_bio_on": ".true."
       },
       "frequency": "medium",
-      "longname": "CO2 Star, Alternate CO2",
+      "longname": "CO2 Star, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -1529,9 +1529,6 @@
       "vertical_grid": "none"
    },
    "ECOSYS_ATM_PRESS": {
-      "dependencies": {
-         "base_bio_on": ".true."
-      },
       "frequency": "medium",
       "longname": "Atmospheric Pressure for base biotic tracer fluxes",
       "operator": "average",
@@ -1539,9 +1536,6 @@
       "vertical_grid": "none"
    },
    "ECOSYS_IFRAC": {
-      "dependencies": {
-         "base_bio_on": ".true."
-      },
       "frequency": [
          "medium",
          "high"
@@ -1555,9 +1549,6 @@
       "vertical_grid": "none"
    },
    "ECOSYS_XKW": {
-      "dependencies": {
-         "base_bio_on": ".true."
-      },
       "frequency": [
          "medium",
          "high"
@@ -1781,9 +1772,9 @@
          "base_bio_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Fe not bound to Ligand",
+      "longname": "Loss of Fe-binding Ligand from Scavenging",
       "operator": "average",
-      "units": "mmol/m^3",
+      "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "NHx_SURFACE_EMIS": {
@@ -1892,7 +1883,7 @@
          "base_bio_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Vertical Minimum of O2",
+      "longname": "Depth of Vertical Minimum of O2",
       "operator": "average",
       "units": "cm",
       "vertical_grid": "none"
@@ -2146,9 +2137,6 @@
       "vertical_grid": "layer_avg"
    },
    "PV_CO2": {
-      "dependencies": {
-         "base_bio_on": ".true."
-      },
       "frequency": "never",
       "longname": "CO2 Piston Velocity for base biotic tracer fluxes",
       "operator": "average",
@@ -2217,9 +2205,6 @@
       "vertical_grid": "layer_avg"
    },
    "SCHMIDT_CO2": {
-      "dependencies": {
-         "base_bio_on": ".true."
-      },
       "frequency": "medium",
       "longname": "CO2 Schmidt Number for base biotic tracers fluxes",
       "operator": "average",
@@ -2542,7 +2527,7 @@
    },
    "graze_((zooplankton_sname))_((zooplankton_sname))": {
       "frequency": "never",
-      "longname": "((zooplankton_lname)) grazing loss to ((zooplankton_lname))",
+      "longname": "((zooplankton_lname1)) grazing loss to ((zooplankton_lname2))",
       "operator": "average",
       "truncate": true,
       "units": "mmol/m^3/s",
@@ -2550,14 +2535,14 @@
    },
    "graze_((zooplankton_sname))_((zooplankton_sname))_zint": {
       "frequency": "never",
-      "longname": "((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral",
+      "longname": "((zooplankton_lname1)) Grazing to ((zooplankton_lname2)) Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "graze_((zooplankton_sname))_((zooplankton_sname))_zint_100m": {
       "frequency": "never",
-      "longname": "((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral, 0-100m",
+      "longname": "((zooplankton_lname1)) Grazing to ((zooplankton_lname2)) Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"

@@ -7,6 +7,7 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
+  use marbl_settings_mod, only : base_bio_on
   use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
@@ -165,90 +166,6 @@ contains
         return
       end if
 
-      lname    = 'PV_O2'
-      sname    = 'PV_O2'
-      units    = vel_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PV_O2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'O2 Schmidt Number'
-      sname    = 'SCHMIDT_O2'
-      units    = '1'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SCHMIDT_O2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'O2 Saturation'
-      sname    = 'O2SAT'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%O2SAT, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'CO2 Star'
-      sname    = 'CO2STAR'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CO2STAR, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'D CO2 Star'
-      sname    = 'DCO2STAR'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DCO2STAR, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'surface pCO2'
-      sname    = 'pCO2SURF'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%pCO2SURF, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'D pCO2 for base biotic tracer fluxes'
-      sname    = 'DpCO2'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DpCO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
       lname    = 'CO2 Piston Velocity for base biotic tracer fluxes'
       sname    = 'PV_CO2'
       units    = vel_units
@@ -273,184 +190,270 @@ contains
         return
       end if
 
-      lname    = 'DIC Surface Gas Flux'
-      sname    = 'FG_CO2'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DIC_GAS_FLUX, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+      if (base_bio_on) then
+        lname    = 'PV_O2'
+        sname    = 'PV_O2'
+        units    = vel_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PV_O2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Surface pH'
-      sname    = 'PH'
-      units    = '1'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PH, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'O2 Schmidt Number'
+        sname    = 'SCHMIDT_O2'
+        units    = '1'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SCHMIDT_O2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Atmospheric CO2'
-      sname    = 'ATM_CO2'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ATM_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'O2 Saturation'
+        sname    = 'O2SAT'
+        units    = unit_system%conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%O2SAT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'CO2 Star, Alternative CO2'
-      sname    = 'CO2STAR_ALT_CO2'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CO2STAR_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'CO2 Star'
+        sname    = 'CO2STAR'
+        units    = unit_system%conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CO2STAR, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'D CO2 Star, Alternative CO2'
-      sname    = 'DCO2STAR_ALT_CO2'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DCO2STAR_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'D CO2 Star'
+        sname    = 'DCO2STAR'
+        units    = unit_system%conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DCO2STAR, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'surface pCO2, Alternative CO2'
-      sname    = 'pCO2SURF_ALT_CO2'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%pCO2SURF_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'surface pCO2'
+        sname    = 'pCO2SURF'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%pCO2SURF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'D pCO2, Alternative CO2'
-      sname    = 'DpCO2_ALT_CO2'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DpCO2_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'D pCO2 for base biotic tracer fluxes'
+        sname    = 'DpCO2'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DpCO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'DIC Surface Gas Flux, Alternative CO2'
-      sname    = 'FG_ALT_CO2'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DIC_GAS_FLUX_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'DIC Surface Gas Flux'
+        sname    = 'FG_CO2'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DIC_GAS_FLUX, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Surface pH, Alternative CO2'
-      sname    = 'PH_ALT_CO2'
-      units    = '1'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PH_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'Surface pH'
+        sname    = 'PH'
+        units    = '1'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PH, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Atmospheric Alternative CO2'
-      sname    = 'ATM_ALT_CO2'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ATM_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'Atmospheric CO2'
+        sname    = 'ATM_CO2'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ATM_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Atmospheric Iron Flux'
-      sname    = 'IRON_FLUX'
-      units    = 'mmol/m^2/s' ! output in mks regardless of unit system!
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%IRON_FLUX, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'CO2 Star, Alternative CO2'
+        sname    = 'CO2STAR_ALT_CO2'
+        units    = unit_system%conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CO2STAR_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Dust Flux'
-      sname    = 'DUST_FLUX'
-      write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DUST_FLUX, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'D CO2 Star, Alternative CO2'
+        sname    = 'DCO2STAR_ALT_CO2'
+        units    = unit_system%conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DCO2STAR_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Flux of NOx from Atmosphere'
-      sname    = 'NOx_FLUX'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%NOx_FLUX, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'surface pCO2, Alternative CO2'
+        sname    = 'pCO2SURF_ALT_CO2'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%pCO2SURF_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Flux of NHy from Atmosphere'
-      sname    = 'NHy_FLUX'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%NHy_FLUX, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+        lname    = 'D pCO2, Alternative CO2'
+        sname    = 'DpCO2_ALT_CO2'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DpCO2_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Emission of NHx to Atmosphere'
-      sname    = 'NHx_SURFACE_EMIS'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%NHx_SURFACE_EMIS, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
+        lname    = 'DIC Surface Gas Flux, Alternative CO2'
+        sname    = 'FG_ALT_CO2'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DIC_GAS_FLUX_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Surface pH, Alternative CO2'
+        sname    = 'PH_ALT_CO2'
+        units    = '1'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PH_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Atmospheric Alternative CO2'
+        sname    = 'ATM_ALT_CO2'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ATM_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Atmospheric Iron Flux'
+        sname    = 'IRON_FLUX'
+        units    = 'mmol/m^2/s' ! output in mks regardless of unit system!
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%IRON_FLUX, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Dust Flux'
+        sname    = 'DUST_FLUX'
+        write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DUST_FLUX, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Flux of NOx from Atmosphere'
+        sname    = 'NOx_FLUX'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%NOx_FLUX, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Flux of NHy from Atmosphere'
+        sname    = 'NHy_FLUX'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%NHy_FLUX, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Emission of NHx to Atmosphere'
+        sname    = 'NHx_SURFACE_EMIS'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%NHx_SURFACE_EMIS, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
       end if
 
     end associate
@@ -464,381 +467,7 @@ contains
               diags => marbl_interior_tendency_diags   &
              )
 
-      ! General 2D diags
-      lname = 'Calcite Saturation Depth'
-      sname = 'zsatcalc'
-      units = unit_system%L
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%zsatcalc, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Aragonite Saturation Depth'
-      sname = 'zsatarag'
-      units = unit_system%L
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%zsatarag, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Minimum of O2'
-      sname = 'O2_ZMIN'
-      units = unit_system%conc_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%O2_ZMIN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Depth of Vertical Minimum of O2'
-      sname = 'O2_ZMIN_DEPTH'
-      units = unit_system%L
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%O2_ZMIN_DEPTH, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total C Fixation Vertical Integral'
-      sname = 'photoC_TOT_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%photoC_TOT_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total C Fixation Vertical Integral, 0-100m'
-      sname = 'photoC_TOT_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%photoC_TOT_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total C Fixation from NO3 Vertical Integral'
-      sname = 'photoC_NO3_TOT_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%photoC_NO3_TOT_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total C Fixation from NO3 Vertical Integral, 0-100m'
-      sname = 'photoC_NO3_TOT_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%photoC_NO3_TOT_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of DOC Production'
-      sname = 'DOC_prod_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOC_prod_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of DOC Production, 0-100m'
-      sname = 'DOC_prod_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOC_prod_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of DOC Remineralization'
-      sname = 'DOC_remin_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOC_remin_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of DOC Remineralization, 0-100m'
-      sname = 'DOC_remin_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOC_remin_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of DOCr Remineralization'
-      sname = 'DOCr_remin_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOCr_remin_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of DOCr Remineralization, 0-100m'
-      sname = 'DOCr_remin_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOCr_remin_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ctot'
-      sname = 'Jint_Ctot'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Jint_Ctot, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ntot'
-      sname = 'Jint_Ntot'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Jint_Ntot, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ptot'
-      sname = 'Jint_Ptot'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Jint_Ptot, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Sitot'
-      sname = 'Jint_Sitot'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Jint_Sitot, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Fetot'
-      sname = 'Jint_Fetot'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Jint_Fetot, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Particulate 2D diags
-      lname = 'CaCO3 Flux Hitting Sea Floor'
-      sname = 'calcToFloor'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%calcToFloor, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Flux to Sediments'
-      sname = 'calcToSed'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%calcToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Flux to Sediments, Alternative CO2'
-      sname = 'calcToSed_ALT_CO2'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%calcToSed_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC Flux Hitting Sea Floor'
-      sname = 'pocToFloor'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%pocToFloor, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC Flux to Sediments'
-      sname = 'pocToSed'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%pocToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'nitrogen burial Flux to Sediments'
-      sname = 'ponToSed'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ponToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'nitrogen loss in Sediments'
-      sname = 'SedDenitrif'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SedDenitrif, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'non-oxic,non-dentr remin in Sediments'
-      sname = 'OtherRemin'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%OtherRemin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'phosphorus Flux to Sediments'
-      sname = 'popToSed'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%popToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'biogenic Si Flux to Sediments'
-      sname = 'bsiToSed'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%bsiToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'dust Flux to Sediments'
-      sname = 'dustToSed'
-      write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%dustToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'pFe Flux to Sediments'
-      sname = 'pfeToSed'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%pfeToSed, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Autotroph 2D diags
+      ! Allocate memory for PFT diagnostics
       if (.not.ind%lconstructed()) then
         allocate(ind%N_lim_surf(autotroph_cnt))
         allocate(ind%N_lim_Cweight_avg_100m(autotroph_cnt))
@@ -873,452 +502,6 @@ contains
         allocate(ind%auto_loss_doc_zint_100m(autotroph_cnt))
         allocate(ind%auto_agg_zint(autotroph_cnt))
         allocate(ind%auto_agg_zint_100m(autotroph_cnt))
-      end if
-      do n=1,autotroph_cnt
-        lname = trim(autotroph_settings(n)%lname) // ' N Limitation, Surface'
-        sname = trim(autotroph_settings(n)%sname) // '_N_lim_surf'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%N_lim_surf(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' N Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_N_lim_Cweight_avg_100m'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%N_lim_Cweight_avg_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' P Limitation, Surface'
-        sname = trim(autotroph_settings(n)%sname) // '_P_lim_surf'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%P_lim_surf(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' P Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_P_lim_Cweight_avg_100m'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%P_lim_Cweight_avg_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Fe Limitation, Surface'
-        sname = trim(autotroph_settings(n)%sname) // '_Fe_lim_surf'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%Fe_lim_surf(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Fe Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_Fe_lim_Cweight_avg_100m'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%Fe_lim_Cweight_avg_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        if (autotroph_settings(n)%silicifier) then
-          lname = trim(autotroph_settings(n)%lname) // ' SiO3 Limitation, Surface'
-          sname = trim(autotroph_settings(n)%sname) // '_SiO3_lim_surf'
-          units = '1'
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%SiO3_lim_surf(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-
-          lname = trim(autotroph_settings(n)%lname) // ' SiO3 Limitation, carbon biomass weighted average over 0-100m'
-          sname = trim(autotroph_settings(n)%sname) // '_SiO3_lim_Cweight_avg_100m'
-          units = '1'
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%SiO3_lim_Cweight_avg_100m(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%SiO3_lim_surf(n) = -1
-          ind%SiO3_lim_Cweight_avg_100m(n) = -1
-        end if
-
-        if (autotroph_settings(n)%is_carbon_limited) then
-          lname = trim(autotroph_settings(n)%lname) // ' C Limitation, Surface'
-          sname = trim(autotroph_settings(n)%sname) // '_C_lim_surf'
-          units = '1'
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%C_lim_surf(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-
-          lname = trim(autotroph_settings(n)%lname) // ' C Limitation, carbon biomass weighted average over 0-100m'
-          sname = trim(autotroph_settings(n)%sname) // '_C_lim_Cweight_avg_100m'
-          units = '1'
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%C_lim_Cweight_avg_100m(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, Surface'
-        sname = trim(autotroph_settings(n)%sname) // '_light_lim_surf'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%light_lim_surf(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, carbon biomass weighted average over 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_light_lim_Cweight_avg_100m'
-        units = '1'
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%light_lim_Cweight_avg_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral'
-        sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoC_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral, 0-100m'
-        sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoC_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3 Vertical Integral'
-        sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname) // '_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoC_NO3_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
-          lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral'
-          sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint'
-          units = unit_system%conc_flux_units
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CaCO3_form_zint(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%CaCO3_form_zint(n) = -1
-        end if
-
-        if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
-          lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral, 0-100m'
-          sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint_100m'
-          units = unit_system%conc_flux_units
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CaCO3_form_zint_100m(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%CaCO3_form_zint_100m(n) = -1
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_poc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_poc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_doc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_doc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        do m=1, zooplankton_cnt
-          lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // &
-                  trim(zooplankton_settings(m)%lname) // ' Vertical Integral'
-          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // &
-                  trim(zooplankton_settings(m)%sname) // '_zint'
-          units = unit_system%conc_flux_units
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%auto_graze_zoo_zint(n,m), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-               call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-          end if
-
-          lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // &
-                  trim(zooplankton_settings(m)%lname) // ' Vertical Integral, 0-100m'
-          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // &
-                  trim(zooplankton_settings(m)%sname) // '_zint_100m'
-          units = unit_system%conc_flux_units
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%auto_graze_zoo_zint_100m(n,m), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-               call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-          end if
-        end do
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_poc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_poc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_doc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_doc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral'
-        sname = trim(autotroph_settings(n)%sname) // '_agg_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_agg_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral, 0-100m'
-        sname = trim(autotroph_settings(n)%sname) // '_agg_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_agg_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-      end do
-
-      lname = 'Total CaCO3 Formation Vertical Integral'
-      sname = 'CaCO3_form_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%tot_CaCO3_form_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total CaCO3 Formation Vertical Integral, 0-100m'
-      sname = 'CaCO3_form_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%tot_CaCO3_form_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Zooplankton 2D diags
-      if (.not.ind%lconstructed()) then
         allocate(ind%zoo_loss_zint(zooplankton_cnt))
         allocate(ind%zoo_loss_zint_100m(zooplankton_cnt))
         allocate(ind%zoo_loss_zint_150m(zooplankton_cnt))
@@ -1338,1239 +521,6 @@ contains
         allocate(ind%zoo_graze_zoo_zint_100m(zooplankton_cnt, zooplankton_cnt))
         allocate(ind%x_graze_zoo_zint(zooplankton_cnt))
         allocate(ind%x_graze_zoo_zint_100m(zooplankton_cnt))
-      end if
-      do n = 1,zooplankton_cnt
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-150m'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_150m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_zint_150m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_basal_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral, 0-100m'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_basal_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_poc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_poc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_doc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
-        sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_doc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral'
-        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral'
-        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_poc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_poc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
-        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_doc_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
-        sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_doc_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        do m=1, zooplankton_cnt
-          lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ' // &
-                  trim(zooplankton_settings(m)%lname) // ' Vertical Integral'
-          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // &
-                  trim(zooplankton_settings(m)%sname) // '_zint'
-          units = unit_system%conc_flux_units
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%zoo_graze_zoo_zint(n,m), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-               call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-          end if
-
-          lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ' // &
-                  trim(zooplankton_settings(m)%lname) // ' Vertical Integral, 0-100m'
-          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // &
-                  trim(zooplankton_settings(m)%sname) // '_zint_100m'
-          units = unit_system%conc_flux_units
-          vgrid = 'none'
-          truncate = .false.
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%zoo_graze_zoo_zint_100m(n,m), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-               call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-               return
-          end if
-        end do
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral'
-        sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%x_graze_zoo_zint(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
-        sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
-        units = unit_system%conc_flux_units
-        vgrid = 'none'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%x_graze_zoo_zint_100m(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-      end do
-
-      ! General 3D diags
-      lname = 'in situ temperature'
-      sname = 'insitu_temp'
-      units = 'degC'
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%insitu_temp, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Carbonate Ion Concentration'
-      sname = 'CO3'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CO3, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Bicarbonate Ion Concentration'
-      sname = 'HCO3'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%HCO3, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Carbonic Acid Concentration'
-      sname = 'H2CO3'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%H2CO3, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'pH'
-      sname = 'pH_3D'
-      units = '1'
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ph_3D, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Carbonate Ion Concentration, Alternative CO2'
-      sname = 'CO3_ALT_CO2'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CO3_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Bicarbonate Ion Concentration, Alternative CO2'
-      sname = 'HCO3_ALT_CO2'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%HCO3_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Carbonic Acid Concentration, Alternative CO2'
-      sname = 'H2CO3_ALT_CO2'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%H2CO3_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'pH, Alternative CO2'
-      sname = 'pH_3D_ALT_CO2'
-      units = '1'
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ph_3D_ALT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CO3 concentration at calcite saturation'
-      sname = 'co3_sat_calc'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%co3_sat_calc, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CO3 concentration at aragonite saturation'
-      sname = 'co3_sat_arag'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%co3_sat_arag, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Nitrification'
-      sname = 'NITRIF'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%NITRIF, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Denitrification'
-      sname = 'DENITRIF'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DENITRIF, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'O2 Production'
-      sname = 'O2_PRODUCTION'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%O2_PRODUCTION, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      if (lo2_consumption_scalef) then
-        lname = 'O2 Consumption Scale Factor'
-        sname = 'O2_CONSUMPTION_SCALEF'
-        units = '1'
-        vgrid = 'layer_avg'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-             ind%O2_CONSUMPTION_SCALEF, marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-      end if
-
-      lname = 'O2 Consumption'
-      sname = 'O2_CONSUMPTION'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%O2_CONSUMPTION, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Apparent O2 Utilization'
-      sname = 'AOU'
-      units = unit_system%conc_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%AOU, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'PAR Average over Model Cell'
-      sname = 'PAR_avg'
-      units = 'W/m^2'
-      vgrid = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PAR_avg, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total Autotroph Grazing'
-      sname = 'graze_auto_TOT'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%auto_graze_TOT, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total C Fixation'
-      sname = 'photoC_TOT'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%photoC_TOT, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Total C Fixation from NO3'
-      sname = 'photoC_NO3_TOT'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%photoC_NO3_TOT, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOC Production'
-      sname = 'DOC_prod'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOC_prod, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOC Remineralization'
-      sname = 'DOC_remin'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOC_remin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOCr Remineralization'
-      sname = 'DOCr_remin'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOCr_remin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DON Production'
-      sname = 'DON_prod'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DON_prod, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DON Remineralization'
-      sname = 'DON_remin'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DON_remin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DONr Remineralization'
-      sname = 'DONr_remin'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DONr_remin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOP Production'
-      sname = 'DOP_prod'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOP_prod, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOP Remineralization'
-      sname = 'DOP_remin'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOP_remin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOPr Remineralization'
-      sname = 'DOPr_remin'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOPr_remin, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'DOP loss, due to P budget balancing'
-      sname = 'DOP_loss_P_bal'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%DOP_loss_P_bal, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Iron Scavenging'
-      sname = 'Fe_scavenge'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Fe_scavenge, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Iron Scavenging Rate'
-      sname = 'Fe_scavenge_rate'
-      units = '1/y'
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Fe_scavenge_rate, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Production of Fe-binding Ligand'
-      sname = 'Lig_prod'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Lig_prod, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Loss of Fe-binding Ligand'
-      sname = 'Lig_loss'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Lig_loss, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Loss of Fe-binding Ligand from Scavenging'
-      sname = 'Lig_scavenge'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Lig_scavenge, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Fe not bound to Ligand'
-      sname = 'Fefree'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Fefree, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Loss of Fe-binding Ligand from UV radiation'
-      sname = 'Lig_photochem'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Lig_photochem, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Loss of Fe-binding Ligand from Bacterial Degradation'
-      sname = 'Lig_deg'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%Lig_deg, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Iron Sediment Flux'
-      sname = 'FESEDFLUX'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%fesedflux, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Particulate 2D diags
-
-      write(particulate_flux_ref_depth_str, "(I0,A)") int(particulate_flux_ref_depth*unit_system%len2m), 'm'
-
-      lname = 'POC Flux at ' // trim(particulate_flux_ref_depth_str)
-      sname = 'POC_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POP Flux at ' // trim(particulate_flux_ref_depth_str)
-      sname = 'POP_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Flux at ' // trim(particulate_flux_ref_depth_str)
-      sname = 'CaCO3_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'SiO2 Flux at ' // trim(particulate_flux_ref_depth_str)
-      sname = 'SiO2_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SiO2_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'P_iron Flux at ' // trim(particulate_flux_ref_depth_str)
-      sname = 'P_iron_FLUX_' // trim(particulate_flux_ref_depth_str)
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%P_iron_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of POC Production'
-      sname = 'POC_PROD_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_PROD_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of POC Production, 0-100m'
-      sname = 'POC_PROD_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_PROD_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of POC Remineralization routed to DOCr'
-      sname = 'POC_REMIN_DOCr_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN_DOCr_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of POC Remineralization routed to DOCr, 0-100m'
-      sname = 'POC_REMIN_DOCr_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN_DOCr_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of POC Remineralization routed to DIC'
-      sname = 'POC_REMIN_DIC_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN_DIC_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of POC Remineralization routed to DIC, 0-100m'
-      sname = 'POC_REMIN_DIC_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN_DIC_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of CaCO3 Production'
-      sname = 'CaCO3_PROD_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_PROD_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of CaCO3 Production, 0-100m'
-      sname = 'CaCO3_PROD_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_PROD_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of CaCO3 Remineralization'
-      sname = 'CaCO3_REMIN_zint'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_REMIN_zint, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Vertical Integral of CaCO3 Remineralization, 0-100m'
-      sname = 'CaCO3_REMIN_zint_100m'
-      units = unit_system%conc_flux_units
-      vgrid = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_REMIN_zint_100m, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Particulate 3D diags
-      if (lp_remin_scalef) then
-        lname = 'Particulate Remin Scale Factor'
-        sname = 'P_REMIN_SCALEF'
-        units = '1'
-        vgrid = 'layer_avg'
-        truncate = .false.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-             ind%P_REMIN_SCALEF, marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-      end if
-
-      lname = 'POC Flux into Cell'
-      sname = 'POC_FLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC sFlux into Cell'
-      sname = 'POC_sFLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_sFLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC hFlux into Cell'
-      sname = 'POC_hFLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_hFLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC Production'
-      sname = 'POC_PROD'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_PROD, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC Remineralization routed to DOCr'
-      sname = 'POC_REMIN_DOCr'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN_DOCr, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POC Remineralization routed to DIC'
-      sname = 'POC_REMIN_DIC'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POC_REMIN_DIC, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POP Flux into Cell'
-      sname = 'POP_FLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POP Production'
-      sname = 'POP_PROD'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_PROD, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POP Remineralization routed to DOPr'
-      sname = 'POP_REMIN_DOPr'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_REMIN_DOPr, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'POP Remineralization routed to PO4'
-      sname = 'POP_REMIN_PO4'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%POP_REMIN_PO4, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'PON Remineralization routed to DONr'
-      sname = 'PON_REMIN_DONr'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PON_REMIN_DONr, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'PON Remineralization routed to NH4'
-      sname = 'PON_REMIN_NH4'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PON_REMIN_NH4, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Flux into Cell'
-      sname = 'CaCO3_FLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Production'
-      sname = 'CaCO3_PROD'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_PROD, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Remineralization'
-      sname = 'CaCO3_REMIN'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_REMIN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Flux into Cell, Alternative CO2'
-      sname = 'CaCO3_ALT_CO2_FLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_ALT_CO2_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Production, Alternative CO2'
-      sname = 'CaCO3_ALT_CO2_PROD'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_ALT_CO2_PROD, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'CaCO3 Remineralization, Alternative CO2'
-      sname = 'CaCO3_ALT_CO2_REMIN'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%CaCO3_ALT_CO2_REMIN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'SiO2 Flux into Cell'
-      sname = 'SiO2_FLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SiO2_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'SiO2 Production'
-      sname = 'SiO2_PROD'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SiO2_PROD, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'SiO2 Remineralization'
-      sname = 'SiO2_REMIN'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SiO2_REMIN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Dust Flux into Cell'
-      sname = 'dust_FLUX_IN'
-      write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%dust_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'Dust Remineralization'
-      sname = 'dust_REMIN'
-      write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^3/s'
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%dust_REMIN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'P_iron Flux into Cell'
-      sname = 'P_iron_FLUX_IN'
-      units = unit_system%conc_flux_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%P_iron_FLUX_IN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'P_iron Production'
-      sname = 'P_iron_PROD'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%P_iron_PROD, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname = 'P_iron Remineralization'
-      sname = 'P_iron_REMIN'
-      units = unit_system%conc_tend_units
-      vgrid = 'layer_avg'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%P_iron_REMIN, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Autotroph 3D diags
-      if (.not.ind%lconstructed()) then
         allocate(ind%Qp(autotroph_cnt))
         allocate(ind%photoC(autotroph_cnt))
         allocate(ind%photoC_NO3(autotroph_cnt))
@@ -2591,306 +541,6 @@ contains
         allocate(ind%bSi_form(autotroph_cnt))
         allocate(ind%CaCO3_form(autotroph_cnt))
         allocate(ind%Nfix(autotroph_cnt))
-      end if
-      do n=1,autotroph_cnt
-        if (lvariable_PtoC) then
-          lname = trim(autotroph_settings(n)%lname) // ' P:C ratio'
-          sname = trim(autotroph_settings(n)%sname) // '_Qp'
-          units = '1'
-          vgrid = 'layer_avg'
-          truncate = .not. lecovars_full_depth_tavg
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-               ind%Qp(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%Qp(n) = -1
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' C Fixation'
-        sname = 'photoC_' // trim(autotroph_settings(n)%sname)
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoC(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3'
-        sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname)
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoC_NO3(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Fe Uptake'
-        sname = 'photoFe_' // trim(autotroph_settings(n)%sname)
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoFe(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' NO3 Uptake'
-        sname = 'photoNO3_' // trim(autotroph_settings(n)%sname)
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoNO3(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' NH4 Uptake'
-        sname = 'photoNH4_' // trim(autotroph_settings(n)%sname)
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%photoNH4(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' DOP Uptake'
-        sname = 'DOP_' // trim(autotroph_settings(n)%sname) // '_uptake'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%DOP_uptake(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' PO4 Uptake'
-        sname = 'PO4_' // trim(autotroph_settings(n)%sname) // '_uptake'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%PO4_uptake(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname)
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_poc(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_doc(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Grazing to ZOO TOT'
-        sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zootot'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_graze_zootot(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        do m=1, zooplankton_cnt
-            lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // trim(zooplankton_settings(m)%lname)
-            sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
-            units = unit_system%conc_tend_units
-            vgrid = 'layer_avg'
-            truncate = .not. lecovars_full_depth_tavg
-            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                 ind%auto_graze_zoo(n,m), marbl_status_log)
-            if (marbl_status_log%labort_marbl) then
-                 call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-                 return
-            end if
-        end do
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss'
-        sname = trim(autotroph_settings(n)%sname) // '_loss'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss to POC'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_poc'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_poc(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC'
-        sname = trim(autotroph_settings(n)%sname) // '_loss_doc'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_loss_doc(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        lname = trim(autotroph_settings(n)%lname) // ' Aggregation'
-        sname = trim(autotroph_settings(n)%sname) // '_agg'
-        units = unit_system%conc_tend_units
-        vgrid = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%auto_agg(n), marbl_status_log)
-        if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
-        end if
-
-        if (autotroph_settings(n)%silicifier) then
-          lname = trim(autotroph_settings(n)%lname) // ' Si Uptake'
-          sname = trim(autotroph_settings(n)%sname) // '_bSi_form'
-          units = unit_system%conc_tend_units
-          vgrid = 'layer_avg'
-          truncate = .not. lecovars_full_depth_tavg
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%bSi_form(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%bSi_form(n) = -1
-        end if
-
-        if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
-          lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation'
-          sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form'
-          units = unit_system%conc_tend_units
-          vgrid = 'layer_avg'
-          truncate = .not. lecovars_full_depth_tavg
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%CaCO3_form(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%CaCO3_form(n) = -1
-        end if
-
-        if (autotroph_settings(n)%Nfixer) then
-          lname = trim(autotroph_settings(n)%lname) // ' N Fixation'
-          sname = trim(autotroph_settings(n)%sname) // '_Nfix'
-          units = unit_system%conc_tend_units
-          vgrid = 'layer_avg'
-          truncate = .not. lecovars_full_depth_tavg
-          call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
-               ind%Nfix(n), marbl_status_log)
-          if (marbl_status_log%labort_marbl) then
-            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-            return
-          end if
-        else
-          ind%Nfix(n) = -1
-        end if
-
-      end do ! end do-loop for autotroph_cnt
-
-      lname    = 'Total Si Uptake'
-      sname    = 'bSi_form'
-      units    = unit_system%conc_tend_units
-      vgrid    = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%tot_bSi_form, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'Total CaCO3 Formation'
-      sname    = 'CaCO3_form'
-      units    = unit_system%conc_tend_units
-      vgrid    = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%tot_CaCO3_form, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'Total N Fixation'
-      sname    = 'Nfix'
-      units    = unit_system%conc_tend_units
-      vgrid    = 'layer_avg'
-      truncate = .not. lecovars_full_depth_tavg
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%tot_Nfix, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      ! Zooplankton 3D diags
-      if (.not.ind%lconstructed()) then
         allocate(ind%zoo_loss(zooplankton_cnt))
         allocate(ind%zoo_loss_basal(zooplankton_cnt))
         allocate(ind%zoo_loss_poc(zooplankton_cnt))
@@ -2902,130 +552,2481 @@ contains
         allocate(ind%zoo_graze_zoo(zooplankton_cnt, zooplankton_cnt))
         allocate(ind%x_graze_zoo(zooplankton_cnt))
       end if
-      do n = 1,zooplankton_cnt
-        lname    = trim(zooplankton_settings(n)%lname) // ' Loss'
-        sname    = trim(zooplankton_settings(n)%sname) // '_loss'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss(n), marbl_status_log)
+
+      if (base_bio_on) then
+        ! General 2D diags
+        lname = 'Calcite Saturation Depth'
+        sname = 'zsatcalc'
+        units = unit_system%L
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%zsatcalc, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' Basal Respiration'
-        sname    = trim(zooplankton_settings(n)%sname) // '_loss_basal'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .true.
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_basal(n), marbl_status_log)
+        lname = 'Aragonite Saturation Depth'
+        sname = 'zsatarag'
+        units = unit_system%L
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%zsatarag, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' Loss to POC'
-        sname    = trim(zooplankton_settings(n)%sname) // '_loss_poc'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_poc(n), marbl_status_log)
+        lname = 'Vertical Minimum of O2'
+        sname = 'O2_ZMIN'
+        units = unit_system%conc_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%O2_ZMIN, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' Loss to DOC'
-        sname    = trim(zooplankton_settings(n)%sname) // '_loss_doc'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_loss_doc(n), marbl_status_log)
+        lname = 'Depth of Vertical Minimum of O2'
+        sname = 'O2_ZMIN_DEPTH'
+        units = unit_system%L
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%O2_ZMIN_DEPTH, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss'
-        sname    = 'graze_' // trim(zooplankton_settings(n)%sname)
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze(n), marbl_status_log)
+        lname = 'Total C Fixation Vertical Integral'
+        sname = 'photoC_TOT_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_TOT_zint, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to POC'
-        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_poc(n), marbl_status_log)
+        lname = 'Total C Fixation Vertical Integral, 0-100m'
+        sname = 'photoC_TOT_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_TOT_zint_100m, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to DOC'
-        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_doc(n), marbl_status_log)
+        lname = 'Total C Fixation from NO3 Vertical Integral'
+        sname = 'photoC_NO3_TOT_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_NO3_TOT_zint, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ZOO TOT'
-        sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zootot'
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%zoo_graze_zootot(n), marbl_status_log)
+        lname = 'Total C Fixation from NO3 Vertical Integral, 0-100m'
+        sname = 'photoC_NO3_TOT_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_NO3_TOT_zint_100m, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-        do m=1, zooplankton_cnt
-            lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ' // trim(zooplankton_settings(m)%lname)
-            sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
-            units    = unit_system%conc_tend_units
-            vgrid    = 'layer_avg'
-            truncate = .not. lecovars_full_depth_tavg
-            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-                 ind%zoo_graze_zoo(n,m), marbl_status_log)
+        lname = 'Vertical Integral of DOC Production'
+        sname = 'DOC_prod_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOC_prod_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of DOC Production, 0-100m'
+        sname = 'DOC_prod_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOC_prod_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of DOC Remineralization'
+        sname = 'DOC_remin_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOC_remin_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of DOC Remineralization, 0-100m'
+        sname = 'DOC_remin_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOC_remin_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of DOCr Remineralization'
+        sname = 'DOCr_remin_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOCr_remin_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of DOCr Remineralization, 0-100m'
+        sname = 'DOCr_remin_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOCr_remin_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ctot'
+        sname = 'Jint_Ctot'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Jint_Ctot, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ntot'
+        sname = 'Jint_Ntot'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Jint_Ntot, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Ptot'
+        sname = 'Jint_Ptot'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Jint_Ptot, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Sitot'
+        sname = 'Jint_Sitot'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Jint_Sitot, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of Conservative Subterms of Source Sink Term for Fetot'
+        sname = 'Jint_Fetot'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Jint_Fetot, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Particulate 2D diags
+        lname = 'CaCO3 Flux Hitting Sea Floor'
+        sname = 'calcToFloor'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%calcToFloor, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Flux to Sediments'
+        sname = 'calcToSed'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%calcToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Flux to Sediments, Alternative CO2'
+        sname = 'calcToSed_ALT_CO2'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%calcToSed_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC Flux Hitting Sea Floor'
+        sname = 'pocToFloor'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%pocToFloor, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC Flux to Sediments'
+        sname = 'pocToSed'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%pocToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'nitrogen burial Flux to Sediments'
+        sname = 'ponToSed'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ponToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'nitrogen loss in Sediments'
+        sname = 'SedDenitrif'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SedDenitrif, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'non-oxic,non-dentr remin in Sediments'
+        sname = 'OtherRemin'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%OtherRemin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'phosphorus Flux to Sediments'
+        sname = 'popToSed'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%popToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'biogenic Si Flux to Sediments'
+        sname = 'bsiToSed'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%bsiToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'dust Flux to Sediments'
+        sname = 'dustToSed'
+        write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%dustToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'pFe Flux to Sediments'
+        sname = 'pfeToSed'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%pfeToSed, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Autotroph 2D diags
+        do n=1,autotroph_cnt
+          lname = trim(autotroph_settings(n)%lname) // ' N Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_N_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%N_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' N Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_N_lim_Cweight_avg_100m'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%N_lim_Cweight_avg_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' P Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_P_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%P_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' P Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_P_lim_Cweight_avg_100m'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%P_lim_Cweight_avg_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Fe Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_Fe_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%Fe_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Fe Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_Fe_lim_Cweight_avg_100m'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%Fe_lim_Cweight_avg_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          if (autotroph_settings(n)%silicifier) then
+            lname = trim(autotroph_settings(n)%lname) // ' SiO3 Limitation, Surface'
+            sname = trim(autotroph_settings(n)%sname) // '_SiO3_lim_surf'
+            units = '1'
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                ind%SiO3_lim_surf(n), marbl_status_log)
             if (marbl_status_log%labort_marbl) then
               call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
               return
             end if
+
+            lname = trim(autotroph_settings(n)%lname) // ' SiO3 Limitation, carbon biomass weighted average over 0-100m'
+            sname = trim(autotroph_settings(n)%sname) // '_SiO3_lim_Cweight_avg_100m'
+            units = '1'
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%SiO3_lim_Cweight_avg_100m(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%SiO3_lim_surf(n) = -1
+            ind%SiO3_lim_Cweight_avg_100m(n) = -1
+          end if
+
+          if (autotroph_settings(n)%is_carbon_limited) then
+            lname = trim(autotroph_settings(n)%lname) // ' C Limitation, Surface'
+            sname = trim(autotroph_settings(n)%sname) // '_C_lim_surf'
+            units = '1'
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%C_lim_surf(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+
+            lname = trim(autotroph_settings(n)%lname) // ' C Limitation, carbon biomass weighted average over 0-100m'
+            sname = trim(autotroph_settings(n)%sname) // '_C_lim_Cweight_avg_100m'
+            units = '1'
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%C_lim_Cweight_avg_100m(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, Surface'
+          sname = trim(autotroph_settings(n)%sname) // '_light_lim_surf'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%light_lim_surf(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Light Limitation, carbon biomass weighted average over 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_light_lim_Cweight_avg_100m'
+          units = '1'
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%light_lim_Cweight_avg_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral'
+          sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoC_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Fixation Vertical Integral, 0-100m'
+          sname = 'photoC_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoC_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3 Vertical Integral'
+          sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoC_NO3_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+            lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral'
+            sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint'
+            units = unit_system%conc_flux_units
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                ind%CaCO3_form_zint(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%CaCO3_form_zint(n) = -1
+          end if
+
+          if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+            lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation Vertical Integral, 0-100m'
+            sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form_zint_100m'
+            units = unit_system%conc_flux_units
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                ind%CaCO3_form_zint_100m(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%CaCO3_form_zint_100m(n) = -1
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_poc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_poc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_doc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_doc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          do m=1, zooplankton_cnt
+            lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // &
+                    trim(zooplankton_settings(m)%lname) // ' Vertical Integral'
+            sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // &
+                    trim(zooplankton_settings(m)%sname) // '_zint'
+            units = unit_system%conc_flux_units
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%auto_graze_zoo_zint(n,m), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+                call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+            end if
+
+            lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // &
+                    trim(zooplankton_settings(m)%lname) // ' Vertical Integral, 0-100m'
+            sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // &
+                    trim(zooplankton_settings(m)%sname) // '_zint_100m'
+            units = unit_system%conc_flux_units
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%auto_graze_zoo_zint_100m(n,m), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+                call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+            end if
+          end do
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_poc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_poc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_poc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_doc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_doc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_doc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral'
+          sname = trim(autotroph_settings(n)%sname) // '_agg_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_agg_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Aggregation Vertical Integral, 0-100m'
+          sname = trim(autotroph_settings(n)%sname) // '_agg_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_agg_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
         end do
 
-        lname    = trim(zooplankton_settings(n)%lname) // ' grazing gain'
-        sname    = 'x_graze_' // trim(zooplankton_settings(n)%sname)
-        units    = unit_system%conc_tend_units
-        vgrid    = 'layer_avg'
-        truncate = .not. lecovars_full_depth_tavg
-        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%x_graze_zoo(n), marbl_status_log)
+        lname = 'Total CaCO3 Formation Vertical Integral'
+        sname = 'CaCO3_form_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%tot_CaCO3_form_zint, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
 
-      end do
+        lname = 'Total CaCO3 Formation Vertical Integral, 0-100m'
+        sname = 'CaCO3_form_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%tot_CaCO3_form_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Zooplankton 2D diags
+        do n = 1,zooplankton_cnt
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-100m'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral, 0-150m'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_zint_150m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_zint_150m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_basal_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Basal Respiration Vertical Integral, 0-100m'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_basal_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_basal_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_poc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss to POC Vertical Integral, 0-100m'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_poc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_poc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_doc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss to DOC Vertical Integral, 0-100m'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_doc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_doc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral'
+          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing Vertical Integral, 0-100m'
+          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral'
+          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_poc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing to POC Vertical Integral, 0-100m'
+          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_poc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral'
+          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_doc_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing to DOC Vertical Integral, 0-100m'
+          sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_doc_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          do m=1, zooplankton_cnt
+            lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ' // &
+                    trim(zooplankton_settings(m)%lname) // ' Vertical Integral'
+            sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // &
+                    trim(zooplankton_settings(m)%sname) // '_zint'
+            units = unit_system%conc_flux_units
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%zoo_graze_zoo_zint(n,m), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+                call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+            end if
+
+            lname = trim(zooplankton_settings(n)%lname) // ' Grazing to ' // &
+                    trim(zooplankton_settings(m)%lname) // ' Vertical Integral, 0-100m'
+            sname = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // &
+                    trim(zooplankton_settings(m)%sname) // '_zint_100m'
+            units = unit_system%conc_flux_units
+            vgrid = 'none'
+            truncate = .false.
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%zoo_graze_zoo_zint_100m(n,m), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+                call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+            end if
+          end do
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral'
+          sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%x_graze_zoo_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Grazing Gain Vertical Integral, 0-100m'
+          sname = 'x_graze_' // trim(zooplankton_settings(n)%sname) // '_zint_100m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%x_graze_zoo_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        end do
+
+        ! General 3D diags
+        lname = 'in situ temperature'
+        sname = 'insitu_temp'
+        units = 'degC'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%insitu_temp, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Carbonate Ion Concentration'
+        sname = 'CO3'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CO3, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Bicarbonate Ion Concentration'
+        sname = 'HCO3'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%HCO3, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Carbonic Acid Concentration'
+        sname = 'H2CO3'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%H2CO3, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'pH'
+        sname = 'pH_3D'
+        units = '1'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ph_3D, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Carbonate Ion Concentration, Alternative CO2'
+        sname = 'CO3_ALT_CO2'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CO3_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Bicarbonate Ion Concentration, Alternative CO2'
+        sname = 'HCO3_ALT_CO2'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%HCO3_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Carbonic Acid Concentration, Alternative CO2'
+        sname = 'H2CO3_ALT_CO2'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%H2CO3_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'pH, Alternative CO2'
+        sname = 'pH_3D_ALT_CO2'
+        units = '1'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ph_3D_ALT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CO3 concentration at calcite saturation'
+        sname = 'co3_sat_calc'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%co3_sat_calc, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CO3 concentration at aragonite saturation'
+        sname = 'co3_sat_arag'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%co3_sat_arag, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Nitrification'
+        sname = 'NITRIF'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%NITRIF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Denitrification'
+        sname = 'DENITRIF'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DENITRIF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'O2 Production'
+        sname = 'O2_PRODUCTION'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%O2_PRODUCTION, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        if (lo2_consumption_scalef) then
+          lname = 'O2 Consumption Scale Factor'
+          sname = 'O2_CONSUMPTION_SCALEF'
+          units = '1'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+              ind%O2_CONSUMPTION_SCALEF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        end if
+
+        lname = 'O2 Consumption'
+        sname = 'O2_CONSUMPTION'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%O2_CONSUMPTION, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Apparent O2 Utilization'
+        sname = 'AOU'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%AOU, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'PAR Average over Model Cell'
+        sname = 'PAR_avg'
+        units = 'W/m^2'
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PAR_avg, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total Autotroph Grazing'
+        sname = 'graze_auto_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%auto_graze_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total C Fixation'
+        sname = 'photoC_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total C Fixation from NO3'
+        sname = 'photoC_NO3_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_NO3_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOC Production'
+        sname = 'DOC_prod'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOC_prod, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOC Remineralization'
+        sname = 'DOC_remin'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOC_remin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOCr Remineralization'
+        sname = 'DOCr_remin'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOCr_remin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DON Production'
+        sname = 'DON_prod'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DON_prod, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DON Remineralization'
+        sname = 'DON_remin'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DON_remin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DONr Remineralization'
+        sname = 'DONr_remin'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DONr_remin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOP Production'
+        sname = 'DOP_prod'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOP_prod, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOP Remineralization'
+        sname = 'DOP_remin'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOP_remin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOPr Remineralization'
+        sname = 'DOPr_remin'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOPr_remin, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'DOP loss, due to P budget balancing'
+        sname = 'DOP_loss_P_bal'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOP_loss_P_bal, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Iron Scavenging'
+        sname = 'Fe_scavenge'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Fe_scavenge, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Iron Scavenging Rate'
+        sname = 'Fe_scavenge_rate'
+        units = '1/y'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Fe_scavenge_rate, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Production of Fe-binding Ligand'
+        sname = 'Lig_prod'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Lig_prod, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Loss of Fe-binding Ligand'
+        sname = 'Lig_loss'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Lig_loss, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Loss of Fe-binding Ligand from Scavenging'
+        sname = 'Lig_scavenge'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Lig_scavenge, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Fe not bound to Ligand'
+        sname = 'Fefree'
+        units = unit_system%conc_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Fefree, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Loss of Fe-binding Ligand from UV radiation'
+        sname = 'Lig_photochem'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Lig_photochem, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Loss of Fe-binding Ligand from Bacterial Degradation'
+        sname = 'Lig_deg'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%Lig_deg, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Iron Sediment Flux'
+        sname = 'FESEDFLUX'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%fesedflux, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Particulate 2D diags
+
+        write(particulate_flux_ref_depth_str, "(I0,A)") int(particulate_flux_ref_depth*unit_system%len2m), 'm'
+
+        lname = 'POC Flux at ' // trim(particulate_flux_ref_depth_str)
+        sname = 'POC_FLUX_' // trim(particulate_flux_ref_depth_str)
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POP Flux at ' // trim(particulate_flux_ref_depth_str)
+        sname = 'POP_FLUX_' // trim(particulate_flux_ref_depth_str)
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POP_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Flux at ' // trim(particulate_flux_ref_depth_str)
+        sname = 'CaCO3_FLUX_' // trim(particulate_flux_ref_depth_str)
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'SiO2 Flux at ' // trim(particulate_flux_ref_depth_str)
+        sname = 'SiO2_FLUX_' // trim(particulate_flux_ref_depth_str)
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SiO2_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'P_iron Flux at ' // trim(particulate_flux_ref_depth_str)
+        sname = 'P_iron_FLUX_' // trim(particulate_flux_ref_depth_str)
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%P_iron_FLUX_at_ref_depth, marbl_status_log, ref_depth=particulate_flux_ref_depth)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of POC Production'
+        sname = 'POC_PROD_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_PROD_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of POC Production, 0-100m'
+        sname = 'POC_PROD_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_PROD_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of POC Remineralization routed to DOCr'
+        sname = 'POC_REMIN_DOCr_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_REMIN_DOCr_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of POC Remineralization routed to DOCr, 0-100m'
+        sname = 'POC_REMIN_DOCr_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_REMIN_DOCr_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of POC Remineralization routed to DIC'
+        sname = 'POC_REMIN_DIC_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_REMIN_DIC_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of POC Remineralization routed to DIC, 0-100m'
+        sname = 'POC_REMIN_DIC_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_REMIN_DIC_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of CaCO3 Production'
+        sname = 'CaCO3_PROD_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_PROD_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of CaCO3 Production, 0-100m'
+        sname = 'CaCO3_PROD_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_PROD_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of CaCO3 Remineralization'
+        sname = 'CaCO3_REMIN_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_REMIN_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Vertical Integral of CaCO3 Remineralization, 0-100m'
+        sname = 'CaCO3_REMIN_zint_100m'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_REMIN_zint_100m, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Particulate 3D diags
+        if (lp_remin_scalef) then
+          lname = 'Particulate Remin Scale Factor'
+          sname = 'P_REMIN_SCALEF'
+          units = '1'
+          vgrid = 'layer_avg'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+              ind%P_REMIN_SCALEF, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        end if
+
+        lname = 'POC Flux into Cell'
+        sname = 'POC_FLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC sFlux into Cell'
+        sname = 'POC_sFLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_sFLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC hFlux into Cell'
+        sname = 'POC_hFLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_hFLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC Production'
+        sname = 'POC_PROD'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_PROD, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC Remineralization routed to DOCr'
+        sname = 'POC_REMIN_DOCr'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_REMIN_DOCr, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POC Remineralization routed to DIC'
+        sname = 'POC_REMIN_DIC'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POC_REMIN_DIC, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POP Flux into Cell'
+        sname = 'POP_FLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POP_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POP Production'
+        sname = 'POP_PROD'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POP_PROD, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POP Remineralization routed to DOPr'
+        sname = 'POP_REMIN_DOPr'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POP_REMIN_DOPr, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'POP Remineralization routed to PO4'
+        sname = 'POP_REMIN_PO4'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%POP_REMIN_PO4, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'PON Remineralization routed to DONr'
+        sname = 'PON_REMIN_DONr'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PON_REMIN_DONr, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'PON Remineralization routed to NH4'
+        sname = 'PON_REMIN_NH4'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PON_REMIN_NH4, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Flux into Cell'
+        sname = 'CaCO3_FLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Production'
+        sname = 'CaCO3_PROD'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_PROD, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Remineralization'
+        sname = 'CaCO3_REMIN'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_REMIN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Flux into Cell, Alternative CO2'
+        sname = 'CaCO3_ALT_CO2_FLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_ALT_CO2_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Production, Alternative CO2'
+        sname = 'CaCO3_ALT_CO2_PROD'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_ALT_CO2_PROD, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'CaCO3 Remineralization, Alternative CO2'
+        sname = 'CaCO3_ALT_CO2_REMIN'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CaCO3_ALT_CO2_REMIN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'SiO2 Flux into Cell'
+        sname = 'SiO2_FLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SiO2_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'SiO2 Production'
+        sname = 'SiO2_PROD'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SiO2_PROD, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'SiO2 Remineralization'
+        sname = 'SiO2_REMIN'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SiO2_REMIN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Dust Flux into Cell'
+        sname = 'dust_FLUX_IN'
+        write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%dust_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Dust Remineralization'
+        sname = 'dust_REMIN'
+        write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^3/s'
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%dust_REMIN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'P_iron Flux into Cell'
+        sname = 'P_iron_FLUX_IN'
+        units = unit_system%conc_flux_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%P_iron_FLUX_IN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'P_iron Production'
+        sname = 'P_iron_PROD'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%P_iron_PROD, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'P_iron Remineralization'
+        sname = 'P_iron_REMIN'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%P_iron_REMIN, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Autotroph 3D diags
+        do n=1,autotroph_cnt
+          if (lvariable_PtoC) then
+            lname = trim(autotroph_settings(n)%lname) // ' P:C ratio'
+            sname = trim(autotroph_settings(n)%sname) // '_Qp'
+            units = '1'
+            vgrid = 'layer_avg'
+            truncate = .not. lecovars_full_depth_tavg
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                ind%Qp(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%Qp(n) = -1
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Fixation'
+          sname = 'photoC_' // trim(autotroph_settings(n)%sname)
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoC(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' C Fixation from NO3'
+          sname = 'photoC_NO3_' // trim(autotroph_settings(n)%sname)
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoC_NO3(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Fe Uptake'
+          sname = 'photoFe_' // trim(autotroph_settings(n)%sname)
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoFe(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' NO3 Uptake'
+          sname = 'photoNO3_' // trim(autotroph_settings(n)%sname)
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoNO3(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' NH4 Uptake'
+          sname = 'photoNH4_' // trim(autotroph_settings(n)%sname)
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoNH4(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' DOP Uptake'
+          sname = 'DOP_' // trim(autotroph_settings(n)%sname) // '_uptake'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%DOP_uptake(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' PO4 Uptake'
+          sname = 'PO4_' // trim(autotroph_settings(n)%sname) // '_uptake'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%PO4_uptake(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname)
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to POC'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_poc'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_poc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to DOC'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_doc'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_doc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Grazing to ZOO TOT'
+          sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_zootot'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_graze_zootot(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          do m=1, zooplankton_cnt
+              lname = trim(autotroph_settings(n)%lname) // ' Grazing to ' // trim(zooplankton_settings(m)%lname)
+              sname = 'graze_' // trim(autotroph_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
+              units = unit_system%conc_tend_units
+              vgrid = 'layer_avg'
+              truncate = .not. lecovars_full_depth_tavg
+              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%auto_graze_zoo(n,m), marbl_status_log)
+              if (marbl_status_log%labort_marbl) then
+                  call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+                  return
+              end if
+          end do
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss'
+          sname = trim(autotroph_settings(n)%sname) // '_loss'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss to POC'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_poc'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_poc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Loss to DOC'
+          sname = trim(autotroph_settings(n)%sname) // '_loss_doc'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_loss_doc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' Aggregation'
+          sname = trim(autotroph_settings(n)%sname) // '_agg'
+          units = unit_system%conc_tend_units
+          vgrid = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%auto_agg(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          if (autotroph_settings(n)%silicifier) then
+            lname = trim(autotroph_settings(n)%lname) // ' Si Uptake'
+            sname = trim(autotroph_settings(n)%sname) // '_bSi_form'
+            units = unit_system%conc_tend_units
+            vgrid = 'layer_avg'
+            truncate = .not. lecovars_full_depth_tavg
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                ind%bSi_form(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%bSi_form(n) = -1
+          end if
+
+          if (autotroph_settings(n)%imp_calcifier .or. autotroph_settings(n)%exp_calcifier) then
+            lname = trim(autotroph_settings(n)%lname) // ' CaCO3 Formation'
+            sname = trim(autotroph_settings(n)%sname) // '_CaCO3_form'
+            units = unit_system%conc_tend_units
+            vgrid = 'layer_avg'
+            truncate = .not. lecovars_full_depth_tavg
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                ind%CaCO3_form(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%CaCO3_form(n) = -1
+          end if
+
+          if (autotroph_settings(n)%Nfixer) then
+            lname = trim(autotroph_settings(n)%lname) // ' N Fixation'
+            sname = trim(autotroph_settings(n)%sname) // '_Nfix'
+            units = unit_system%conc_tend_units
+            vgrid = 'layer_avg'
+            truncate = .not. lecovars_full_depth_tavg
+            call diags%add_diagnostic(lname, sname, units, vgrid, truncate, &
+                ind%Nfix(n), marbl_status_log)
+            if (marbl_status_log%labort_marbl) then
+              call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+              return
+            end if
+          else
+            ind%Nfix(n) = -1
+          end if
+
+        end do ! end do-loop for autotroph_cnt
+
+        lname    = 'Total Si Uptake'
+        sname    = 'bSi_form'
+        units    = unit_system%conc_tend_units
+        vgrid    = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%tot_bSi_form, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Total CaCO3 Formation'
+        sname    = 'CaCO3_form'
+        units    = unit_system%conc_tend_units
+        vgrid    = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%tot_CaCO3_form, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Total N Fixation'
+        sname    = 'Nfix'
+        units    = unit_system%conc_tend_units
+        vgrid    = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%tot_Nfix, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        ! Zooplankton 3D diags
+        do n = 1,zooplankton_cnt
+          lname    = trim(zooplankton_settings(n)%lname) // ' Loss'
+          sname    = trim(zooplankton_settings(n)%sname) // '_loss'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' Basal Respiration'
+          sname    = trim(zooplankton_settings(n)%sname) // '_loss_basal'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .true.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_basal(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' Loss to POC'
+          sname    = trim(zooplankton_settings(n)%sname) // '_loss_poc'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_poc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' Loss to DOC'
+          sname    = trim(zooplankton_settings(n)%sname) // '_loss_doc'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_doc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss'
+          sname    = 'graze_' // trim(zooplankton_settings(n)%sname)
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to POC'
+          sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_poc'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_poc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to DOC'
+          sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_doc'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_doc(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ZOO TOT'
+          sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_zootot'
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_graze_zootot(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          do m=1, zooplankton_cnt
+              lname    = trim(zooplankton_settings(n)%lname) // ' grazing loss to ' // trim(zooplankton_settings(m)%lname)
+              sname    = 'graze_' // trim(zooplankton_settings(n)%sname) // '_' // trim(zooplankton_settings(m)%sname)
+              units    = unit_system%conc_tend_units
+              vgrid    = 'layer_avg'
+              truncate = .not. lecovars_full_depth_tavg
+              call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+                  ind%zoo_graze_zoo(n,m), marbl_status_log)
+              if (marbl_status_log%labort_marbl) then
+                call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+                return
+              end if
+          end do
+
+          lname    = trim(zooplankton_settings(n)%lname) // ' grazing gain'
+          sname    = 'x_graze_' // trim(zooplankton_settings(n)%sname)
+          units    = unit_system%conc_tend_units
+          vgrid    = 'layer_avg'
+          truncate = .not. lecovars_full_depth_tavg
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%x_graze_zoo(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+        end do
+      end if
 
       !-----------------------------------------------------------------
       ! Abiotic DIC diagnostics
@@ -3415,7 +3416,6 @@ contains
     use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
 
     use marbl_settings_mod, only : abio_dic_on
-    use marbl_settings_mod, only : base_bio_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
 
@@ -3460,6 +3460,7 @@ contains
     end associate
 
   end subroutine marbl_diagnostics_surface_flux_share
+
   !***********************************************************************
 
   subroutine store_diagnostics_carbonate(marbl_domain, carbonate,             &

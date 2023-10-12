@@ -52,7 +52,7 @@ print_status "CodeConsistency.py" >> ${RESULTS_CACHE}
 command -v pylint 2>&1 > /dev/null
 if [ $? -eq 0 ]; then
   cd ${MARBL_ROOT}/MARBL_tools
-  (set -x ; pylint --rcfile=pylintrc code_consistency.py netcdf_comparison.py)
+  (set -x ; pylint --rcfile=pylintrc code_consistency.py netcdf_comparison.py netcdf_metadata_check.py)
   STATUS=$(check_return $?)
   print_status "pylint" >> ${RESULTS_CACHE}
 fi
@@ -160,11 +160,17 @@ if [ "${STATUS}" == "PASS" ]; then
 
   if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
+    # Compare netCDF output to baseline
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs) vs baseline (cgs))" >> ${RESULTS_CACHE}
+
+    # Compare netCDF metadata to JSON file
+    (set -x ; ./netcdf_metadata_check.py)
+    STATUS=$(check_return $?)
+    print_status "netCDF metadata check" >> ${RESULTS_CACHE}
   fi
 
   # Initialize MARBL (with 4p2z), compute surface fluxes and interior tendencies
@@ -174,12 +180,18 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "call_compute_subroutines.py -s ../../input_files/settings/marbl_with_4p2z_cgs.settings" >> ${RESULTS_CACHE}
 
   if [ "${STATUS}" == "PASS" ]; then
+    # Compare netCDF output to baseline
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_4p2z.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, 4p2z) vs baseline (cgs, 4p2z))" >> ${RESULTS_CACHE}
+
+    # Compare netCDF metadata to JSON file
+    (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_4p2z_cgs.settings)
+    STATUS=$(check_return $?)
+    print_status "netCDF metadata check (4p2z)"
   fi
 
   # Initialize MARBL (with 4p2z), compute surface fluxes and interior tendencies in mks instead of cgs
@@ -204,12 +216,18 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "call_compute_subroutines.py -s ../../input_files/settings/marbl_with_abio_only.settings" >> ${RESULTS_CACHE}
 
   if [ "${STATUS}" == "PASS" ]; then
+    # Compare netCDF output to baseline
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
+
+    # Compare netCDF metadata to JSON file
+    (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_abio_only.settings)
+    STATUS=$(check_return $?)
+    print_status "netCDF metadata check (abio only)"
   fi
 
   # Initialize MARBL (with abio tracers), compute surface fluxes and interior tendencies in mks instead of cgs
@@ -234,12 +252,18 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "call_compute_subroutines.py -s ../../input_files/settings/marbl_with_ciso.settings" >> ${RESULTS_CACHE}
 
   if [ "${STATUS}" == "PASS" ]; then
+    # Compare netCDF output to baseline
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
     (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_ciso.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, with ciso) vs baseline (cgs, with ciso))" >> ${RESULTS_CACHE}
+
+    # Compare netCDF metadata to JSON file
+    (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_ciso.settings)
+    STATUS=$(check_return $?)
+    print_status "netCDF metadata check (ciso)"
   fi
 
   # Initialize MARBL (with ciso tracers), compute surface fluxes and interior tendencies in mks instead of cgs

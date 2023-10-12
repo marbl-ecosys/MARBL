@@ -707,7 +707,7 @@
             "base_bio_on": ".true."
          },
          "long_name": "((autotroph_lname)) Chlorophyll",
-         "units": "mmol/m^3"
+         "units": "mg/m^3"
       },
       "((autotroph_sname))Fe": {
          "dependencies": {
@@ -799,14 +799,14 @@
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractoy)",
+         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractory)",
          "units": "mmol/m^3"
       },
       "DO14Ctot": {
          "dependencies": {
             "ciso_on": ".true."
          },
-         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractoy)",
+         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractory)",
          "units": "mmol/m^3"
       },
       "DOC": {
