@@ -189,9 +189,9 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "netCDF Comparison (1 inst (cgs, 4p2z) vs baseline (cgs, 4p2z))" >> ${RESULTS_CACHE}
 
     # Compare netCDF metadata to JSON file
-    (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_4p2z_cgs.settings)
+    (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_4p2z_cgs.settings -f ../defaults/json/settings_latest+4p2z.json)
     STATUS=$(check_return $?)
-    print_status "netCDF metadata check (4p2z)"
+    print_status "netCDF metadata check (4p2z)" >> ${RESULTS_CACHE}
   fi
 
   # Initialize MARBL (with 4p2z), compute surface fluxes and interior tendencies in mks instead of cgs
@@ -227,7 +227,7 @@ if [ "${STATUS}" == "PASS" ]; then
     # Compare netCDF metadata to JSON file
     (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_abio_only.settings)
     STATUS=$(check_return $?)
-    print_status "netCDF metadata check (abio only)"
+    print_status "netCDF metadata check (abio only)" >> ${RESULTS_CACHE}
   fi
 
   # Initialize MARBL (with abio tracers), compute surface fluxes and interior tendencies in mks instead of cgs
@@ -263,7 +263,7 @@ if [ "${STATUS}" == "PASS" ]; then
     # Compare netCDF metadata to JSON file
     (set -x ; ./netcdf_metadata_check.py -s ../tests/input_files/settings/marbl_with_ciso.settings)
     STATUS=$(check_return $?)
-    print_status "netCDF metadata check (ciso)"
+    print_status "netCDF metadata check (ciso)" >> ${RESULTS_CACHE}
   fi
 
   # Initialize MARBL (with ciso tracers), compute surface fluxes and interior tendencies in mks instead of cgs

@@ -354,6 +354,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
     # (Fortran vars are case-insensitive)
     if varname.lower() in input_dict.keys():
         # Ignore ' and " from strings
+        from_input_dict = True
         def_value = input_dict[varname.lower()].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
@@ -361,11 +362,13 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
     # Note that if variable foo is an array, then foo = bar in the input file
     # should be treated as foo(1) = bar
     elif varname[-3:] == "(1)" and varname.lower()[:-3] in input_dict.keys():
+        from_input_dict = True
         def_value = input_dict[varname.lower()[:-3]].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
         del input_dict[varname.lower()[:-3]]
     else:
+        from_input_dict = False
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
         if isinstance(var_dict["default_value"], dict):
@@ -390,7 +393,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
             def_value = var_dict["default_value"]
 
     # call translate value from JSON file to format F90 expects
-    value = _translate_JSON_value(def_value, var_dict["datatype"], units, unit_system)
+    value = _translate_JSON_value(def_value, var_dict["datatype"], units, unit_system, from_input_dict=from_input_dict)
 
     # Append to config keywords if JSON wants it
     if "_append_to_config_keywords" in var_dict.keys():
@@ -407,7 +410,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
 
 ################################################################################
 
-def _translate_JSON_value(value, datatype, units, unit_system):
+def _translate_JSON_value(value, datatype, units, unit_system, from_input_dict=False):
     """ The value provided in the JSON file needs to be adjusted depending on the datatype
         of the variable. Strings need to be wrapped in "", and numbers written in
         scientific notation need to be formatted consistently.
@@ -426,9 +429,9 @@ def _translate_JSON_value(value, datatype, units, unit_system):
         # if variable is a real but value is unicode evaluate it
         if datatype == "real":
             if isinstance(value, str):
-                return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system))
+                return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system, from_input_dict))
             else:
-                return value*_get_scale_factor(units, unit_system)
+                return value*_get_scale_factor(units, unit_system, from_input_dict)
         # if variable is an integer but value is unicode convert it
         if datatype == "integer" and isinstance(value, str):
             return int(value)
@@ -451,7 +454,10 @@ def _unit_conv_dict():
     new_dict['cgs']['m^2/mg s/yr'] = {'new_units': 'cm^2/ng s/yr', 'scale_factor': 0.01}
     return new_dict
 
-def _get_scale_factor(units, unit_system):
+def _get_scale_factor(units, unit_system, from_input_dict=False):
+    if from_input_dict:
+        # Do not apply scale factor to user-specified values
+        return 1.
     try:
         return _unit_conv_dict()[unit_system][units]['scale_factor']
     except:
