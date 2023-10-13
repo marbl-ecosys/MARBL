@@ -3415,7 +3415,6 @@ contains
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
 
-    use marbl_settings_mod, only : abio_dic_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
 
@@ -3438,7 +3437,7 @@ contains
     !  calculate gas flux quantities if necessary
     !-----------------------------------------------------------------------
 
-    if (abio_dic_on .or. (base_bio_on .and. (lflux_gas_o2 .or. lflux_gas_co2))) then
+    if (lflux_gas_o2 .or. lflux_gas_co2) then
 
        diags(ind_diag%ECOSYS_IFRAC)%field_2d(:)     = ifrac(:)
        diags(ind_diag%ECOSYS_XKW)%field_2d(:)       = piston_velocity(:)
@@ -3450,7 +3449,7 @@ contains
     !  compute CO2 flux, computing disequilibrium one row at a time
     !-----------------------------------------------------------------------
 
-    if (abio_dic_on .or. (base_bio_on .and. lflux_gas_co2)) then
+    if (lflux_gas_co2) then
 
      diags(ind_diag%PV_CO2)%field_2d(:)      = pv_co2(:)
      diags(ind_diag%SCHMIDT_CO2)%field_2d(:) = schmidt_co2(:)

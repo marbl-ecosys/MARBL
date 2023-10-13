@@ -181,7 +181,6 @@ module marbl_interface_private_types
   ! that makes it easy to pass to the diagnostics
   type, public :: marbl_surface_flux_internal_type
      real (r8), allocatable, dimension(:)   :: piston_velocity
-     real (r8), allocatable, dimension(:)   :: xkw_ice
      real (r8), allocatable, dimension(:)   :: flux_co2
      real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (conc flux units)
      real (r8), allocatable, dimension(:)   :: co2star
@@ -1344,7 +1343,6 @@ contains
     integer (int_kind),                      intent(in)  :: num_elements
 
     allocate(this%piston_velocity(num_elements), source=c0)
-    allocate(this%xkw_ice(num_elements), source=c0)
     allocate(this%flux_co2(num_elements), source=c0)
     allocate(this%flux_alt_co2(num_elements), source=c0)
     allocate(this%co2star(num_elements), source=c0)
@@ -1373,7 +1371,6 @@ contains
 
     if (allocated(this%piston_velocity)) then
       deallocate(this%piston_velocity)
-      deallocate(this%xkw_ice)
       deallocate(this%flux_co2)
       deallocate(this%flux_alt_co2)
       deallocate(this%co2star)

@@ -419,7 +419,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     ciso_lsource_sink             = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lcheck_forcing                = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lecovars_full_depth_tavg      = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    lflux_gas_o2                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lflux_gas_o2                  = base_bio_on     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lflux_gas_co2                 = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lcompute_nhx_surface_emis     = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -710,6 +710,15 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+    sname     = 'lflux_gas_co2'
+    lname     = 'Run CO2 gas flux portion of the code'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => lflux_gas_co2
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
     if (ciso_on) then
       sname     = 'ciso_lsource_sink'
       lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
@@ -747,15 +756,6 @@ end subroutine marbl_settings_set_defaults_tracer_modules
       units     = 'unitless'
       datatype  = 'logical'
       lptr      => lflux_gas_o2
-      call this%add_var(sname, lname, units, datatype, category,       &
-                          marbl_status_log, lptr=lptr)
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-      sname     = 'lflux_gas_co2'
-      lname     = 'Run CO2 gas flux portion of the code'
-      units     = 'unitless'
-      datatype  = 'logical'
-      lptr      => lflux_gas_co2
       call this%add_var(sname, lname, units, datatype, category,       &
                           marbl_status_log, lptr=lptr)
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
@@ -2220,13 +2220,13 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     end if
 
     ! Abort if ciso is on but base_bio is not
-    if (ciso_on .and. (.not.base_bio_on)) then
+    if (ciso_on .and. (.not. base_bio_on)) then
       write(log_message, '(A)') 'You can not run with carbon isotopes without the base biotic tracers'
       call marbl_status_log%log_error(log_message, subname)
     end if
 
     ! Abort if GCM doesn't support global ops but configuration requires them
-    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
+    if (ladjust_bury_coeff .and. (.not. lallow_glo_ops)) then
       write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
              '.true. unless GCM can perform global operations'
       call marbl_status_log%log_error(log_message, subname)
@@ -2502,7 +2502,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     end if
 
     ! 4) Append new entry to list
-    if (.not.associated(this%vars)) then
+    if (.not. associated(this%vars)) then
       this%vars => new_entry
     else
       ll_prev%next => new_entry
@@ -2888,7 +2888,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
       new_entry%datatype = 'unknown'
     end if
 
-    if (.not.associated(this%VarsFromPut)) then
+    if (.not. associated(this%VarsFromPut)) then
       this%VarsFromPut => new_entry
     else
       this%LastVarFromPut%next => new_entry
@@ -2933,7 +2933,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
       if (case_insensitive_eq((ll_ptr%short_name), trim(var))) exit
       ll_ptr => ll_ptr%next
     end do
-    if (.not.associated(ll_ptr)) then
+    if (.not. associated(ll_ptr)) then
       write(log_message, "(2A)") trim(var), 'not found!'
       call marbl_status_log%log_error(log_message, subname)
       return
