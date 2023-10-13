@@ -42,11 +42,9 @@ module marbl_init_tracer_metadata_mod
     ! initialize tracer metatdata
     !-----------------------------------------------------------------------
 
+    marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
+
     if (base_bio_on) then
-
-      marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
-      marbl_tracer_metadata(:)%tracer_module_name = 'base_biotic'
-
       call init_non_autotroph_tracer_metadata('PO4', 'Dissolved Inorganic Phosphate', 'base_bio', &
                 unit_system, marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
       call init_non_autotroph_tracer_metadata('NO3', 'Dissolved Inorganic Nitrate', 'base_bio',   &
