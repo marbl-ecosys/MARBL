@@ -22,6 +22,10 @@
 ####################
 
 ECOSYS_IFRAC :
+   dependencies :
+      lflux_gas_o2 : .true.
+      lflux_gas_co2 : .true.
+   dependencies_or : true
    longname : Ice Fraction
    units : fraction
    vertical_grid : none
@@ -32,6 +36,10 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
+   dependencies :
+      lflux_gas_o2 : .true.
+      lflux_gas_co2 : .true.
+   dependencies_or : true
    longname : XKW
    units : cm/s
    vertical_grid : none
@@ -42,18 +50,26 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
+   dependencies :
+      lflux_gas_o2 : .true.
+      lflux_gas_co2 : .true.
+   dependencies_or : true
    longname : Atmospheric Pressure
    units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
 PV_CO2 :
+   dependencies :
+      lflux_gas_co2 : .true.
    longname : CO2 Piston Velocity
    units : cm/s
    vertical_grid : none
    frequency : never
    operator : average
 SCHMIDT_CO2 :
+   dependencies :
+      lflux_gas_co2 : .true.
    longname : CO2 Schmidt Number for base biotic tracers fluxes
    units : 1
    vertical_grid : none

@@ -1529,6 +1529,11 @@
       "vertical_grid": "none"
    },
    "ECOSYS_ATM_PRESS": {
+      "dependencies": {
+         "lflux_gas_co2": ".true.",
+         "lflux_gas_o2": ".true."
+      },
+      "dependencies_or": true,
       "frequency": "medium",
       "longname": "Atmospheric Pressure",
       "operator": "average",
@@ -1536,6 +1541,11 @@
       "vertical_grid": "none"
    },
    "ECOSYS_IFRAC": {
+      "dependencies": {
+         "lflux_gas_co2": ".true.",
+         "lflux_gas_o2": ".true."
+      },
+      "dependencies_or": true,
       "frequency": [
          "medium",
          "high"
@@ -1549,6 +1559,11 @@
       "vertical_grid": "none"
    },
    "ECOSYS_XKW": {
+      "dependencies": {
+         "lflux_gas_co2": ".true.",
+         "lflux_gas_o2": ".true."
+      },
+      "dependencies_or": true,
       "frequency": [
          "medium",
          "high"
@@ -2137,6 +2152,9 @@
       "vertical_grid": "layer_avg"
    },
    "PV_CO2": {
+      "dependencies": {
+         "lflux_gas_co2": ".true."
+      },
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
       "operator": "average",
@@ -2205,6 +2223,9 @@
       "vertical_grid": "layer_avg"
    },
    "SCHMIDT_CO2": {
+      "dependencies": {
+         "lflux_gas_co2": ".true."
+      },
       "frequency": "medium",
       "longname": "CO2 Schmidt Number for base biotic tracers fluxes",
       "operator": "average",

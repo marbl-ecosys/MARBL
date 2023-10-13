@@ -85,6 +85,8 @@ contains
        marbl_surface_flux_diags,      &
        marbl_status_log)
 
+    use marbl_settings_mod, only : lflux_gas_o2
+    use marbl_settings_mod, only : lflux_gas_co2
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : lvariable_PtoC
@@ -130,64 +132,68 @@ contains
               diags => marbl_surface_flux_diags   &
              )
 
-      lname    = 'Ice Fraction'
-      sname    = 'ECOSYS_IFRAC'
-      units    = 'fraction'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ECOSYS_IFRAC, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
+      if (lflux_gas_o2 .or. lflux_gas_co2) then
+        lname    = 'Ice Fraction'
+        sname    = 'ECOSYS_IFRAC'
+        units    = 'fraction'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ECOSYS_IFRAC, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'XKW'
+        sname    = 'ECOSYS_XKW'
+        units    = vel_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ECOSYS_XKW, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname    = 'Atmospheric Pressure'
+        sname    = 'ECOSYS_ATM_PRESS'
+        units    = 'atmospheres'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%ECOSYS_ATM_PRESS, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
       end if
 
-      lname    = 'XKW'
-      sname    = 'ECOSYS_XKW'
-      units    = vel_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ECOSYS_XKW, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
+      if (lflux_gas_co2) then
+        lname    = 'CO2 Piston Velocity'
+        sname    = 'PV_CO2'
+        units    = vel_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PV_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Atmospheric Pressure'
-      sname    = 'ECOSYS_ATM_PRESS'
-      units    = 'atmospheres'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%ECOSYS_ATM_PRESS, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'CO2 Piston Velocity'
-      sname    = 'PV_CO2'
-      units    = vel_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%PV_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
-      end if
-
-      lname    = 'CO2 Schmidt Number for base biotic tracers fluxes'
-      sname    = 'SCHMIDT_CO2'
-      units    = '1'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-           ind%SCHMIDT_CO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-        return
+        lname    = 'CO2 Schmidt Number for base biotic tracers fluxes'
+        sname    = 'SCHMIDT_CO2'
+        units    = '1'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%SCHMIDT_CO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
       end if
 
       if (base_bio_on) then

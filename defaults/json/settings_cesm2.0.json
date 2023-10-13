@@ -1139,7 +1139,6 @@
       "lflux_gas_co2": {
          "datatype": "logical",
          "default_value": ".true.",
-         "dependencies": "base_bio_on",
          "longname": "Control which portions of code are executed (useful for debugging)",
          "subcategory": "3. config flags",
          "units": "unitless"

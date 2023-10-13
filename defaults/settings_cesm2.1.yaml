@@ -332,7 +332,6 @@ general_parms :
       datatype : logical
       default_value : .true.
    lflux_gas_co2 :
-      dependencies : base_bio_on
       longname : Control which portions of code are executed (useful for debugging)
       subcategory : 3. config flags
       units : unitless

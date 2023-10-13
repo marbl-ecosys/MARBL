@@ -224,11 +224,19 @@ def meet_dependencies(input_dict, MARBL_settings):
     import logging
     logger = logging.getLogger(__name__)
 
+    dependencies_or = input_dict.get('dependencies_or', False)
     if "dependencies" in input_dict.keys():
-        for dependency in input_dict["dependencies"].keys():
-            if dependency not in MARBL_settings.settings_dict.keys():
-                logger.error("'%s' is not a valid dependency" % dependency)
-                abort(1)
-            if input_dict["dependencies"][dependency] != MARBL_settings.settings_dict[dependency]['value']:
-                return False
+        if dependencies_or:
+            for dependency in input_dict["dependencies"].keys():
+                if dependency in MARBL_settings.settings_dict.keys():
+                    if input_dict["dependencies"][dependency] == MARBL_settings.settings_dict[dependency]['value']:
+                        return True
+            return False
+        else:
+            for dependency in input_dict["dependencies"].keys():
+                if dependency not in MARBL_settings.settings_dict.keys():
+                    logger.error("'%s' is not a valid dependency" % dependency)
+                    abort(1)
+                if input_dict["dependencies"][dependency] != MARBL_settings.settings_dict[dependency]['value']:
+                    return False
     return True
