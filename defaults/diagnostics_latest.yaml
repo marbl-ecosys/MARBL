@@ -22,7 +22,7 @@
 ####################
 
 ECOSYS_IFRAC :
-   longname : Ice Fraction for base biotic tracer fluxes # Want more consistent capitalization
+   longname : Ice Fraction
    units : fraction
    vertical_grid : none
    frequency :
@@ -32,7 +32,7 @@ ECOSYS_IFRAC :
       - average
       - average
 ECOSYS_XKW :
-   longname : XKW for base biotic tracer fluxes # Want more consistent capitalization
+   longname : XKW
    units : cm/s
    vertical_grid : none
    frequency :
@@ -42,13 +42,13 @@ ECOSYS_XKW :
       - average
       - average
 ECOSYS_ATM_PRESS :
-   longname : Atmospheric Pressure for base biotic tracer fluxes # Want more consistent capitalization
+   longname : Atmospheric Pressure
    units : atmospheres
    vertical_grid : none
    frequency : medium
    operator : average
 PV_CO2 :
-   longname : CO2 Piston Velocity for base biotic tracer fluxes
+   longname : CO2 Piston Velocity
    units : cm/s
    vertical_grid : none
    frequency : never
@@ -126,7 +126,7 @@ pCO2SURF_ALT_CO2 :
 DpCO2 : &DpCO2
    dependencies :
       base_bio_on : .true.
-   longname : D pCO2 for base biotic tracer fluxes
+   longname : D pCO2
    units : ppmv
    vertical_grid : none
    frequency :
@@ -235,7 +235,7 @@ ABIO_pCO2 :
 ABIO_D14C_atm :
    dependencies :
       abio_dic_on : .true.
-   longname : Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes
+   longname : Atmospheric Delta 14C for Abiotic DIC tracer fluxes
    units : permil
    vertical_grid : none
    frequency : medium
@@ -308,7 +308,7 @@ d_SF_ABIO_DIC_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
       labio_derivative_diags : .true.
-   longname : Derivative of STF_ABIO_DIC wrt ABIO_DIC
+   longname : Derivative of ABIO_FG_DIC wrt ABIO_DIC
    units : cm/s
    vertical_grid : none
    frequency : never
@@ -317,7 +317,7 @@ d_SF_ABIO_DI14C_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
       labio_derivative_diags : .true.
-   longname : Derivative of STF_ABIO_DI14C wrt ABIO_DIC
+   longname : Derivative of ABIO_FG_DI14C wrt ABIO_DIC
    units : cm/s
    vertical_grid : none
    frequency : never
@@ -326,7 +326,7 @@ d_SF_ABIO_DI14C_d_ABIO_DI14C :
    dependencies :
       abio_dic_on : .true.
       labio_derivative_diags : .true.
-   longname : Derivative of STF_ABIO_DI14C wrt ABIO_DI14C
+   longname : Derivative of ABIO_FG_DI14C wrt ABIO_DI14C
    units : cm/s
    vertical_grid : none
    frequency : never
@@ -371,7 +371,7 @@ CISO_FG_d13C :
 CISO_D13C_atm :
    dependencies :
       ciso_on : .true.
-   longname : Atmospheric Delta 13C in permil
+   longname : Atmospheric Delta 13C
    units : permil
    vertical_grid : none
    frequency : medium
@@ -443,7 +443,7 @@ CISO_FG_d14C :
 CISO_D14C_atm :
    dependencies :
       ciso_on : .true.
-   longname : Atmospheric Delta 14C in permil
+   longname : Atmospheric Delta 14C
    units : permil
    vertical_grid : none
    frequency : medium
@@ -1443,7 +1443,7 @@ Nfix :
 ABIO_D14C_ocn :
    dependencies :
       abio_dic_on : .true.
-   longname : Oceanic Delta 14C in permil for Abiotic DIC tracer fluxes
+   longname : Oceanic Delta 14C for Abiotic DIC tracer fluxes
    units : permil
    vertical_grid : layer_avg
    frequency : medium

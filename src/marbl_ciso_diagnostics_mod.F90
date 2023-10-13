@@ -113,7 +113,7 @@ contains
        return
       end if
 
-      lname    = 'Atmospheric Delta 13C in permil'
+      lname    = 'Atmospheric Delta 13C'
       sname    = 'CISO_D13C_atm'
       units    = 'permil'
       vgrid    = 'none'
@@ -221,7 +221,7 @@ contains
        return
       end if
 
-      lname    = 'Atmospheric Delta 14C in permil'
+      lname    = 'Atmospheric Delta 14C'
       sname    = 'CISO_D14C_atm'
       units    = 'permil'
       vgrid    = 'none'

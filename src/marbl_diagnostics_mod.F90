@@ -130,7 +130,7 @@ contains
               diags => marbl_surface_flux_diags   &
              )
 
-      lname    = 'Ice Fraction for base biotic tracer fluxes'
+      lname    = 'Ice Fraction'
       sname    = 'ECOSYS_IFRAC'
       units    = 'fraction'
       vgrid    = 'none'
@@ -142,7 +142,7 @@ contains
         return
       end if
 
-      lname    = 'XKW for base biotic tracer fluxes'
+      lname    = 'XKW'
       sname    = 'ECOSYS_XKW'
       units    = vel_units
       vgrid    = 'none'
@@ -154,7 +154,7 @@ contains
         return
       end if
 
-      lname    = 'Atmospheric Pressure for base biotic tracer fluxes'
+      lname    = 'Atmospheric Pressure'
       sname    = 'ECOSYS_ATM_PRESS'
       units    = 'atmospheres'
       vgrid    = 'none'
@@ -166,7 +166,7 @@ contains
         return
       end if
 
-      lname    = 'CO2 Piston Velocity for base biotic tracer fluxes'
+      lname    = 'CO2 Piston Velocity'
       sname    = 'PV_CO2'
       units    = vel_units
       vgrid    = 'none'
@@ -263,7 +263,7 @@ contains
           return
         end if
 
-        lname    = 'D pCO2 for base biotic tracer fluxes'
+        lname    = 'D pCO2'
         sname    = 'DpCO2'
         units    = 'ppmv'
         vgrid    = 'none'

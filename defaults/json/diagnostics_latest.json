@@ -383,7 +383,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes",
+      "longname": "Atmospheric Delta 14C for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
@@ -393,7 +393,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Oceanic Delta 14C in permil for Abiotic DIC tracer fluxes",
+      "longname": "Oceanic Delta 14C for Abiotic DIC tracer fluxes",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
@@ -609,7 +609,7 @@
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atmospheric Delta 13C in permil",
+      "longname": "Atmospheric Delta 13C",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
@@ -619,7 +619,7 @@
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atmospheric Delta 14C in permil",
+      "longname": "Atmospheric Delta 14C",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
@@ -1510,7 +1510,7 @@
          "medium",
          "high"
       ],
-      "longname": "D pCO2 for base biotic tracer fluxes",
+      "longname": "D pCO2",
       "operator": [
          "average",
          "average"
@@ -1530,7 +1530,7 @@
    },
    "ECOSYS_ATM_PRESS": {
       "frequency": "medium",
-      "longname": "Atmospheric Pressure for base biotic tracer fluxes",
+      "longname": "Atmospheric Pressure",
       "operator": "average",
       "units": "atmospheres",
       "vertical_grid": "none"
@@ -1540,7 +1540,7 @@
          "medium",
          "high"
       ],
-      "longname": "Ice Fraction for base biotic tracer fluxes",
+      "longname": "Ice Fraction",
       "operator": [
          "average",
          "average"
@@ -1553,7 +1553,7 @@
          "medium",
          "high"
       ],
-      "longname": "XKW for base biotic tracer fluxes",
+      "longname": "XKW",
       "operator": [
          "average",
          "average"
@@ -2138,7 +2138,7 @@
    },
    "PV_CO2": {
       "frequency": "never",
-      "longname": "CO2 Piston Velocity for base biotic tracer fluxes",
+      "longname": "CO2 Piston Velocity",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -2367,7 +2367,7 @@
          "labio_derivative_diags": ".true."
       },
       "frequency": "never",
-      "longname": "Derivative of STF_ABIO_DI14C wrt ABIO_DI14C",
+      "longname": "Derivative of ABIO_FG_DI14C wrt ABIO_DI14C",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -2378,7 +2378,7 @@
          "labio_derivative_diags": ".true."
       },
       "frequency": "never",
-      "longname": "Derivative of STF_ABIO_DI14C wrt ABIO_DIC",
+      "longname": "Derivative of ABIO_FG_DI14C wrt ABIO_DIC",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
@@ -2389,7 +2389,7 @@
          "labio_derivative_diags": ".true."
       },
       "frequency": "never",
-      "longname": "Derivative of STF_ABIO_DIC wrt ABIO_DIC",
+      "longname": "Derivative of ABIO_FG_DIC wrt ABIO_DIC",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"

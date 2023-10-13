@@ -79,7 +79,7 @@ contains
        return
       end if
 
-      lname    = 'Atmospheric Delta 14C in permil for Abiotic DIC tracer fluxes'
+      lname    = 'Atmospheric Delta 14C for Abiotic DIC tracer fluxes'
       sname    = 'ABIO_D14C_atm'
       units    = 'permil'
       vgrid    = 'none'
@@ -151,7 +151,6 @@ contains
        return
       end if
 
-
       lname    = 'Surface Alkalinity for Abiotic DIC tracer fluxes'
       sname    = 'ABIO_ALK_SURF'
       units    = unit_system%alk_conc_units
@@ -189,7 +188,7 @@ contains
       end if
 
       if (labio_derivative_diags) then
-        lname    = 'Derivative of STF_ABIO_DIC wrt ABIO_DIC'
+        lname    = 'Derivative of ABIO_FG_DIC wrt ABIO_DIC'
         sname    = 'd_SF_ABIO_DIC_d_ABIO_DIC'
         units    = vel_units
         vgrid    = 'none'
@@ -201,7 +200,7 @@ contains
          return
         end if
 
-        lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DIC'
+        lname    = 'Derivative of ABIO_FG_DI14C wrt ABIO_DIC'
         sname    = 'd_SF_ABIO_DI14C_d_ABIO_DIC'
         units    = vel_units
         vgrid    = 'none'
@@ -213,7 +212,7 @@ contains
           return
         end if
 
-        lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DI14C'
+        lname    = 'Derivative of ABIO_FG_DI14C wrt ABIO_DI14C'
         sname    = 'd_SF_ABIO_DI14C_d_ABIO_DI14C'
         units    = vel_units
         vgrid    = 'none'
@@ -237,7 +236,7 @@ contains
               diags => marbl_interior_tendency_diags &
              )
 
-      lname    = 'Oceanic Delta 14C in permil for Abiotic DIC tracer fluxes'
+      lname    = 'Oceanic Delta 14C for Abiotic DIC tracer fluxes'
       sname    = 'ABIO_D14C_ocn'
       units    = 'permil'
       vgrid    = 'layer_avg'
