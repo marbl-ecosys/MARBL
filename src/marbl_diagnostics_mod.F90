@@ -467,92 +467,6 @@ contains
               diags => marbl_interior_tendency_diags   &
              )
 
-      ! Allocate memory for PFT diagnostics
-      if (.not.ind%lconstructed()) then
-        allocate(ind%N_lim_surf(autotroph_cnt))
-        allocate(ind%N_lim_Cweight_avg_100m(autotroph_cnt))
-        allocate(ind%P_lim_surf(autotroph_cnt))
-        allocate(ind%P_lim_Cweight_avg_100m(autotroph_cnt))
-        allocate(ind%Fe_lim_surf(autotroph_cnt))
-        allocate(ind%Fe_lim_Cweight_avg_100m(autotroph_cnt))
-        allocate(ind%SiO3_lim_surf(autotroph_cnt))
-        allocate(ind%SiO3_lim_Cweight_avg_100m(autotroph_cnt))
-        allocate(ind%C_lim_surf(autotroph_cnt))
-        allocate(ind%C_lim_Cweight_avg_100m(autotroph_cnt))
-        allocate(ind%light_lim_surf(autotroph_cnt))
-        allocate(ind%light_lim_Cweight_avg_100m(autotroph_cnt))
-        allocate(ind%photoC_zint(autotroph_cnt))
-        allocate(ind%photoC_zint_100m(autotroph_cnt))
-        allocate(ind%photoC_NO3_zint(autotroph_cnt))
-        allocate(ind%CaCO3_form_zint(autotroph_cnt))
-        allocate(ind%CaCO3_form_zint_100m(autotroph_cnt))
-        allocate(ind%auto_graze_zint(autotroph_cnt))
-        allocate(ind%auto_graze_zint_100m(autotroph_cnt))
-        allocate(ind%auto_graze_poc_zint(autotroph_cnt))
-        allocate(ind%auto_graze_poc_zint_100m(autotroph_cnt))
-        allocate(ind%auto_graze_doc_zint(autotroph_cnt))
-        allocate(ind%auto_graze_doc_zint_100m(autotroph_cnt))
-        allocate(ind%auto_graze_zoo_zint(autotroph_cnt, zooplankton_cnt))
-        allocate(ind%auto_graze_zoo_zint_100m(autotroph_cnt, zooplankton_cnt))
-        allocate(ind%auto_loss_zint(autotroph_cnt))
-        allocate(ind%auto_loss_zint_100m(autotroph_cnt))
-        allocate(ind%auto_loss_poc_zint(autotroph_cnt))
-        allocate(ind%auto_loss_poc_zint_100m(autotroph_cnt))
-        allocate(ind%auto_loss_doc_zint(autotroph_cnt))
-        allocate(ind%auto_loss_doc_zint_100m(autotroph_cnt))
-        allocate(ind%auto_agg_zint(autotroph_cnt))
-        allocate(ind%auto_agg_zint_100m(autotroph_cnt))
-        allocate(ind%zoo_loss_zint(zooplankton_cnt))
-        allocate(ind%zoo_loss_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_loss_zint_150m(zooplankton_cnt))
-        allocate(ind%zoo_loss_basal_zint(zooplankton_cnt))
-        allocate(ind%zoo_loss_basal_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_loss_poc_zint(zooplankton_cnt))
-        allocate(ind%zoo_loss_poc_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_loss_doc_zint(zooplankton_cnt))
-        allocate(ind%zoo_loss_doc_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_graze_zint(zooplankton_cnt))
-        allocate(ind%zoo_graze_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_graze_poc_zint(zooplankton_cnt))
-        allocate(ind%zoo_graze_poc_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_graze_doc_zint(zooplankton_cnt))
-        allocate(ind%zoo_graze_doc_zint_100m(zooplankton_cnt))
-        allocate(ind%zoo_graze_zoo_zint(zooplankton_cnt, zooplankton_cnt))
-        allocate(ind%zoo_graze_zoo_zint_100m(zooplankton_cnt, zooplankton_cnt))
-        allocate(ind%x_graze_zoo_zint(zooplankton_cnt))
-        allocate(ind%x_graze_zoo_zint_100m(zooplankton_cnt))
-        allocate(ind%Qp(autotroph_cnt))
-        allocate(ind%photoC(autotroph_cnt))
-        allocate(ind%photoC_NO3(autotroph_cnt))
-        allocate(ind%photoFe(autotroph_cnt))
-        allocate(ind%photoNO3(autotroph_cnt))
-        allocate(ind%photoNH4(autotroph_cnt))
-        allocate(ind%DOP_uptake(autotroph_cnt))
-        allocate(ind%PO4_uptake(autotroph_cnt))
-        allocate(ind%auto_graze(autotroph_cnt))
-        allocate(ind%auto_graze_poc(autotroph_cnt))
-        allocate(ind%auto_graze_doc(autotroph_cnt))
-        allocate(ind%auto_graze_zootot(autotroph_cnt))
-        allocate(ind%auto_graze_zoo(autotroph_cnt, zooplankton_cnt))
-        allocate(ind%auto_loss(autotroph_cnt))
-        allocate(ind%auto_loss_poc(autotroph_cnt))
-        allocate(ind%auto_loss_doc(autotroph_cnt))
-        allocate(ind%auto_agg(autotroph_cnt))
-        allocate(ind%bSi_form(autotroph_cnt))
-        allocate(ind%CaCO3_form(autotroph_cnt))
-        allocate(ind%Nfix(autotroph_cnt))
-        allocate(ind%zoo_loss(zooplankton_cnt))
-        allocate(ind%zoo_loss_basal(zooplankton_cnt))
-        allocate(ind%zoo_loss_poc(zooplankton_cnt))
-        allocate(ind%zoo_loss_doc(zooplankton_cnt))
-        allocate(ind%zoo_graze(zooplankton_cnt))
-        allocate(ind%zoo_graze_poc(zooplankton_cnt))
-        allocate(ind%zoo_graze_doc(zooplankton_cnt))
-        allocate(ind%zoo_graze_zootot(zooplankton_cnt))
-        allocate(ind%zoo_graze_zoo(zooplankton_cnt, zooplankton_cnt))
-        allocate(ind%x_graze_zoo(zooplankton_cnt))
-      end if
-
       if (base_bio_on) then
         ! General 2D diags
         lname = 'Calcite Saturation Depth'
@@ -929,6 +843,41 @@ contains
         end if
 
         ! Autotroph 2D diags
+        if (.not.ind%lallocated()) then
+          allocate(ind%N_lim_surf(autotroph_cnt))
+          allocate(ind%N_lim_Cweight_avg_100m(autotroph_cnt))
+          allocate(ind%P_lim_surf(autotroph_cnt))
+          allocate(ind%P_lim_Cweight_avg_100m(autotroph_cnt))
+          allocate(ind%Fe_lim_surf(autotroph_cnt))
+          allocate(ind%Fe_lim_Cweight_avg_100m(autotroph_cnt))
+          allocate(ind%SiO3_lim_surf(autotroph_cnt))
+          allocate(ind%SiO3_lim_Cweight_avg_100m(autotroph_cnt))
+          allocate(ind%C_lim_surf(autotroph_cnt))
+          allocate(ind%C_lim_Cweight_avg_100m(autotroph_cnt))
+          allocate(ind%light_lim_surf(autotroph_cnt))
+          allocate(ind%light_lim_Cweight_avg_100m(autotroph_cnt))
+          allocate(ind%photoC_zint(autotroph_cnt))
+          allocate(ind%photoC_zint_100m(autotroph_cnt))
+          allocate(ind%photoC_NO3_zint(autotroph_cnt))
+          allocate(ind%CaCO3_form_zint(autotroph_cnt))
+          allocate(ind%CaCO3_form_zint_100m(autotroph_cnt))
+          allocate(ind%auto_graze_zint(autotroph_cnt))
+          allocate(ind%auto_graze_zint_100m(autotroph_cnt))
+          allocate(ind%auto_graze_poc_zint(autotroph_cnt))
+          allocate(ind%auto_graze_poc_zint_100m(autotroph_cnt))
+          allocate(ind%auto_graze_doc_zint(autotroph_cnt))
+          allocate(ind%auto_graze_doc_zint_100m(autotroph_cnt))
+          allocate(ind%auto_graze_zoo_zint(autotroph_cnt, zooplankton_cnt))
+          allocate(ind%auto_graze_zoo_zint_100m(autotroph_cnt, zooplankton_cnt))
+          allocate(ind%auto_loss_zint(autotroph_cnt))
+          allocate(ind%auto_loss_zint_100m(autotroph_cnt))
+          allocate(ind%auto_loss_poc_zint(autotroph_cnt))
+          allocate(ind%auto_loss_poc_zint_100m(autotroph_cnt))
+          allocate(ind%auto_loss_doc_zint(autotroph_cnt))
+          allocate(ind%auto_loss_doc_zint_100m(autotroph_cnt))
+          allocate(ind%auto_agg_zint(autotroph_cnt))
+          allocate(ind%auto_agg_zint_100m(autotroph_cnt))
+        end if
         do n=1,autotroph_cnt
           lname = trim(autotroph_settings(n)%lname) // ' N Limitation, Surface'
           sname = trim(autotroph_settings(n)%sname) // '_N_lim_surf'
@@ -1373,6 +1322,27 @@ contains
         end if
 
         ! Zooplankton 2D diags
+        if (.not.ind%lallocated()) then
+          allocate(ind%zoo_loss_zint(zooplankton_cnt))
+          allocate(ind%zoo_loss_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_loss_zint_150m(zooplankton_cnt))
+          allocate(ind%zoo_loss_basal_zint(zooplankton_cnt))
+          allocate(ind%zoo_loss_basal_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_loss_poc_zint(zooplankton_cnt))
+          allocate(ind%zoo_loss_poc_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_loss_doc_zint(zooplankton_cnt))
+          allocate(ind%zoo_loss_doc_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_graze_zint(zooplankton_cnt))
+          allocate(ind%zoo_graze_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_graze_poc_zint(zooplankton_cnt))
+          allocate(ind%zoo_graze_poc_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_graze_doc_zint(zooplankton_cnt))
+          allocate(ind%zoo_graze_doc_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_graze_zoo_zint(zooplankton_cnt, zooplankton_cnt))
+          allocate(ind%zoo_graze_zoo_zint_100m(zooplankton_cnt, zooplankton_cnt))
+          allocate(ind%x_graze_zoo_zint(zooplankton_cnt))
+          allocate(ind%x_graze_zoo_zint_100m(zooplankton_cnt))
+        end if
         do n = 1,zooplankton_cnt
           lname = trim(zooplankton_settings(n)%lname) // ' Loss Vertical Integral'
           sname = trim(zooplankton_settings(n)%sname) // '_loss_zint'
@@ -2604,6 +2574,28 @@ contains
         end if
 
         ! Autotroph 3D diags
+        if (.not.ind%lallocated()) then
+          allocate(ind%Qp(autotroph_cnt))
+          allocate(ind%photoC(autotroph_cnt))
+          allocate(ind%photoC_NO3(autotroph_cnt))
+          allocate(ind%photoFe(autotroph_cnt))
+          allocate(ind%photoNO3(autotroph_cnt))
+          allocate(ind%photoNH4(autotroph_cnt))
+          allocate(ind%DOP_uptake(autotroph_cnt))
+          allocate(ind%PO4_uptake(autotroph_cnt))
+          allocate(ind%auto_graze(autotroph_cnt))
+          allocate(ind%auto_graze_poc(autotroph_cnt))
+          allocate(ind%auto_graze_doc(autotroph_cnt))
+          allocate(ind%auto_graze_zootot(autotroph_cnt))
+          allocate(ind%auto_graze_zoo(autotroph_cnt, zooplankton_cnt))
+          allocate(ind%auto_loss(autotroph_cnt))
+          allocate(ind%auto_loss_poc(autotroph_cnt))
+          allocate(ind%auto_loss_doc(autotroph_cnt))
+          allocate(ind%auto_agg(autotroph_cnt))
+          allocate(ind%bSi_form(autotroph_cnt))
+          allocate(ind%CaCO3_form(autotroph_cnt))
+          allocate(ind%Nfix(autotroph_cnt))
+        end if
         do n=1,autotroph_cnt
           if (lvariable_PtoC) then
             lname = trim(autotroph_settings(n)%lname) // ' P:C ratio'
@@ -2902,6 +2894,18 @@ contains
         end if
 
         ! Zooplankton 3D diags
+        if (.not.ind%lallocated()) then
+          allocate(ind%zoo_loss(zooplankton_cnt))
+          allocate(ind%zoo_loss_basal(zooplankton_cnt))
+          allocate(ind%zoo_loss_poc(zooplankton_cnt))
+          allocate(ind%zoo_loss_doc(zooplankton_cnt))
+          allocate(ind%zoo_graze(zooplankton_cnt))
+          allocate(ind%zoo_graze_poc(zooplankton_cnt))
+          allocate(ind%zoo_graze_doc(zooplankton_cnt))
+          allocate(ind%zoo_graze_zootot(zooplankton_cnt))
+          allocate(ind%zoo_graze_zoo(zooplankton_cnt, zooplankton_cnt))
+          allocate(ind%x_graze_zoo(zooplankton_cnt))
+        end if
         do n = 1,zooplankton_cnt
           lname    = trim(zooplankton_settings(n)%lname) // ' Loss'
           sname    = trim(zooplankton_settings(n)%sname) // '_loss'
@@ -3058,7 +3062,7 @@ contains
        ! FIXME #60: this approach is not thread-safe
        !    i.e. if this is called from 2 threads simulatneously, a race condition
        !    on the allocation status check and allocation is introduced
-       if (.not.ind%lconstructed()) then
+       if (.not. ind%lallocated()) then
           allocate(ind%restore_tend(marbl_tracer_indices%total_cnt))
        end if
 

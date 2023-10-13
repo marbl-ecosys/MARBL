@@ -608,7 +608,7 @@ contains
       end if
 
       !  Nonstandard autotroph 2D and 3D fields for each autotroph
-      if (.not.ind%lconstructed()) then
+      if (.not.ind%lallocated()) then
        allocate(ind%CISO_eps_autotroph(autotroph_cnt))
        allocate(ind%CISO_mui_to_co2star(autotroph_cnt))
        allocate(ind%CISO_Ca13CO3_form(autotroph_cnt))
