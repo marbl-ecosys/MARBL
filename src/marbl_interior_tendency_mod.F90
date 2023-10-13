@@ -204,7 +204,6 @@ contains
     real (r8) :: Lig_photochem(domain%km)    ! loss of Fe-binding Ligand from UV radiation
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
-    real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
 
     ! NOTE(bja, 2015-07) vectorization: arrays that are (n, k, c, i)
     ! probably can not be vectorized reasonably over c without memory
@@ -235,7 +234,7 @@ contains
     !-----------------------------------------------------------------------
 
     call setup_local_tracers(domain%kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
-         tracer_local(:,:), zooplankton_local, totalChl_local)
+         tracer_local(:,:), zooplankton_local)
 
     !-----------------------------------------------------------------------
     !  Set all interior diagnostics to zero
@@ -371,7 +370,7 @@ contains
     end if
 
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
-                     totalChl_local, unit_system, PAR)
+                     autotroph_local, unit_system, PAR)
 
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
@@ -546,7 +545,7 @@ contains
   !***********************************************************************
 
   subroutine compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_ind, &
-                         totalChl_local, unit_system, PAR)
+                         autotroph_local, unit_system, PAR)
 
     !-----------------------------------------------------------------------
     !  compute PAR related quantities
@@ -558,12 +557,12 @@ contains
 
     ! PAR is intent(inout) because it components, while entirely set here, are allocated elsewhere
 
-    type(marbl_domain_type)                   , intent(in)    :: domain
-    type(marbl_forcing_fields_type)           , intent(in)    :: interior_tendency_forcings(:)
-    type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
-    real(r8)                                  , intent(in)    :: totalChl_local(:)
-    type(unit_system_type)                    , intent(in)    :: unit_system
-    type(marbl_PAR_type)                      , intent(inout) :: PAR
+    type(marbl_domain_type),                             intent(in)    :: domain
+    type(marbl_forcing_fields_type),                     intent(in)    :: interior_tendency_forcings(:)
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: interior_tendency_forcing_ind
+    type(autotroph_local_type),                          intent(in)    :: autotroph_local
+    type(unit_system_type),                              intent(in)    :: unit_system
+    type(marbl_PAR_type),                                intent(inout) :: PAR
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -574,6 +573,7 @@ contains
     real (r8), parameter :: PAR_threshold = 1.0e-19_r8
 
     real (r8) :: WORK1(domain%kmt)
+    real (r8) :: totalChl_local(domain%kmt)
     integer(int_kind) :: k, subcol_ind
     !-----------------------------------------------------------------------
 
@@ -624,7 +624,8 @@ contains
       ! compute attenuation coefficient over column
       !-----------------------------------------------------------------------
 
-      WORK1(:) = max(totalChl_local(1:column_kmt), 0.02_r8)
+      totalChl_local(:) = sum(autotroph_local%Chl(:,1:column_kmt), dim=1)
+      WORK1(:) = max(totalChl_local(:), 0.02_r8)
       do k = 1, column_kmt
         if (WORK1(k) < 0.13224_r8) then
           PAR%KPARdz(k) = (0.0919_r8*unit_system%len2m)*(WORK1(k)**0.3536_r8)
@@ -752,7 +753,7 @@ contains
   !***********************************************************************
 
   subroutine setup_local_tracers(column_kmt, marbl_tracer_indices, tracers, &
-       autotroph_local, tracer_local, zooplankton_local, totalChl_local)
+       autotroph_local, tracer_local, zooplankton_local)
 
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
@@ -765,7 +766,6 @@ contains
     type(autotroph_local_type)   , intent(inout) :: autotroph_local
     real (r8)                    , intent(out)   :: tracer_local(:,:)
     type(zooplankton_local_type) , intent(inout) :: zooplankton_local
-    real (r8)                    , intent(out)   :: totalChl_local(:)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -845,13 +845,6 @@ contains
 
     ! autotroph consistency check
     call autotroph_zero_consistency_enforce(column_kmt, marbl_tracer_indices, autotroph_local)
-
-    ! set totalChl_local
-    if (autotroph_cnt > 0) then
-      totalChl_local = sum(autotroph_local%Chl(:,:), dim=1)
-    else
-      totalChl_local = c0
-    end if
 
   end subroutine setup_local_tracers
 
