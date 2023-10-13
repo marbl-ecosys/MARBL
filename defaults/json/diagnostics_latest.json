@@ -363,7 +363,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Surface Alkalinity for Abiotic DIC tracer fluxes",
+      "longname": "Surface Alkalinity for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "meq/m^3",
       "vertical_grid": "none"
@@ -373,7 +373,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "CO2 Star for Abiotic DIC tracer fluxes",
+      "longname": "CO2 Star for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -383,7 +383,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atmospheric Delta 14C for Abiotic DIC tracer fluxes",
+      "longname": "Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
@@ -393,7 +393,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Oceanic Delta 14C for Abiotic DIC tracer fluxes",
+      "longname": "Oceanic Delta 14C for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "layer_avg"
@@ -403,7 +403,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "D CO2 Star for Abiotic DIC tracer fluxes",
+      "longname": "D CO2 Star for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
@@ -413,7 +413,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "D pCO2 for Abiotic DIC tracer fluxes",
+      "longname": "D pCO2 for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -423,7 +423,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Surface gas flux of abiotic DI14C",
+      "longname": "Surface Gas Flux of Abiotic DI14C",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -433,7 +433,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Surface gas flux of abiotic DIC",
+      "longname": "Surface Gas Flux of Abiotic DIC",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -443,7 +443,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Surface pH for Abiotic DIC tracer fluxes",
+      "longname": "Surface pH for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": 1,
       "vertical_grid": "none"
@@ -453,7 +453,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes",
+      "longname": "CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "ppm",
       "vertical_grid": "none"
@@ -463,7 +463,7 @@
          "abio_dic_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Surface pCO2 for Abiotic DIC tracer fluxes",
+      "longname": "Surface pCO2 for Abiotic DIC Tracer Fluxes",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -1497,7 +1497,7 @@
          "base_bio_on": ".true."
       },
       "frequency": "never",
-      "longname": "Dust Flux",
+      "longname": "Atmospheric Dust Flux",
       "operator": "average",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
@@ -2166,7 +2166,7 @@
          "base_bio_on": ".true."
       },
       "frequency": "never",
-      "longname": "PV_O2",
+      "longname": "O2 Piston Velocity",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"

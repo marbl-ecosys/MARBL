@@ -462,14 +462,14 @@ module marbl_interface_private_types
      integer(int_kind) :: DpCO2
      integer(int_kind) :: PV_CO2
      integer(int_kind) :: SCHMIDT_CO2
-     integer(int_kind) :: DIC_GAS_FLUX
+     integer(int_kind) :: FG_CO2
      integer(int_kind) :: PH
      integer(int_kind) :: ATM_CO2
      integer(int_kind) :: CO2STAR_ALT_CO2
      integer(int_kind) :: DCO2STAR_ALT_CO2
      integer(int_kind) :: pCO2SURF_ALT_CO2
      integer(int_kind) :: DpCO2_ALT_CO2
-     integer(int_kind) :: DIC_GAS_FLUX_ALT_CO2
+     integer(int_kind) :: FG_CO2_ALT_CO2
      integer(int_kind) :: PH_ALT_CO2
      integer(int_kind) :: ATM_ALT_CO2
      integer(int_kind) :: IRON_FLUX

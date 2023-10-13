@@ -197,7 +197,7 @@ contains
       end if
 
       if (base_bio_on) then
-        lname    = 'PV_O2'
+        lname    = 'O2 Piston Velocity'
         sname    = 'PV_O2'
         units    = vel_units
         vgrid    = 'none'
@@ -287,7 +287,7 @@ contains
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-            ind%DIC_GAS_FLUX, marbl_status_log)
+            ind%FG_CO2, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -371,7 +371,7 @@ contains
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
-            ind%DIC_GAS_FLUX_ALT_CO2, marbl_status_log)
+            ind%FG_CO2_ALT_CO2, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -413,7 +413,7 @@ contains
           return
         end if
 
-        lname    = 'Dust Flux'
+        lname    = 'Atmospheric Dust Flux'
         sname    = 'DUST_FLUX'
         write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
         vgrid    = 'none'
@@ -3378,11 +3378,11 @@ contains
        diags(ind_diag%pCO2SURF_ALT_CO2)%field_2d(:)     = pco2surf_alt(:)
        diags(ind_diag%DpCO2_ALT_CO2)%field_2d(:)        = dpco2_alt(:)
 
-       diags(ind_diag%DIC_GAS_FLUX)%field_2d(:)         = flux_co2(:)
+       diags(ind_diag%FG_CO2)%field_2d(:)               = flux_co2(:)
        diags(ind_diag%PH)%field_2d(:)                   = ph_prev(:)
        diags(ind_diag%ATM_CO2)%field_2d(:)              = xco2(:)
 
-       diags(ind_diag%DIC_GAS_FLUX_ALT_CO2)%field_2d(:) = flux_alt_co2(:)
+       diags(ind_diag%FG_CO2_ALT_CO2)%field_2d(:)       = flux_alt_co2(:)
        diags(ind_diag%PH_ALT_CO2)%field_2d(:)           = ph_prev_alt_co2(:)
        diags(ind_diag%ATM_ALT_CO2)%field_2d(:)          = xco2_alt_co2(:)
 

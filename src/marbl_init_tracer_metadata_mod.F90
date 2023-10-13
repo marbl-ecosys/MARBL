@@ -294,35 +294,29 @@ module marbl_init_tracer_metadata_mod
        endif
 
        ! ciso tracers
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
-       if (n .gt. 0) then
+       if (ciso_on) then
+          n = marbl_tracer_indices%auto_inds(auto_ind)%C13_ind
           marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // '13C'
           marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon-13'
           marbl_tracer_metadata(n)%units      = unit_system%conc_units
           marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
           marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
-       end if
 
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
-       if (n .gt. 0) then
+          n = marbl_tracer_indices%auto_inds(auto_ind)%C14_ind
           marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // '14C'
           marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon-14'
           marbl_tracer_metadata(n)%units      = unit_system%conc_units
           marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
           marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
-       end if
 
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-       if (n .gt. 0) then
+          n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
           marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca13CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca13CO3'
           marbl_tracer_metadata(n)%units      = unit_system%conc_units
           marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
           marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
-       end if
 
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-       if (n .gt. 0) then
+          n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
           marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca14CO3'
           marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca14CO3'
           marbl_tracer_metadata(n)%units      = unit_system%conc_units

@@ -67,7 +67,7 @@ contains
               diags => marbl_surface_flux_diags &
              )
 
-      lname    = 'CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes'
+      lname    = 'CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_pCO2'
       units    = 'ppm'
       vgrid    = 'none'
@@ -79,7 +79,7 @@ contains
        return
       end if
 
-      lname    = 'Atmospheric Delta 14C for Abiotic DIC tracer fluxes'
+      lname    = 'Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_D14C_atm'
       units    = 'permil'
       vgrid    = 'none'
@@ -91,7 +91,7 @@ contains
        return
       end if
 
-      lname    = 'CO2 Star for Abiotic DIC tracer fluxes'
+      lname    = 'CO2 Star for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_CO2STAR'
       units    = unit_system%conc_units
       vgrid    = 'none'
@@ -103,7 +103,7 @@ contains
        return
       end if
 
-      lname    = 'D CO2 Star for Abiotic DIC tracer fluxes'
+      lname    = 'D CO2 Star for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_DCO2STAR'
       units    = unit_system%conc_units
       vgrid    = 'none'
@@ -115,7 +115,7 @@ contains
        return
       end if
 
-      lname    = 'Surface pCO2 for Abiotic DIC tracer fluxes'
+      lname    = 'Surface pCO2 for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_pCO2SURF'
       units    = 'ppmv'
       vgrid    = 'none'
@@ -127,7 +127,7 @@ contains
        return
       end if
 
-      lname    = 'D pCO2 for Abiotic DIC tracer fluxes'
+      lname    = 'D pCO2 for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_DpCO2'
       units    = 'ppmv'
       vgrid    = 'none'
@@ -139,7 +139,7 @@ contains
        return
       end if
 
-      lname    = 'Surface pH for Abiotic DIC tracer fluxes'
+      lname    = 'Surface pH for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_PH'
       units    = '1'
       vgrid    = 'none'
@@ -151,7 +151,7 @@ contains
        return
       end if
 
-      lname    = 'Surface Alkalinity for Abiotic DIC tracer fluxes'
+      lname    = 'Surface Alkalinity for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_ALK_SURF'
       units    = unit_system%alk_conc_units
       vgrid    = 'none'
@@ -163,7 +163,7 @@ contains
        return
       end if
 
-      lname    = 'Surface gas flux of abiotic DIC'
+      lname    = 'Surface Gas Flux of Abiotic DIC'
       sname    = 'ABIO_FG_DIC'
       units    = unit_system%conc_flux_units
       vgrid    = 'none'
@@ -175,7 +175,7 @@ contains
        return
       end if
 
-      lname    = 'Surface gas flux of abiotic DI14C'
+      lname    = 'Surface Gas Flux of Abiotic DI14C'
       sname    = 'ABIO_FG_DI14C'
       units    = unit_system%conc_flux_units
       vgrid    = 'none'
@@ -236,7 +236,7 @@ contains
               diags => marbl_interior_tendency_diags &
              )
 
-      lname    = 'Oceanic Delta 14C for Abiotic DIC tracer fluxes'
+      lname    = 'Oceanic Delta 14C for Abiotic DIC Tracer Fluxes'
       sname    = 'ABIO_D14C_ocn'
       units    = 'permil'
       vgrid    = 'layer_avg'

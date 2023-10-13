@@ -83,7 +83,7 @@ SCHMIDT_CO2 :
 PV_O2 :
    dependencies :
       base_bio_on : .true.
-   longname : PV_O2 # Should be "O2 Piston Velocity" to match PV_CO2?
+   longname : O2 Piston Velocity
    units : cm/s
    vertical_grid : none
    frequency : never
@@ -206,7 +206,7 @@ IRON_FLUX :
 DUST_FLUX :
    dependencies :
       base_bio_on : .true.
-   longname : Dust Flux # Should be "Atmospheric Dust Flux?"
+   longname : Atmospheric Dust Flux
    units : g/cm^2/s
    vertical_grid : none
    frequency : never
@@ -243,7 +243,7 @@ NHx_SURFACE_EMIS :
 ABIO_pCO2 :
    dependencies :
       abio_dic_on : .true.
-   longname : CO2 atmospheric partial pressure for Abiotic DIC tracer fluxes
+   longname : CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes
    units : ppm
    vertical_grid : none
    frequency : medium
@@ -251,7 +251,7 @@ ABIO_pCO2 :
 ABIO_D14C_atm :
    dependencies :
       abio_dic_on : .true.
-   longname : Atmospheric Delta 14C for Abiotic DIC tracer fluxes
+   longname : Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes
    units : permil
    vertical_grid : none
    frequency : medium
@@ -259,7 +259,7 @@ ABIO_D14C_atm :
 ABIO_CO2STAR :
    dependencies :
       abio_dic_on : .true.
-   longname : CO2 Star for Abiotic DIC tracer fluxes
+   longname : CO2 Star for Abiotic DIC Tracer Fluxes
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
@@ -267,7 +267,7 @@ ABIO_CO2STAR :
 ABIO_DCO2STAR :
    dependencies :
       abio_dic_on : .true.
-   longname : D CO2 Star for Abiotic DIC tracer fluxes
+   longname : D CO2 Star for Abiotic DIC Tracer Fluxes
    units : mmol/m^3
    vertical_grid : none
    frequency : medium
@@ -275,7 +275,7 @@ ABIO_DCO2STAR :
 ABIO_pCO2SURF :
    dependencies :
       abio_dic_on : .true.
-   longname : Surface pCO2 for Abiotic DIC tracer fluxes
+   longname : Surface pCO2 for Abiotic DIC Tracer Fluxes
    units : ppmv
    vertical_grid : none
    frequency : medium
@@ -283,7 +283,7 @@ ABIO_pCO2SURF :
 ABIO_DpCO2 :
    dependencies :
       abio_dic_on : .true.
-   longname : D pCO2 for Abiotic DIC tracer fluxes
+   longname : D pCO2 for Abiotic DIC Tracer Fluxes
    units : ppmv
    vertical_grid : none
    frequency : medium
@@ -291,7 +291,7 @@ ABIO_DpCO2 :
 ABIO_PH :
    dependencies :
       abio_dic_on : .true.
-   longname : Surface pH for Abiotic DIC tracer fluxes
+   longname : Surface pH for Abiotic DIC Tracer Fluxes
    units : 1
    vertical_grid : none
    frequency : medium
@@ -299,7 +299,7 @@ ABIO_PH :
 ABIO_ALK_SURF :
    dependencies :
       abio_dic_on : .true.
-   longname : Surface Alkalinity for Abiotic DIC tracer fluxes
+   longname : Surface Alkalinity for Abiotic DIC Tracer Fluxes
    units : meq/m^3
    vertical_grid : none
    frequency : medium
@@ -307,7 +307,7 @@ ABIO_ALK_SURF :
 ABIO_FG_DIC :
    dependencies :
       abio_dic_on : .true.
-   longname : Surface gas flux of abiotic DIC
+   longname : Surface Gas Flux of Abiotic DIC
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
@@ -315,7 +315,7 @@ ABIO_FG_DIC :
 ABIO_FG_DI14C :
    dependencies :
       abio_dic_on : .true.
-   longname : Surface gas flux of abiotic DI14C
+   longname : Surface Gas Flux of Abiotic DI14C
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
@@ -1459,7 +1459,7 @@ Nfix :
 ABIO_D14C_ocn :
    dependencies :
       abio_dic_on : .true.
-   longname : Oceanic Delta 14C for Abiotic DIC tracer fluxes
+   longname : Oceanic Delta 14C for Abiotic DIC Tracer Fluxes
    units : permil
    vertical_grid : layer_avg
    frequency : medium
