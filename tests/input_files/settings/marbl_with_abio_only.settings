@@ -1,2 +1,3 @@
 abio_dic_on = .true.
 base_bio_on = .false.
+labio_derivative_diags = .true.

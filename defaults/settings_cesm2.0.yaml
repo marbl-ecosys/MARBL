@@ -374,6 +374,13 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .false.
+   labio_derivative_diags :
+      dependencies : abio_dic_on
+      longname : Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)
+      subcategory : 3. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
    bftt_dz_sum_thres:
       dependencies : base_bio_on
       longname : MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold

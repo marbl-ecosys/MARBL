@@ -221,6 +221,9 @@ def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dic
 ################################################################################
 
 def meet_dependencies(input_dict, MARBL_settings):
+    import logging
+    logger = logging.getLogger(__name__)
+
     if "dependencies" in input_dict.keys():
         for dependency in input_dict["dependencies"].keys():
             if dependency not in MARBL_settings.settings_dict.keys():

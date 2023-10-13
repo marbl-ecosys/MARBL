@@ -1097,6 +1097,14 @@
          "subcategory": "5. general parameters",
          "units": 1
       },
+      "labio_derivative_diags": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "dependencies": "abio_dic_on",
+         "longname": "Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
       "ladjust_bury_coeff": {
          "_append_to_config_keywords": true,
          "datatype": "logical",

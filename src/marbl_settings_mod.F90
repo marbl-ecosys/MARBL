@@ -256,6 +256,7 @@ module marbl_settings_mod
                                                               !   (this is done primarily in spinup runs)
   logical(log_kind), target :: lo2_consumption_scalef         ! Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
   logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
+  logical(log_kind), target :: labio_derivative_diags         ! Compute derivative diagnostic terms in abiotic surface flux module
 
   character(len=char_len), target :: init_bury_coeff_opt
 
@@ -426,6 +427,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    labio_derivative_diags        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100._r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -714,6 +716,17 @@ end subroutine marbl_settings_set_defaults_tracer_modules
       units     = 'unitless'
       datatype  = 'logical'
       lptr      => ciso_lsource_sink
+      call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+    end if
+
+    if (abio_dic_on) then
+      sname     = 'labio_derivative_diags'
+      lname     = 'Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => labio_derivative_diags
       call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)

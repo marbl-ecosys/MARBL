@@ -8,6 +8,7 @@ module marbl_abio_dic_diagnostics_mod
   use marbl_kinds_mod, only : char_len
 
   use marbl_settings_mod, only : unit_system_type
+  use marbl_settings_mod, only : labio_derivative_diags
 
   use marbl_interface_public_types, only : marbl_diagnostics_type
 
@@ -187,40 +188,42 @@ contains
        return
       end if
 
-      lname    = 'Derivative of STF_ABIO_DIC wrt ABIO_DIC'
-      sname    = 'd_SF_ABIO_DIC_d_ABIO_DIC'
-      units    = vel_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%d_SF_ABIO_DIC_d_ABIO_DIC, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
+      if (labio_derivative_diags) then
+        lname    = 'Derivative of STF_ABIO_DIC wrt ABIO_DIC'
+        sname    = 'd_SF_ABIO_DIC_d_ABIO_DIC'
+        units    = vel_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%d_SF_ABIO_DIC_d_ABIO_DIC, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+         call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+         return
+        end if
 
-      lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DIC'
-      sname    = 'd_SF_ABIO_DI14C_d_ABIO_DIC'
-      units    = vel_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%d_SF_ABIO_DI14C_d_ABIO_DIC, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
+        lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DIC'
+        sname    = 'd_SF_ABIO_DI14C_d_ABIO_DIC'
+        units    = vel_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%d_SF_ABIO_DI14C_d_ABIO_DIC, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
 
-      lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DI14C'
-      sname    = 'd_SF_ABIO_DI14C_d_ABIO_DI14C'
-      units    = vel_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%d_SF_ABIO_DI14C_d_ABIO_DI14C, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
+        lname    = 'Derivative of STF_ABIO_DI14C wrt ABIO_DI14C'
+        sname    = 'd_SF_ABIO_DI14C_d_ABIO_DI14C'
+        units    = vel_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%d_SF_ABIO_DI14C_d_ABIO_DI14C, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
       end if
 
     end associate
@@ -297,9 +300,11 @@ contains
     diags(ind%ABIO_ALK_SURF)%field_2d(:) = alk_surf(:)
     diags(ind%ABIO_FG_DIC)%field_2d(:) = fg_dic(:)
     diags(ind%ABIO_FG_DI14C)%field_2d(:) = fg_di14c(:)
-    diags(ind%d_SF_ABIO_DIC_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,1)
-    diags(ind%d_SF_ABIO_DI14C_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,2)
-    diags(ind%d_SF_ABIO_DI14C_d_ABIO_DI14C)%field_2d(:) = derivative_terms(:,3)
+    if (labio_derivative_diags) then
+      diags(ind%d_SF_ABIO_DIC_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,1)
+      diags(ind%d_SF_ABIO_DI14C_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,2)
+      diags(ind%d_SF_ABIO_DI14C_d_ABIO_DI14C)%field_2d(:) = derivative_terms(:,3)
+    end if
 
     end associate
 

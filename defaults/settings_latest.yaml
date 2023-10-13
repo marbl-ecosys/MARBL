@@ -263,6 +263,7 @@ tracer_modules :
       units : unitless
       datatype : logical
       default_value : .false.
+      _append_to_config_keywords : true
    ciso_on :
       longname : Control whether CISO tracer module is active
       subcategory : 1. tracer modules
@@ -373,6 +374,13 @@ general_parms :
    lp_remin_scalef :
       dependencies : base_bio_on
       longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
+      subcategory : 3. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
+   labio_derivative_diags :
+      dependencies : abio_dic_on
+      longname : Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)
       subcategory : 3. config flags
       units : unitless
       datatype : logical

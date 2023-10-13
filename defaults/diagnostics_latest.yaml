@@ -307,6 +307,7 @@ ABIO_FG_DI14C :
 d_SF_ABIO_DIC_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
+      labio_derivative_diags : .true.
    longname : Derivative of STF_ABIO_DIC wrt ABIO_DIC
    units : cm/s
    vertical_grid : none
@@ -315,6 +316,7 @@ d_SF_ABIO_DIC_d_ABIO_DIC :
 d_SF_ABIO_DI14C_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
+      labio_derivative_diags : .true.
    longname : Derivative of STF_ABIO_DI14C wrt ABIO_DIC
    units : cm/s
    vertical_grid : none
@@ -323,6 +325,7 @@ d_SF_ABIO_DI14C_d_ABIO_DIC :
 d_SF_ABIO_DI14C_d_ABIO_DI14C :
    dependencies :
       abio_dic_on : .true.
+      labio_derivative_diags : .true.
    longname : Derivative of STF_ABIO_DI14C wrt ABIO_DI14C
    units : cm/s
    vertical_grid : none
