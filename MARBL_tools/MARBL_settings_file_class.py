@@ -275,7 +275,9 @@ class MARBL_settings_class(object):
 
         # If array is length 0, remove it from settings dictionary
         if len(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)) == 0:
-            del self._settings['PFT_derived_types'][variable_name]
+            for key in self.get_category_names():
+                if variable_name in self._settings[key]:
+                    del self._settings[key][variable_name]
 
     ################################################################################
 
@@ -289,7 +291,7 @@ class MARBL_settings_class(object):
             (just varname for scalars, but multiple keys for arrays)
         """
 
-        # Return immediately if variable should not be settings file
+        # Return immediately if variable should not be in settings file
         if 'dependencies' in this_var:
             if this_var['dependencies'] not in self._config_keyword:
                 return
