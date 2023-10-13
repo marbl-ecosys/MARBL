@@ -41,7 +41,7 @@ Contains
     vgrid = 'none'
     rank  = 2
     call surface_state%add_state(lname, sname, units, vgrid, rank,            &
-         surf_ind%base_ph_surf, marbl_status_log)
+         surf_ind%base_bio_ph_surf, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("add_state(PH_SURF)", subname)
       return
@@ -53,7 +53,7 @@ Contains
     vgrid = 'none'
     rank  = 2
     call surface_state%add_state(lname, sname, units, vgrid, rank,            &
-         surf_ind%abio_ph_surf, marbl_status_log)
+         surf_ind%abio_dic_ph_surf, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("add_state(ABIO_PH_SURF)", subname)
       return
@@ -65,7 +65,7 @@ Contains
     vgrid = 'none'
     rank  = 2
     call surface_state%add_state(lname, sname, units, vgrid, rank,            &
-         surf_ind%base_ph_alt_co2_surf, marbl_status_log)
+         surf_ind%base_bio_ph_alt_co2_surf, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("add_state(PH_SURF_ALT_CO2)", subname)
       return

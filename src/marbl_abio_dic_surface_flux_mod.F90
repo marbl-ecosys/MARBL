@@ -114,7 +114,7 @@ contains
         ! Values computed for abio and bio
         pv_co2          => surface_flux_internal%pv_co2(:), &
        ! Saved state
-        ph_surf => saved_state%state(saved_state_ind%abio_ph_surf)%field_2d, &
+        ph_surf => saved_state%state(saved_state_ind%abio_dic_ph_surf)%field_2d, &
         ! Tracer indices
         dic_ind      => marbl_tracer_indices%abio_dic_ind, &
         di14c_ind    => marbl_tracer_indices%abio_di14c_ind, &

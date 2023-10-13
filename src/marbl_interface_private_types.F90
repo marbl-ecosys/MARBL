@@ -337,7 +337,7 @@ module marbl_interface_private_types
     type (marbl_tracer_count_type) :: abio_dic
     type (marbl_tracer_count_type) :: ciso
 
-    ! base tracers
+    ! base biotic tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
     integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
     integer (int_kind) :: sio3_ind        = 0 ! dissolved inorganic silicate
@@ -356,11 +356,11 @@ module marbl_interface_private_types
     integer (int_kind) :: donr_ind        = 0 ! refractory DON
     integer (int_kind) :: docr_ind        = 0 ! refractory DOC
 
-    ! ABIO tracers
+    ! abiotic dic tracers
     integer (int_kind) :: abio_dic_ind    = 0 ! abiotic dissolved inorganic carbon
     integer (int_kind) :: abio_di14c_ind  = 0 ! abiotic dissolved inorganic carbon 14
 
-    ! CISO tracers
+    ! carbon isotope tracers
     integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
     integer (int_kind) :: do13ctot_ind    = 0 ! dissolved organic carbon 13 (semi-labile+refractory)
     integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
@@ -436,9 +436,9 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: marbl_surface_flux_saved_state_indexing_type
-    integer :: base_ph_surf = 0
-    integer :: base_ph_alt_co2_surf = 0
-    integer :: abio_ph_surf = 0
+    integer :: base_bio_ph_surf = 0
+    integer :: base_bio_ph_alt_co2_surf = 0
+    integer :: abio_dic_ph_surf = 0
   end type marbl_surface_flux_saved_state_indexing_type
 
   !*****************************************************************************
@@ -1461,7 +1461,7 @@ contains
     allocate(this%auto_inds(autotroph_cnt))
     allocate(this%zoo_inds(zooplankton_cnt))
 
-    ! General ecosys tracers
+    ! Base biotic tracers
     if (base_bio_on) then
       call this%add_tracer_index('po4', 'base_bio', this%po4_ind, marbl_status_log)
       call this%add_tracer_index('no3', 'base_bio', this%no3_ind, marbl_status_log)
@@ -1514,6 +1514,7 @@ contains
       end do
     end if
 
+    ! Carbon isotope tracers
     if (ciso_on) then
       call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
       call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
@@ -1540,9 +1541,10 @@ contains
       end do
     end if
 
+    ! Abiotic tracers
     if (abio_dic_on) then
-      call this%add_tracer_index('abio_dic',   'abio', this%abio_dic_ind,   marbl_status_log)
-      call this%add_tracer_index('abio_di14c', 'abio', this%abio_di14c_ind, marbl_status_log)
+      call this%add_tracer_index('abio_dic',   'abio_dic', this%abio_dic_ind,   marbl_status_log)
+      call this%add_tracer_index('abio_di14c', 'abio_dic', this%abio_di14c_ind, marbl_status_log)
     end if
 
     if (marbl_status_log%labort_marbl) then
@@ -1602,7 +1604,7 @@ contains
     select case (trim(category))
       case ('base_bio')
         call this%base_bio%update_count(ind, marbl_status_log)
-      case ('abio')
+      case ('abio_dic')
         call this%abio_dic%update_count(ind, marbl_status_log)
       case ('ciso')
         call this%ciso%update_count(ind, marbl_status_log)
@@ -1678,9 +1680,9 @@ contains
 
       forcing_cnt = 0
 
-      ! -------------------------------------------------------
-      ! | Request these fields if abio or base tracers are on |
-      ! -------------------------------------------------------
+      ! -----------------------------------------------------------------
+      ! | Request these fields if abiotic or base biotic tracers are on |
+      ! -----------------------------------------------------------------
 
       if (base_bio_on .or. abio_dic_on) then
         ! Square of 10m wind

@@ -143,39 +143,39 @@ contains
          nox_flux     => surface_flux_forcings(surface_flux_forcing_ind%nox_flux_id)%field_0d,     &
          nhy_flux     => surface_flux_forcings(surface_flux_forcing_ind%nhy_flux_id)%field_0d,     &
 
-         piston_velocity      => surface_flux_internal%piston_velocity(:),                       &
-         xkw_ice              => surface_flux_internal%xkw_ice(:),                               &
-         flux_co2             => surface_flux_internal%flux_co2(:),                              &
-         co2star              => surface_flux_internal%co2star(:),                               &
-         dco2star             => surface_flux_internal%dco2star(:),                              &
-         pco2surf             => surface_flux_internal%pco2surf(:),                              &
-         dpco2                => surface_flux_internal%dpco2(:),                                 &
-         co3                  => surface_flux_internal%co3(:),                                   &
-         co2star_alt          => surface_flux_internal%co2star_alt(:),                           &
-         dco2star_alt         => surface_flux_internal%dco2star_alt(:),                          &
-         pco2surf_alt         => surface_flux_internal%pco2surf_alt(:),                          &
-         dpco2_alt            => surface_flux_internal%dpco2_alt(:),                             &
-         schmidt_co2          => surface_flux_internal%schmidt_co2(:),                           &
-         schmidt_o2           => surface_flux_internal%schmidt_o2(:),                            &
-         pv_o2                => surface_flux_internal%pv_o2(:),                                 &
-         pv_co2               => surface_flux_internal%pv_co2(:),                                &
-         o2sat                => surface_flux_internal%o2sat(:),                                 &
-         flux_alt_co2         => surface_flux_internal%flux_alt_co2(:),                          &
-         nhx_surface_emis     => surface_flux_internal%nhx_surface_emis(:),                      &
+         piston_velocity      => surface_flux_internal%piston_velocity(:),   &
+         xkw_ice              => surface_flux_internal%xkw_ice(:),           &
+         flux_co2             => surface_flux_internal%flux_co2(:),          &
+         co2star              => surface_flux_internal%co2star(:),           &
+         dco2star             => surface_flux_internal%dco2star(:),          &
+         pco2surf             => surface_flux_internal%pco2surf(:),          &
+         dpco2                => surface_flux_internal%dpco2(:),             &
+         co3                  => surface_flux_internal%co3(:),               &
+         co2star_alt          => surface_flux_internal%co2star_alt(:),       &
+         dco2star_alt         => surface_flux_internal%dco2star_alt(:),      &
+         pco2surf_alt         => surface_flux_internal%pco2surf_alt(:),      &
+         dpco2_alt            => surface_flux_internal%dpco2_alt(:),         &
+         schmidt_co2          => surface_flux_internal%schmidt_co2(:),       &
+         schmidt_o2           => surface_flux_internal%schmidt_o2(:),        &
+         pv_o2                => surface_flux_internal%pv_o2(:),             &
+         pv_co2               => surface_flux_internal%pv_co2(:),            &
+         o2sat                => surface_flux_internal%o2sat(:),             &
+         flux_alt_co2         => surface_flux_internal%flux_alt_co2(:),      &
+         nhx_surface_emis     => surface_flux_internal%nhx_surface_emis(:),  &
 
-         ph_prev_surf         => saved_state%state(saved_state_ind%base_ph_surf)%field_2d,         &
-         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%base_ph_alt_co2_surf)%field_2d, &
+         ph_prev_surf         => saved_state%state(saved_state_ind%base_bio_ph_surf)%field_2d,         &
+         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%base_bio_ph_alt_co2_surf)%field_2d, &
 
-         po4_ind           => marbl_tracer_indices%po4_ind,                                     &
-         no3_ind           => marbl_tracer_indices%no3_ind,                                     &
-         sio3_ind          => marbl_tracer_indices%sio3_ind,                                    &
-         nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
-         fe_ind            => marbl_tracer_indices%fe_ind,                                      &
-         o2_ind            => marbl_tracer_indices%o2_ind,                                      &
-         dic_ind           => marbl_tracer_indices%dic_ind,                                     &
-         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
-         alk_ind           => marbl_tracer_indices%alk_ind,                                     &
-         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind                              &
+         po4_ind           => marbl_tracer_indices%po4_ind,         &
+         no3_ind           => marbl_tracer_indices%no3_ind,         &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,        &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,         &
+         fe_ind            => marbl_tracer_indices%fe_ind,          &
+         o2_ind            => marbl_tracer_indices%o2_ind,          &
+         dic_ind           => marbl_tracer_indices%dic_ind,         &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
+         alk_ind           => marbl_tracer_indices%alk_ind,         &
+         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind  &
          )
 
     !-----------------------------------------------------------------------
