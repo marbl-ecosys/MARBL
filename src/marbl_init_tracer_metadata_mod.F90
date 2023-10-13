@@ -310,18 +310,22 @@ module marbl_init_tracer_metadata_mod
           marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca13CO3_ind
-          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca13CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca13CO3'
-          marbl_tracer_metadata(n)%units      = unit_system%conc_units
-          marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
-          marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
+          if (n .gt. 0) then
+             marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca13CO3'
+             marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca13CO3'
+             marbl_tracer_metadata(n)%units      = unit_system%conc_units
+             marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
+             marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
+          end if
 
           n = marbl_tracer_indices%auto_inds(auto_ind)%Ca14CO3_ind
-          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca14CO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca14CO3'
-          marbl_tracer_metadata(n)%units      = unit_system%conc_units
-          marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
-          marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
+          if (n .gt. 0) then
+             marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Ca14CO3'
+             marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Ca14CO3'
+             marbl_tracer_metadata(n)%units      = unit_system%conc_units
+             marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
+             marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
+          end if
        end if
 
     end do
