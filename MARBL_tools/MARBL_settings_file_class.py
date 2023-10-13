@@ -290,8 +290,8 @@ class MARBL_settings_class(object):
         """
 
         # Return immediately if variable should not be settings file
-        if 'defined_if' in this_var:
-            if this_var['defined_if'] not in self._config_keyword:
+        if 'dependencies' in this_var:
+            if this_var['dependencies'] not in self._config_keyword:
                 return
 
         # Keys copied out of the settings file into settings_dict[varname]['attrs']

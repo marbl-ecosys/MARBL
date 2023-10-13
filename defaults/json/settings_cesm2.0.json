@@ -7,7 +7,7 @@
             "PFT_defaults == \"CESM2\"": 3,
             "default": 1
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Number of autotroph classes",
          "must set": "PFT_defaults == 'user-specified'",
          "subcategory": "2. config PFTs",
@@ -19,7 +19,7 @@
             "PFT_defaults == \"CESM2\"": 3,
             "default": 1
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Number of grazer prey classes",
          "subcategory": "2. config PFTs",
          "units": "unitless"
@@ -30,7 +30,7 @@
             "PFT_defaults == \"CESM2\"": 1,
             "default": 1
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Number of zooplankton classes",
          "subcategory": "2. config PFTs",
          "units": "unitless"
@@ -916,7 +916,7 @@
       "Jint_Ctot_thres_molpm2pyr": {
          "datatype": "real",
          "default_value": 1e-09,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "MARBL will abort if abs(Jint_Ctot) exceeds this threshold",
          "subcategory": "5. general parameters",
          "units": "mol m-2 yr-1"
@@ -940,7 +940,7 @@
          "_append_to_config_keywords": true,
          "datatype": "string",
          "default_value": "CESM2",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Define how PFTs are initialized",
          "subcategory": "2. config PFTs",
          "units": "unitless",
@@ -952,7 +952,7 @@
       "POM_bury_frac_max": {
          "datatype": "real",
          "default_value": 0.8,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "maximum bury fraction for POM",
          "subcategory": "5. general parameters (bury coeffs)",
          "units": "unitless"
@@ -960,7 +960,7 @@
       "PON_bury_coeff": {
          "datatype": "real",
          "default_value": 0.5,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Scale factor for burial of PON",
          "subcategory": "5. general parameters (bury coeffs)",
          "units": "unitless"
@@ -968,7 +968,7 @@
       "QCaCO3_max": {
          "datatype": "real",
          "default_value": 0.4,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Max CaCO3/C ratio for calcifiers",
          "subcategory": "5. general parameters",
          "units": "mmol CaCO3/mmol C"
@@ -976,7 +976,7 @@
       "auto_mort2_exp": {
          "datatype": "real",
          "default_value": 1.75,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Value of power loss exponent for autotrophs",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -984,7 +984,7 @@
       "bSi_bury_frac_max": {
          "datatype": "real",
          "default_value": 1.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "maximum bury fraction for bSi",
          "subcategory": "5. general parameters (bury coeffs)",
          "units": "unitless"
@@ -992,7 +992,7 @@
       "bftt_dz_sum_thres": {
          "datatype": "real",
          "default_value": 1e-14,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1000,7 +1000,7 @@
       "bury_coeff_rmean_timescale_years": {
          "datatype": "real",
          "default_value": 10,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Running mean time scale for bury coefficients",
          "subcategory": "5. general parameters",
          "units": "years"
@@ -1008,7 +1008,7 @@
       "caco3_bury_thres_depth": {
          "datatype": "real",
          "default_value": "3000e2",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Threshold depth for CaCO3 burial when opt = 'fixed_depth'",
          "subcategory": "5. general parameters",
          "units": "cm"
@@ -1016,7 +1016,7 @@
       "caco3_bury_thres_omega_calc": {
          "datatype": "real",
          "default_value": 1.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1024,7 +1024,7 @@
       "caco3_bury_thres_opt": {
          "datatype": "string",
          "default_value": "omega_calc",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Option of threshold of CaCO3 burial",
          "subcategory": "5. general parameters",
          "units": "non-numeric",
@@ -1036,7 +1036,7 @@
       "ciso_fract_factors": {
          "datatype": "string",
          "default_value": "Laws",
-         "defined_if": "ciso_on",
+         "dependencies": "ciso_on",
          "longname": "Option for which biological fractionation calculation to use",
          "subcategory": "5. general parameters",
          "units": "non-numeric"
@@ -1044,7 +1044,7 @@
       "ciso_lsource_sink": {
          "datatype": "logical",
          "default_value": ".true.",
-         "defined_if": "ciso_on",
+         "dependencies": "ciso_on",
          "longname": "Control which portions of the carbon isotope code are executed (useful for debugging)",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1052,7 +1052,7 @@
       "f_graze_CaCO3_remin": {
          "datatype": "real",
          "default_value": 0.33,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Fraction of spCaCO3 grazing which is remineralized in zooplankton guts",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1060,7 +1060,7 @@
       "gQ_Fe_kFe_thres": {
          "datatype": "real",
          "default_value": 10.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Fe:kFe ratio threshold in uptake ratio computations",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1068,7 +1068,7 @@
       "gQ_Si_kSi_thres": {
          "datatype": "real",
          "default_value": 5.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Si:kSi ratio threshold in uptake ratio computations",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1076,7 +1076,7 @@
       "gQsi_0": {
          "datatype": "real",
          "default_value": 0.137,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "initial Si/C ratio for growth",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1084,7 +1084,7 @@
       "gQsi_max": {
          "datatype": "real",
          "default_value": 0.685,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "max Si/C ratio for growth",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1092,7 +1092,7 @@
       "gQsi_min": {
          "datatype": "real",
          "default_value": 0.0457,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "min Si/C ratio for growth",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1101,7 +1101,7 @@
          "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": ".false.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Control if bury coefficients are adjusted (rather than constant)",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1116,7 +1116,7 @@
       "lcompute_nhx_surface_emis": {
          "datatype": "logical",
          "default_value": ".true.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Control if NHx emissions are computed",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1131,7 +1131,7 @@
       "lflux_gas_co2": {
          "datatype": "logical",
          "default_value": ".true.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Control which portions of code are executed (useful for debugging)",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1139,7 +1139,7 @@
       "lflux_gas_o2": {
          "datatype": "logical",
          "default_value": ".true.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Control which portions of code are executed (useful for debugging)",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1147,7 +1147,7 @@
       "lo2_consumption_scalef": {
          "datatype": "logical",
          "default_value": ".false.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1155,7 +1155,7 @@
       "lp_remin_scalef": {
          "datatype": "logical",
          "default_value": ".false.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Apply p_remin_scalef to particulate remin (and request it as a forcing)",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1170,7 +1170,7 @@
       "lvariable_PtoC": {
          "datatype": "logical",
          "default_value": ".true.",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Control if PtoC ratios in autotrophs vary",
          "subcategory": "3. config flags",
          "units": "unitless"
@@ -1178,7 +1178,7 @@
       "o2_sf_o2_range_hi": {
          "datatype": "real",
          "default_value": 45.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "o2_scalefactor is applied to diss length scales for O2 less than this",
          "subcategory": "5. general parameters",
          "units": "mmol/m^3"
@@ -1186,7 +1186,7 @@
       "o2_sf_o2_range_lo": {
          "datatype": "real",
          "default_value": 5.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "o2_scalefactor is constant for O2 less than this",
          "subcategory": "5. general parameters",
          "units": "mmol/m^3"
@@ -1194,7 +1194,7 @@
       "o2_sf_val_lo_o2": {
          "datatype": "real",
          "default_value": 3.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1202,7 +1202,7 @@
       "parm_CaCO3_diss": {
          "datatype": "real",
          "default_value": "500e2",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Base CaCO3 dissolution length scale",
          "subcategory": "5. general parameters (dissolution)",
          "units": "cm"
@@ -1210,7 +1210,7 @@
       "parm_CaCO3_gamma": {
          "datatype": "real",
          "default_value": 0.1,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1218,7 +1218,7 @@
       "parm_FeLig_scavenge_rate0": {
          "datatype": "real",
          "default_value": 1.4,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Scavenging base rate for bound iron",
          "subcategory": "5. general parameters (scavenging)",
          "units": "cm^2/ng s/yr"
@@ -1226,7 +1226,7 @@
       "parm_Fe_bioavail": {
          "datatype": "real",
          "default_value": 1.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Fraction of Fe flux that is bioavailable",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1234,7 +1234,7 @@
       "parm_Fe_desorption_rate0": {
          "datatype": "real",
          "default_value": "1e-6",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Desorption rate for scavenged Fe from particles",
          "subcategory": "5. general parameters",
          "units": "1/cm"
@@ -1242,7 +1242,7 @@
       "parm_Fe_scavenge_rate0": {
          "datatype": "real",
          "default_value": 18.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Scavenging base rate for Fe",
          "subcategory": "5. general parameters (scavenging)",
          "units": "cm^2/ng s/yr"
@@ -1250,7 +1250,7 @@
       "parm_Lig_degrade_rate0": {
          "datatype": "real",
          "default_value": 9.4e-05,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Fe-binding ligand bacterial degradation base rate coefficient",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1258,7 +1258,7 @@
       "parm_Lig_scavenge_rate0": {
          "datatype": "real",
          "default_value": 0.015,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Scavenging base rate for bound ligand",
          "subcategory": "5. general parameters (scavenging)",
          "units": "cm^2/ng s/yr"
@@ -1266,7 +1266,7 @@
       "parm_POC_diss": {
          "datatype": "real",
          "default_value": "100e2",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Base POC dissolution length scale",
          "subcategory": "5. general parameters (dissolution)",
          "units": "cm"
@@ -1274,7 +1274,7 @@
       "parm_SiO2_diss": {
          "datatype": "real",
          "default_value": "770e2",
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Base SiO2 dissolution length scale",
          "subcategory": "5. general parameters (dissolution)",
          "units": "cm"
@@ -1282,7 +1282,7 @@
       "parm_SiO2_gamma": {
          "datatype": "real",
          "default_value": 0.1,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "SiO2 gamma (fraction of production -> hard subclass)",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1293,7 +1293,7 @@
             "GRID == \"CESM_x3\"": 0.075,
             "default": 0.07
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Fraction of sp production as CaCO3 production",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1301,7 +1301,7 @@
       "parm_hPOC_CaCO3_ratio": {
          "datatype": "real",
          "default_value": 0.05,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "hPOC to CaCO3 ratio",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1309,7 +1309,7 @@
       "parm_hPOC_SiO2_ratio": {
          "datatype": "real",
          "default_value": 0.05,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "hPOC to SiO2 ratio",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1317,7 +1317,7 @@
       "parm_hPOC_dust_ratio": {
          "datatype": "real",
          "default_value": 0.05,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "hPOC to dust ratio",
          "subcategory": "5. general parameters",
          "units": 1
@@ -1328,7 +1328,7 @@
             "GRID == \"CESM_x3\"": 5.0,
             "default": 1.1
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Initial scale factor for burial of POC, PON",
          "subcategory": "5. general parameters (bury coeffs)",
          "units": "unitless"
@@ -1339,7 +1339,7 @@
             "GRID == \"CESM_x3\"": 5.0,
             "default": 1.1
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Initial scale factor for burial of POP",
          "subcategory": "5. general parameters (bury coeffs)",
          "units": "unitless"
@@ -1350,7 +1350,7 @@
             "GRID == \"CESM_x3\"": 1.1,
             "default": 1.0
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Initial scale factor for burial of bSi",
          "subcategory": "5. general parameters (bury coeffs)",
          "units": "unitless"
@@ -1358,7 +1358,7 @@
       "parm_kappa_nitrif_per_day": {
          "datatype": "real",
          "default_value": 0.06,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Nitrification inverse time constant",
          "subcategory": "5. general parameters (nitrification)",
          "units": "1/day"
@@ -1366,7 +1366,7 @@
       "parm_labile_ratio": {
          "datatype": "real",
          "default_value": 0.94,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Fraction of loss to DOC that routed directly to DIC",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1374,7 +1374,7 @@
       "parm_nitrif_par_lim": {
          "datatype": "real",
          "default_value": 1.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "PAR limit for nitrification",
          "subcategory": "5. general parameters (nitrification)",
          "units": "W/m^2"
@@ -1382,7 +1382,7 @@
       "parm_o2_min": {
          "datatype": "real",
          "default_value": 5.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Minimum O2 needed for production & consumption",
          "subcategory": "5. general parameters",
          "units": "nmol/cm^3"
@@ -1390,7 +1390,7 @@
       "parm_o2_min_delta": {
          "datatype": "real",
          "default_value": 5.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Width of min O2 range",
          "subcategory": "5. general parameters",
          "units": "nmol/cm^3"
@@ -1412,7 +1412,7 @@
                5.5
             ]
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Prescribed scalelen values",
          "subcategory": "6. Scale lengths",
          "units": "unitless"
@@ -1426,7 +1426,7 @@
             "500.0e2",
             "1000.0e2"
          ],
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Depths of prescribed scalelen values",
          "subcategory": "6. Scale lengths",
          "units": "cm"
@@ -1437,7 +1437,7 @@
             "GRID == \"CESM_x3\"": 1.4,
             "default": 1
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Global scaling factor for sed_denitrif",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1445,7 +1445,7 @@
       "particulate_flux_ref_depth": {
          "datatype": "real",
          "default_value": 100.0,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "reference depth for particulate flux diagnostics",
          "subcategory": "5. general parameters",
          "units": "m"
@@ -1453,7 +1453,7 @@
       "zoo_mort2_exp": {
          "datatype": "real",
          "default_value": 1.5,
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Value of power loss exponent for zooplankton",
          "subcategory": "5. general parameters",
          "units": "unitless"
@@ -1467,7 +1467,7 @@
             "default": "settings_file",
             "not ladjust_bury_coeff": "settings_file"
          },
-         "defined_if": "base_bio_on",
+         "dependencies": "base_bio_on",
          "longname": "Source of initial burial coefficient",
          "subcategory": "4. config strings",
          "units": "unitless"
