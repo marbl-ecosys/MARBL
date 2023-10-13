@@ -118,16 +118,8 @@ contains
         ph_surf => saved_state%state(saved_state_ind%abio_dic_ph_surf)%field_2d, &
         ! Tracer indices
         dic_ind      => marbl_tracer_indices%abio_dic_ind, &
-        di14c_ind    => marbl_tracer_indices%abio_di14c_ind, &
-        abio_ind_beg => marbl_tracer_indices%abio_dic%ind_beg, &
-        abio_ind_end => marbl_tracer_indices%abio_dic%ind_end &
+        di14c_ind    => marbl_tracer_indices%abio_di14c_ind &
         )
-
-    !-----------------------------------------------------------------------
-    !  abio fluxes initially set to 0
-    !-----------------------------------------------------------------------
-
-    surface_fluxes(:,abio_ind_beg:abio_ind_end) = c0
 
     !-----------------------------------------------------------------------
     ! Set C14 ratios
