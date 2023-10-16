@@ -360,7 +360,8 @@
    },
    "ABIO_ALK_SURF": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "Surface Alkalinity for Abiotic DIC Tracer Fluxes",
@@ -370,7 +371,8 @@
    },
    "ABIO_CO2STAR": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "CO2 Star for Abiotic DIC Tracer Fluxes",
@@ -380,7 +382,8 @@
    },
    "ABIO_D14C_atm": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes",
@@ -400,7 +403,8 @@
    },
    "ABIO_DCO2STAR": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "D CO2 Star for Abiotic DIC Tracer Fluxes",
@@ -410,7 +414,8 @@
    },
    "ABIO_DpCO2": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "D pCO2 for Abiotic DIC Tracer Fluxes",
@@ -420,7 +425,8 @@
    },
    "ABIO_FG_DI14C": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "Surface Gas Flux of Abiotic DI14C",
@@ -430,7 +436,8 @@
    },
    "ABIO_FG_DIC": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "Surface Gas Flux of Abiotic DIC",
@@ -440,7 +447,8 @@
    },
    "ABIO_PH": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "Surface pH for Abiotic DIC Tracer Fluxes",
@@ -450,7 +458,8 @@
    },
    "ABIO_pCO2": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes",
@@ -460,7 +469,8 @@
    },
    "ABIO_pCO2SURF": {
       "dependencies": {
-         "abio_dic_on": ".true."
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "medium",
       "longname": "Surface pCO2 for Abiotic DIC Tracer Fluxes",
@@ -2385,7 +2395,8 @@
    "d_SF_ABIO_DI14C_d_ABIO_DI14C": {
       "dependencies": {
          "abio_dic_on": ".true.",
-         "labio_derivative_diags": ".true."
+         "labio_derivative_diags": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "never",
       "longname": "Derivative of ABIO_FG_DI14C wrt ABIO_DI14C",
@@ -2396,7 +2407,8 @@
    "d_SF_ABIO_DI14C_d_ABIO_DIC": {
       "dependencies": {
          "abio_dic_on": ".true.",
-         "labio_derivative_diags": ".true."
+         "labio_derivative_diags": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "never",
       "longname": "Derivative of ABIO_FG_DI14C wrt ABIO_DIC",
@@ -2407,7 +2419,8 @@
    "d_SF_ABIO_DIC_d_ABIO_DIC": {
       "dependencies": {
          "abio_dic_on": ".true.",
-         "labio_derivative_diags": ".true."
+         "labio_derivative_diags": ".true.",
+         "lflux_gas_co2": ".true."
       },
       "frequency": "never",
       "longname": "Derivative of ABIO_FG_DIC wrt ABIO_DIC",

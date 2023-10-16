@@ -8,6 +8,8 @@ module marbl_diagnostics_mod
   use marbl_kinds_mod, only : char_len
 
   use marbl_settings_mod, only : base_bio_on
+  use marbl_settings_mod, only : lflux_gas_co2
+  use marbl_settings_mod, only : lflux_gas_o2
   use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
@@ -85,8 +87,6 @@ contains
        marbl_surface_flux_diags,      &
        marbl_status_log)
 
-    use marbl_settings_mod, only : lflux_gas_o2
-    use marbl_settings_mod, only : lflux_gas_co2
     use marbl_settings_mod, only : lo2_consumption_scalef
     use marbl_settings_mod, only : lp_remin_scalef
     use marbl_settings_mod, only : lvariable_PtoC
@@ -3289,10 +3289,8 @@ contains
     ! !DESCRIPTION:
     !  Compute surface flux diagnostics for base biotic tracer module.
 
-    use marbl_interface_private_types , only : marbl_surface_flux_forcing_indexing_type
-    use marbl_interface_private_types , only : marbl_surface_flux_saved_state_indexing_type
-    use marbl_settings_mod   , only : lflux_gas_o2
-    use marbl_settings_mod   , only : lflux_gas_co2
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
+    use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
 
     type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
@@ -3355,19 +3353,16 @@ contains
     !-----------------------------------------------------------------------
 
     if (lflux_gas_o2) then
-
        diags(ind_diag%PV_O2)%field_2d(:)      = pv_o2(:)
        diags(ind_diag%SCHMIDT_O2)%field_2d(:) = schmidt_o2(:)
        diags(ind_diag%O2SAT)%field_2d(:)      = o2sat(:)
-
-    endif  ! lflux_gas_o2
+    endif
 
     !-----------------------------------------------------------------------
     !  compute CO2 flux, computing disequilibrium one row at a time
     !-----------------------------------------------------------------------
 
     if (lflux_gas_co2) then
-
        diags(ind_diag%CO2STAR)%field_2d(:)              = co2star(:)
        diags(ind_diag%DCO2STAR)%field_2d(:)             = dco2star(:)
        diags(ind_diag%pCO2SURF)%field_2d(:)             = pco2surf(:)
@@ -3385,8 +3380,7 @@ contains
        diags(ind_diag%FG_CO2_ALT_CO2)%field_2d(:)       = flux_alt_co2(:)
        diags(ind_diag%PH_ALT_CO2)%field_2d(:)           = ph_prev_alt_co2(:)
        diags(ind_diag%ATM_ALT_CO2)%field_2d(:)          = xco2_alt_co2(:)
-
-    endif  !  lflux_gas_co2
+    endif
 
     !-----------------------------------------------------------------------
     !  calculate nox and nhy fluxes and nhx emissions
@@ -3425,9 +3419,6 @@ contains
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_surface_flux_saved_state_indexing_type
 
-    use marbl_settings_mod, only : lflux_gas_o2
-    use marbl_settings_mod, only : lflux_gas_co2
-
     type(marbl_surface_flux_forcing_indexing_type), intent(in) :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type)           , intent(in)    :: surface_flux_forcings(:)
     type(marbl_surface_flux_internal_type)    , intent(in)    :: surface_flux_internal
@@ -3460,11 +3451,9 @@ contains
     !-----------------------------------------------------------------------
 
     if (lflux_gas_co2) then
-
-     diags(ind_diag%PV_CO2)%field_2d(:)      = pv_co2(:)
-     diags(ind_diag%SCHMIDT_CO2)%field_2d(:) = schmidt_co2(:)
-
-    endif  !  lflux_gas_co2
+      diags(ind_diag%PV_CO2)%field_2d(:)      = pv_co2(:)
+      diags(ind_diag%SCHMIDT_CO2)%field_2d(:) = schmidt_co2(:)
+    endif
 
     end associate
 

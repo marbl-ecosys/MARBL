@@ -294,7 +294,7 @@ contains
            num_elements     = num_elements,                            &
            lcomp_co2calc_coeffs = .true.,                              &
            dic_in     = tracers_at_surface(:,dic_ind),                 &
-           xco2_in    = surface_flux_forcings(ind%xco2_id)%field_0d,   &
+           xco2_in    = xco2(:),                                       &
            ta_in      = tracers_at_surface(:,alk_ind),                 &
            pt_in      = tracers_at_surface(:,po4_ind),                 &
            sit_in     = tracers_at_surface(:,sio3_ind),                &
@@ -354,7 +354,7 @@ contains
            num_elements     = num_elements,                            &
            lcomp_co2calc_coeffs = .false.,                             &
            dic_in     = tracers_at_surface(:,dic_alt_co2_ind),         &
-           xco2_in    = surface_flux_forcings(ind%xco2_alt_co2_id)%field_0d, &
+           xco2_in    = xco2_alt_co2(:),                               &
            ta_in      = tracers_at_surface(:,alk_alt_co2_ind),         &
            pt_in      = tracers_at_surface(:,po4_ind),                 &
            sit_in     = tracers_at_surface(:,sio3_ind),                &

@@ -243,6 +243,7 @@ NHx_SURFACE_EMIS :
 ABIO_pCO2 :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes
    units : ppm
    vertical_grid : none
@@ -251,6 +252,7 @@ ABIO_pCO2 :
 ABIO_D14C_atm :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes
    units : permil
    vertical_grid : none
@@ -259,6 +261,7 @@ ABIO_D14C_atm :
 ABIO_CO2STAR :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : CO2 Star for Abiotic DIC Tracer Fluxes
    units : mmol/m^3
    vertical_grid : none
@@ -267,6 +270,7 @@ ABIO_CO2STAR :
 ABIO_DCO2STAR :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : D CO2 Star for Abiotic DIC Tracer Fluxes
    units : mmol/m^3
    vertical_grid : none
@@ -275,6 +279,7 @@ ABIO_DCO2STAR :
 ABIO_pCO2SURF :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : Surface pCO2 for Abiotic DIC Tracer Fluxes
    units : ppmv
    vertical_grid : none
@@ -283,6 +288,7 @@ ABIO_pCO2SURF :
 ABIO_DpCO2 :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : D pCO2 for Abiotic DIC Tracer Fluxes
    units : ppmv
    vertical_grid : none
@@ -291,6 +297,7 @@ ABIO_DpCO2 :
 ABIO_PH :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : Surface pH for Abiotic DIC Tracer Fluxes
    units : 1
    vertical_grid : none
@@ -299,6 +306,7 @@ ABIO_PH :
 ABIO_ALK_SURF :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : Surface Alkalinity for Abiotic DIC Tracer Fluxes
    units : meq/m^3
    vertical_grid : none
@@ -307,6 +315,7 @@ ABIO_ALK_SURF :
 ABIO_FG_DIC :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : Surface Gas Flux of Abiotic DIC
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -315,6 +324,7 @@ ABIO_FG_DIC :
 ABIO_FG_DI14C :
    dependencies :
       abio_dic_on : .true.
+      lflux_gas_co2 : .true.
    longname : Surface Gas Flux of Abiotic DI14C
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -324,6 +334,7 @@ d_SF_ABIO_DIC_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
       labio_derivative_diags : .true.
+      lflux_gas_co2 : .true.
    longname : Derivative of ABIO_FG_DIC wrt ABIO_DIC
    units : cm/s
    vertical_grid : none
@@ -333,6 +344,7 @@ d_SF_ABIO_DI14C_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
       labio_derivative_diags : .true.
+      lflux_gas_co2 : .true.
    longname : Derivative of ABIO_FG_DI14C wrt ABIO_DIC
    units : cm/s
    vertical_grid : none
@@ -342,6 +354,7 @@ d_SF_ABIO_DI14C_d_ABIO_DI14C :
    dependencies :
       abio_dic_on : .true.
       labio_derivative_diags : .true.
+      lflux_gas_co2 : .true.
    longname : Derivative of ABIO_FG_DI14C wrt ABIO_DI14C
    units : cm/s
    vertical_grid : none

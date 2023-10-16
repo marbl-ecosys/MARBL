@@ -258,8 +258,8 @@ contains
 
       ! update abiotic DIC diagnostics
       call marbl_abio_dic_diagnostics_surface_flux_compute( &
-          xco2, &
-          d14c, &
+          surface_flux_forcing_ind, &
+          surface_flux_forcings, &
           co2star, &
           dco2star, &
           pco2surf, &

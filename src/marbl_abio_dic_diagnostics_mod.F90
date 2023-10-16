@@ -7,6 +7,7 @@ module marbl_abio_dic_diagnostics_mod
   use marbl_kinds_mod, only : int_kind
   use marbl_kinds_mod, only : char_len
 
+  use marbl_settings_mod, only : lflux_gas_co2
   use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : labio_derivative_diags
 
@@ -67,162 +68,165 @@ contains
               diags => marbl_surface_flux_diags &
              )
 
-      lname    = 'CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_pCO2'
-      units    = 'ppm'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_pCO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_D14C_atm'
-      units    = 'permil'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_D14C_atm, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'CO2 Star for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_CO2STAR'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_CO2STAR, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'D CO2 Star for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_DCO2STAR'
-      units    = unit_system%conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_DCO2STAR, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'Surface pCO2 for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_pCO2SURF'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_pCO2SURF, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'D pCO2 for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_DpCO2'
-      units    = 'ppmv'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_DpCO2, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'Surface pH for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_PH'
-      units    = '1'
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_PH, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'Surface Alkalinity for Abiotic DIC Tracer Fluxes'
-      sname    = 'ABIO_ALK_SURF'
-      units    = unit_system%alk_conc_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_ALK_SURF, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'Surface Gas Flux of Abiotic DIC'
-      sname    = 'ABIO_FG_DIC'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-           ind%ABIO_FG_DIC, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      lname    = 'Surface Gas Flux of Abiotic DI14C'
-      sname    = 'ABIO_FG_DI14C'
-      units    = unit_system%conc_flux_units
-      vgrid    = 'none'
-      truncate = .false.
-      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-          ind%ABIO_FG_DI14C, marbl_status_log)
-      if (marbl_status_log%labort_marbl) then
-       call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-       return
-      end if
-
-      if (labio_derivative_diags) then
-        lname    = 'Derivative of ABIO_FG_DIC wrt ABIO_DIC'
-        sname    = 'd_SF_ABIO_DIC_d_ABIO_DIC'
-        units    = vel_units
+      if (lflux_gas_co2) then
+        lname    = 'CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_pCO2'
+        units    = 'ppm'
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%d_SF_ABIO_DIC_d_ABIO_DIC, marbl_status_log)
+             ind%ABIO_pCO2, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
-         call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-         return
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
         end if
 
-        lname    = 'Derivative of ABIO_FG_DI14C wrt ABIO_DIC'
-        sname    = 'd_SF_ABIO_DI14C_d_ABIO_DIC'
-        units    = vel_units
+        lname    = 'Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_D14C_atm'
+        units    = 'permil'
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%d_SF_ABIO_DI14C_d_ABIO_DIC, marbl_status_log)
+             ind%ABIO_D14C_atm, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
         end if
 
-        lname    = 'Derivative of ABIO_FG_DI14C wrt ABIO_DI14C'
-        sname    = 'd_SF_ABIO_DI14C_d_ABIO_DI14C'
-        units    = vel_units
+        lname    = 'CO2 Star for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_CO2STAR'
+        units    = unit_system%conc_units
         vgrid    = 'none'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
-             ind%d_SF_ABIO_DI14C_d_ABIO_DI14C, marbl_status_log)
+             ind%ABIO_CO2STAR, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
-          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
-          return
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
         end if
+
+        lname    = 'D CO2 Star for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_DCO2STAR'
+        units    = unit_system%conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_DCO2STAR, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        lname    = 'Surface pCO2 for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_pCO2SURF'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_pCO2SURF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        lname    = 'D pCO2 for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_DpCO2'
+        units    = 'ppmv'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_DpCO2, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        lname    = 'Surface pH for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_PH'
+        units    = '1'
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_PH, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        lname    = 'Surface Alkalinity for Abiotic DIC Tracer Fluxes'
+        sname    = 'ABIO_ALK_SURF'
+        units    = unit_system%alk_conc_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_ALK_SURF, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        lname    = 'Surface Gas Flux of Abiotic DIC'
+        sname    = 'ABIO_FG_DIC'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_FG_DIC, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        lname    = 'Surface Gas Flux of Abiotic DI14C'
+        sname    = 'ABIO_FG_DI14C'
+        units    = unit_system%conc_flux_units
+        vgrid    = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+             ind%ABIO_FG_DI14C, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+        end if
+
+        if (labio_derivative_diags) then
+          lname    = 'Derivative of ABIO_FG_DIC wrt ABIO_DIC'
+          sname    = 'd_SF_ABIO_DIC_d_ABIO_DIC'
+          units    = vel_units
+          vgrid    = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%d_SF_ABIO_DIC_d_ABIO_DIC, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = 'Derivative of ABIO_FG_DI14C wrt ABIO_DIC'
+          sname    = 'd_SF_ABIO_DI14C_d_ABIO_DIC'
+          units    = vel_units
+          vgrid    = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%d_SF_ABIO_DI14C_d_ABIO_DIC, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname    = 'Derivative of ABIO_FG_DI14C wrt ABIO_DI14C'
+          sname    = 'd_SF_ABIO_DI14C_d_ABIO_DI14C'
+          units    = vel_units
+          vgrid    = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+               ind%d_SF_ABIO_DI14C_d_ABIO_DI14C, marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+        end if
+
       end if
 
     end associate
@@ -255,8 +259,8 @@ contains
   !***********************************************************************
 
   subroutine marbl_abio_dic_diagnostics_surface_flux_compute( &
-       xco2, &
-       d14c, &
+       surface_flux_forcing_ind, &
+       surface_flux_forcings, &
        co2star, &
        dco2star, &
        pco2surf, &
@@ -271,38 +275,45 @@ contains
     ! !DESCRIPTION:
     !  Compute surface fluxes for ecosys tracer module.
 
-    real (r8), dimension(:),      intent(in)    :: xco2
-    real (r8), dimension(:),      intent(in)    :: d14c
-    real (r8), dimension(:),      intent(in)    :: co2star
-    real (r8), dimension(:),      intent(in)    :: dco2star
-    real (r8), dimension(:),      intent(in)    :: pco2surf
-    real (r8), dimension(:),      intent(in)    :: dpco2
-    real (r8), dimension(:),      intent(in)    :: ph_surf
-    real (r8), dimension(:),      intent(in)    :: alk_surf
-    real (r8), dimension(:),      intent(in)    :: fg_dic
-    real (r8), dimension(:),      intent(in)    :: fg_di14c
-    real (r8), dimension(:,:),    intent(in)    :: derivative_terms
-    type(marbl_diagnostics_type), intent(inout) :: marbl_surface_flux_diags
+    use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
+    use marbl_interface_public_types, only : marbl_forcing_fields_type
+
+    type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_ind
+    type(marbl_forcing_fields_type),                intent(in)    :: surface_flux_forcings(:)
+    real (r8), dimension(:),                        intent(in)    :: co2star
+    real (r8), dimension(:),                        intent(in)    :: dco2star
+    real (r8), dimension(:),                        intent(in)    :: pco2surf
+    real (r8), dimension(:),                        intent(in)    :: dpco2
+    real (r8), dimension(:),                        intent(in)    :: ph_surf
+    real (r8), dimension(:),                        intent(in)    :: alk_surf
+    real (r8), dimension(:),                        intent(in)    :: fg_dic
+    real (r8), dimension(:),                        intent(in)    :: fg_di14c
+    real (r8), dimension(:,:),                      intent(in)    :: derivative_terms
+    type(marbl_diagnostics_type),                   intent(inout) :: marbl_surface_flux_diags
 
     associate(                                       &
+         xco2    => surface_flux_forcings(surface_flux_forcing_ind%xco2_id)%field_0d, &
+         d14c    => surface_flux_forcings(surface_flux_forcing_ind%d14c_id)%field_0d, &
          diags => marbl_surface_flux_diags%diags,    &
          ind   => marbl_surface_flux_diag_ind        &
          )
 
-    diags(ind%ABIO_pCO2)%field_2d(:) = xco2(:)
-    diags(ind%ABIO_D14C_atm)%field_2d(:) = d14c(:)
-    diags(ind%ABIO_CO2STAR)%field_2d(:) = co2star(:)
-    diags(ind%ABIO_DCO2STAR)%field_2d(:) = dco2star(:)
-    diags(ind%ABIO_pCO2SURF)%field_2d(:) = pco2surf(:)
-    diags(ind%ABIO_DpCO2)%field_2d(:) = dpco2(:)
-    diags(ind%ABIO_PH)%field_2d(:) = ph_surf(:)
-    diags(ind%ABIO_ALK_SURF)%field_2d(:) = alk_surf(:)
-    diags(ind%ABIO_FG_DIC)%field_2d(:) = fg_dic(:)
-    diags(ind%ABIO_FG_DI14C)%field_2d(:) = fg_di14c(:)
-    if (labio_derivative_diags) then
-      diags(ind%d_SF_ABIO_DIC_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,1)
-      diags(ind%d_SF_ABIO_DI14C_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,2)
-      diags(ind%d_SF_ABIO_DI14C_d_ABIO_DI14C)%field_2d(:) = derivative_terms(:,3)
+    if (lflux_gas_co2) then
+      diags(ind%ABIO_pCO2)%field_2d(:) = xco2(:)
+      diags(ind%ABIO_D14C_atm)%field_2d(:) = d14c(:)
+      diags(ind%ABIO_CO2STAR)%field_2d(:) = co2star(:)
+      diags(ind%ABIO_DCO2STAR)%field_2d(:) = dco2star(:)
+      diags(ind%ABIO_pCO2SURF)%field_2d(:) = pco2surf(:)
+      diags(ind%ABIO_DpCO2)%field_2d(:) = dpco2(:)
+      diags(ind%ABIO_PH)%field_2d(:) = ph_surf(:)
+      diags(ind%ABIO_ALK_SURF)%field_2d(:) = alk_surf(:)
+      diags(ind%ABIO_FG_DIC)%field_2d(:) = fg_dic(:)
+      diags(ind%ABIO_FG_DI14C)%field_2d(:) = fg_di14c(:)
+      if (labio_derivative_diags) then
+        diags(ind%d_SF_ABIO_DIC_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,1)
+        diags(ind%d_SF_ABIO_DI14C_d_ABIO_DIC)%field_2d(:) = derivative_terms(:,2)
+        diags(ind%d_SF_ABIO_DI14C_d_ABIO_DI14C)%field_2d(:) = derivative_terms(:,3)
+      end if
     end if
 
     end associate
