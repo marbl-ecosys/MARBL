@@ -237,13 +237,15 @@ module marbl_settings_mod
 
   character(len=char_len), target :: PFT_defaults             ! Set up PFT parameters based on known classes, e.g. 'CESM2'
                                                               ! (or set to 'user-specified' and use put_setting())
+  logical(log_kind), target :: base_bio_on                    ! control whether base tracer module is active
+  logical(log_kind), target :: abio_dic_on                    ! control whether abio tracer module is active
   logical(log_kind), target :: ciso_on                        ! control whether ciso tracer module is active
   logical(log_kind), target :: lsource_sink                   ! control which portion of code is executed, useful for debugging
   logical(log_kind), target :: ciso_lsource_sink              ! control which portion of carbon isotope code is executed, useful for debugging
   logical(log_kind), target :: lcheck_forcing                 ! control whether consistency checks are performed on forcing input
   logical(log_kind), target :: lecovars_full_depth_tavg       ! If .false., MARBL will recommend truncating the column for some diagnostics
-  logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed usefull for debugging
-  logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed usefull for debugging
+  logical(log_kind), target :: lflux_gas_o2                   ! controls which portion of code are executed useful for debugging
+  logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed useful for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotroph_settings vary
   logical(log_kind), target :: ladjust_bury_coeff             ! control if bury coefficients are adjusted (rather than constant)
@@ -254,6 +256,7 @@ module marbl_settings_mod
                                                               !   (this is done primarily in spinup runs)
   logical(log_kind), target :: lo2_consumption_scalef         ! Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
   logical(log_kind), target :: lp_remin_scalef                ! Apply p_remin_scalef to particulate remin (and request it as a forcing)
+  logical(log_kind), target :: labio_derivative_diags         ! Compute derivative diagnostic terms in abiotic surface flux module
 
   character(len=char_len), target :: init_bury_coeff_opt
 
@@ -397,17 +400,26 @@ contains
 
   !*****************************************************************************
 
+subroutine marbl_settings_set_defaults_tracer_modules()
+
+  base_bio_on                   = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+  abio_dic_on                   = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+  ciso_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+
+end subroutine marbl_settings_set_defaults_tracer_modules
+
+!*****************************************************************************
+
   subroutine marbl_settings_set_defaults_general_parms(unit_system)
 
     type(unit_system_type), intent(in) :: unit_system
 
     PFT_defaults                  = 'CESM2'         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    ciso_on                       = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lsource_sink                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ciso_lsource_sink             = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lcheck_forcing                = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lecovars_full_depth_tavg      = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    lflux_gas_o2                  = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lflux_gas_o2                  = base_bio_on     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lflux_gas_co2                 = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lcompute_nhx_surface_emis     = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -415,6 +427,7 @@ contains
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lp_remin_scalef               = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    labio_derivative_diags        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     particulate_flux_ref_depth    = 100._r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -494,20 +507,27 @@ contains
       PFT_defaults = 'user-specified'
     end if
 
-    select case (trim(PFT_defaults))
-      case ('CESM2')
-        autotroph_cnt                 = 3
-        zooplankton_cnt               = 1
-        max_grazer_prey_cnt           = 3
-      case ('user-specified')
-        ! User must change these with put_setting()
-        autotroph_cnt                 = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-        zooplankton_cnt               = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-        max_grazer_prey_cnt           = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-      case DEFAULT
-        write(log_message, "(3A)") "'", trim(PFT_defaults), "' is not a valid value for PFT_defaults"
-        call marbl_status_log%log_error(log_message, subname)
-    end select
+    if (.not. base_bio_on) then
+      PFT_defaults = 'None'
+      autotroph_cnt       = 0
+      zooplankton_cnt     = 0
+      max_grazer_prey_cnt = 0
+    else
+      select case (trim(PFT_defaults))
+        case ('CESM2')
+          autotroph_cnt                 = 3
+          zooplankton_cnt               = 1
+          max_grazer_prey_cnt           = 3
+        case ('user-specified')
+          ! User must change these with put_setting()
+          autotroph_cnt                 = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+          zooplankton_cnt               = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+          max_grazer_prey_cnt           = -1       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+        case DEFAULT
+          write(log_message, "(3A)") "'", trim(PFT_defaults), "' is not a valid value for PFT_defaults"
+          call marbl_status_log%log_error(log_message, subname)
+      end select
+    end if
 
   end subroutine marbl_settings_set_defaults_PFT_counts
 
@@ -538,6 +558,7 @@ contains
         call grazing_relationship_settings(1,1)%set_to_default('sp_zoo', marbl_status_log)
         call grazing_relationship_settings(2,1)%set_to_default('diat_zoo', marbl_status_log)
         call grazing_relationship_settings(3,1)%set_to_default('diaz_zoo', marbl_status_log)
+      case ('None')
       case ('user-specified')
         do m=1,autotroph_cnt
           call autotroph_settings(m)%set_to_default('unset', marbl_status_log)
@@ -582,7 +603,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_settings_define_general_parms(this, marbl_status_log)
+  subroutine marbl_settings_define_tracer_modules(this, marbl_status_log)
 
     class(marbl_settings_type), intent(inout) :: this
     type(marbl_log_type),       intent(inout) :: marbl_status_log
@@ -591,9 +612,7 @@ contains
     character(len=char_len)     :: log_message
 
     character(len=char_len)          :: sname, lname, units, datatype, category
-    real(r8),                pointer :: rptr => NULL()
     logical(log_kind),       pointer :: lptr => NULL()
-    character(len=char_len), pointer :: sptr => NULL()
     logical                          :: labort_marbl_loc
 
     if (associated(this%vars)) then
@@ -604,22 +623,27 @@ contains
     allocate(this%categories(0))
     labort_marbl_loc = .false.
 
-    ! ----------------------
-    category = 'config PFTs'
-    ! ----------------------
+    ! -----------------------
+    category = 'tracer modules'
+    ! -----------------------
 
-    sname     = 'PFT_defaults'
-    lname     = 'Define how PFTs are initialized'
+    sname     = 'base_bio_on'
+    lname     = 'Control whether base tracer module is active'
     units     = 'unitless'
-    datatype  = 'string'
-    sptr      => PFT_defaults
+    datatype  = 'logical'
+    lptr      => base_bio_on
     call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, sptr=sptr)
+                        marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    ! -----------------------
-    category = 'config flags'
-    ! -----------------------
+    sname     = 'abio_dic_on'
+    lname     = 'Control whether abiotic tracer module is active'
+    units     = 'unitless'
+    datatype  = 'logical'
+    lptr      => abio_dic_on
+    call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'ciso_on'
     lname     = 'Control whether CISO tracer module is active'
@@ -629,6 +653,44 @@ contains
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+  end subroutine marbl_settings_define_tracer_modules
+
+  !*****************************************************************************
+
+  subroutine marbl_settings_define_general_parms(this, marbl_status_log)
+
+    class(marbl_settings_type), intent(inout) :: this
+    type(marbl_log_type),       intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_general_parms'
+
+    character(len=char_len)          :: sname, lname, units, datatype, category
+    real(r8),                pointer :: rptr => NULL()
+    logical(log_kind),       pointer :: lptr => NULL()
+    character(len=char_len), pointer :: sptr => NULL()
+    logical                          :: labort_marbl_loc
+
+    labort_marbl_loc = .false.
+
+    if (base_bio_on) then
+      ! ----------------------
+      category = 'config PFTs'
+      ! ----------------------
+
+      sname     = 'PFT_defaults'
+      lname     = 'Define how PFTs are initialized'
+      units     = 'unitless'
+      datatype  = 'string'
+      sptr      => PFT_defaults
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, sptr=sptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+    end if
+
+    ! -----------------------
+    category = 'config flags'
+    ! -----------------------
 
     sname     = 'lsource_sink'
     lname     = 'Control which portions of code are executed (useful for debugging)'
@@ -648,14 +710,36 @@ contains
                         marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'ciso_lsource_sink'
-    lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
+    sname     = 'lflux_gas_co2'
+    lname     = 'Run CO2 gas flux portion of the code'
     units     = 'unitless'
     datatype  = 'logical'
-    lptr      => ciso_lsource_sink
+    lptr      => lflux_gas_co2
     call this%add_var(sname, lname, units, datatype, category,       &
-                      marbl_status_log, lptr=lptr)
+                        marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    if (ciso_on) then
+      sname     = 'ciso_lsource_sink'
+      lname     = 'Control which portions of carbon isotope code are executed (useful for debugging)'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => ciso_lsource_sink
+      call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+    end if
+
+    if (abio_dic_on) then
+      sname     = 'labio_derivative_diags'
+      lname     = 'Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => labio_derivative_diags
+      call this%add_var(sname, lname, units, datatype, category,       &
+                        marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+    end if
 
     sname     = 'lcheck_forcing'
     lname     = 'Control whether consistency checks are performed on forcing input (useful for debugging)'
@@ -666,529 +750,526 @@ contains
                       marbl_status_log, lptr=lptr)
     call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'lflux_gas_o2'
-    lname     = 'Run O2 gas flux portion of the code'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => lflux_gas_o2
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+    if (base_bio_on) then
+      sname     = 'lflux_gas_o2'
+      lname     = 'Run O2 gas flux portion of the code'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => lflux_gas_o2
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'lflux_gas_co2'
-    lname     = 'Run CO2 gas flux portion of the code'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => lflux_gas_co2
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      sname     = 'lcompute_nhx_surface_emis'
+      lname     = 'control if NHx emissions are computed'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => lcompute_nhx_surface_emis
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'lcompute_nhx_surface_emis'
-    lname     = 'control if NHx emissions are computed'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => lcompute_nhx_surface_emis
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      sname     = 'lvariable_PtoC'
+      lname     = 'control if PtoC ratios in autotrophs vary'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => lvariable_PtoC
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'lvariable_PtoC'
-    lname     = 'control if PtoC ratios in autotrophs vary'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => lvariable_PtoC
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      sname     = 'ladjust_bury_coeff'
+      lname     = 'Adjust the bury coefficient to maintain equilibrium'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => ladjust_bury_coeff
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'ladjust_bury_coeff'
-    lname     = 'Adjust the bury coefficient to maintain equilibrium'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => ladjust_bury_coeff
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      sname     = 'lo2_consumption_scalef'
+      lname     = 'Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => lo2_consumption_scalef
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'lo2_consumption_scalef'
-    lname     = 'Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => lo2_consumption_scalef
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      sname     = 'lp_remin_scalef'
+      lname     = 'Apply p_remin_scalef to particulate remin (and request it as a forcing)'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => lp_remin_scalef
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'lp_remin_scalef'
-    lname     = 'Apply p_remin_scalef to particulate remin (and request it as a forcing)'
-    units     = 'unitless'
-    datatype  = 'logical'
-    lptr      => lp_remin_scalef
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, lptr=lptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      ! --------------------------
+      category  = 'config strings'
+      ! --------------------------
 
-    ! --------------------------
-    category  = 'config strings'
-    ! --------------------------
+      sname     = 'init_bury_coeff_opt'
+      lname     = 'How to set initial bury coefficients'
+      units     = 'unitless'
+      datatype  = 'string'
+      sptr      => init_bury_coeff_opt
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, sptr=sptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-    sname     = 'init_bury_coeff_opt'
-    lname     = 'How to set initial bury coefficients'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => init_bury_coeff_opt
-    call this%add_var(sname, lname, units, datatype, category,       &
+      ! -----------------------------
+      category  = 'general parmeters'
+      ! -----------------------------
+
+      sname     = 'particulate_flux_ref_depth'
+      lname     = 'reference depth for particulate flux diagnostics'
+      units     = 'm'
+      datatype  = 'real'
+      rptr      => particulate_flux_ref_depth
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'bftt_dz_sum_thres'
+      lname     = 'MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => bftt_dz_sum_thres
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'Jint_Ctot_thres_molpm2pyr'
+      lname     = 'MARBL will abort if abs(Jint_Ctot) exceeds this threshold'
+      units     = 'mol m-2 yr-1'
+      datatype  = 'real'
+      rptr      => Jint_Ctot_thres_molpm2pyr
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'gQsi_0'
+      lname     = 'initial Si/C ratio for growth'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => gQsi_0
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'gQsi_max'
+      lname     = 'max Si/C ratio for growth'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => gQsi_max
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'gQsi_min'
+      lname     = 'min Si/C ratio for growth'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => gQsi_min
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'gQ_Fe_kFe_thres'
+      lname     = 'Fe:kFe ratio threshold in uptake ratio computations'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => gQ_Fe_kFe_thres
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'gQ_Si_kSi_thres'
+      lname     = 'Si:kSi ratio threshold in uptake ratio computations'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => gQ_Si_kSi_thres
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_Fe_bioavail'
+      lname     = 'Fraction of Fe flux that is bioavailable'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => parm_Fe_bioavail
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_o2_min'
+      lname     = 'Minimum O2 needed for production and consumption'
+      units     = 'nmol/cm^3'
+      datatype  = 'real'
+      rptr      => parm_o2_min
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_o2_min_delta'
+      lname     = 'Width of minimum O2 range'
+      units     = 'nmol/cm^3'
+      datatype  = 'real'
+      rptr      => parm_o2_min_delta
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_kappa_nitrif_per_day'
+      lname     = 'Nitrification inverse time constant'
+      units     = '1/day'
+      datatype  = 'real'
+      rptr      => parm_kappa_nitrif_per_day
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_nitrif_par_lim'
+      lname     = 'PAR limit for nitrification'
+      units     = 'W/m^2'
+      datatype  = 'real'
+      rptr      => parm_nitrif_par_lim
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_labile_ratio'
+      lname     = 'Fraction of loss to DOC that is routed directly to DIC'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => parm_labile_ratio
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_init_POC_bury_coeff'
+      lname     = 'initial scale factor for burial of POC, PON'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => parm_init_POC_bury_coeff
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_init_POP_bury_coeff'
+      lname     = 'initial scale factor for burial of POP'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => parm_init_POP_bury_coeff
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_init_bSi_bury_coeff'
+      lname     = 'initial scale factor for burial of bSi'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => parm_init_bSi_bury_coeff
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_Fe_scavenge_rate0'
+      lname     = 'scavenging base rate for Fe'
+      units     = 'cm^2/ng s/yr'
+      datatype  = 'real'
+      rptr      => parm_Fe_scavenge_rate0
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_Lig_scavenge_rate0'
+      lname     = 'scavenging base rate for bound ligand'
+      units     = 'cm^2/ng s/yr'
+      datatype  = 'real'
+      rptr      => parm_Lig_scavenge_rate0
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_FeLig_scavenge_rate0'
+      lname     = 'scavenging base rate for bound iron'
+      units     = 'cm^2/ng s/yr'
+      datatype  = 'real'
+      rptr      => parm_FeLig_scavenge_rate0
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_Lig_degrade_rate0'
+      lname     = 'Fe-binding ligand bacterial degradation rate coefficient'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_Lig_degrade_rate0
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_Fe_desorption_rate0'
+      lname     = 'desorption rate for scavenged Fe from particles'
+      units     = '1/cm'
+      datatype  = 'real'
+      rptr      => parm_Fe_desorption_rate0
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_f_prod_sp_CaCO3'
+      lname     = 'Fraction of sp production as CaCO3 production'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => parm_f_prod_sp_CaCO3
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_POC_diss'
+      lname     = 'base POC dissolution length scale'
+      units     = 'cm'
+      datatype  = 'real'
+      rptr      => parm_POC_diss
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_SiO2_diss'
+      lname     = 'base SiO2 dissolution length scale'
+      units     = 'cm'
+      datatype  = 'real'
+      rptr      => parm_SiO2_diss
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_SiO2_gamma'
+      lname     = 'SiO2 gamma (fraction of production -> hard subclass)'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_SiO2_gamma
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_hPOC_SiO2_ratio'
+      lname     = 'hPOC to SiO2 ratio'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_hPOC_SiO2_ratio
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_CaCO3_diss'
+      lname     = 'base CaCO3 dissolution length scale'
+      units     = 'cm'
+      datatype  = 'real'
+      rptr      => parm_CaCO3_diss
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_CaCO3_gamma'
+      lname     = 'CaCO3 gamma (fraction of production -> hard subclass)'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_CaCO3_gamma
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_hPOC_CaCO3_ratio'
+      lname     = 'hPOC to CaCO3 ratio'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_hPOC_CaCO3_ratio
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_hPOC_dust_ratio'
+      lname     = 'hPOC to dust ratio'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_hPOC_dust_ratio
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'o2_sf_o2_range_hi'
+      lname     = 'o2_scalefactor is applied to diss length scales for O2 less than this'
+      units     = 'mmol/m^3'
+      datatype  = 'real'
+      rptr      => o2_sf_o2_range_hi
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'o2_sf_o2_range_lo'
+      lname     = 'o2_scalefactor is constant for O2 less than this'
+      units     = 'mmol/m^3'
+      datatype  = 'real'
+      rptr      => o2_sf_o2_range_lo
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'o2_sf_val_lo_o2'
+      lname     = 'o2_scalefactor constant for O2 less than o2_sf_o2_range_lo'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => o2_sf_val_lo_o2
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_sed_denitrif_coeff'
+      lname     = 'global scaling factor for sed_denitrif'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => parm_sed_denitrif_coeff
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'bury_coeff_rmean_timescale_years'
+      lname     = 'Timescale for bury coefficient running means'
+      units     = 'yr'
+      datatype  = 'real'
+      rptr      => bury_coeff_rmean_timescale_years
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      ! -------------------------
+      category  = 'Scale lengths'
+      ! -------------------------
+
+      sname     = 'parm_scalelen_z'
+      lname     = 'Depths of prescribed scale length values'
+      units     = 'cm'
+      call this%add_var_1d_r8(sname, lname, units, category,             &
+                                parm_scalelen_z, marbl_status_log)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'parm_scalelen_vals'
+      lname     = 'Prescribed scale length values'
+      units     = 'cm'
+      call this%add_var_1d_r8(sname, lname, units, category,             &
+                                parm_scalelen_vals, marbl_status_log)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      ! -----------------------------
+      category  = 'general parameters'
+      ! -----------------------------
+
+      sname     = 'caco3_bury_thres_opt'
+      lname     = 'Option for CaCO3 burial threshold'
+      units     = 'unitless'
+      datatype  = 'string'
+      sptr      => caco3_bury_thres_opt
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, sptr=sptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'caco3_bury_thres_depth'
+      lname     = 'Threshold depth for CaCO3 burial (if using fixed_depth option)'
+      units     = 'cm'
+      datatype  = 'real'
+      rptr      => caco3_bury_thres_depth
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'caco3_bury_thres_omega_calc'
+      lname     = 'omega calcite threshold for CaCO3 burial (if using omega_calc option)'
+      units     = '1'
+      datatype  = 'real'
+      rptr      => caco3_bury_thres_omega_calc
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'PON_bury_coeff'
+      lname     = 'scale factor for burial of PON'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => PON_bury_coeff
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'POM_bury_frac_max'
+      lname     = 'maximum bury fraction for POM'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => POM_bury_frac_max
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'bSi_bury_frac_max'
+      lname     = 'maximum bury fraction for bSi'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => bSi_bury_frac_max
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'auto_mort2_exp'
+      lname     = 'Value of power loss exponent for autotrophs'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => auto_mort2_exp
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'zoo_mort2_exp'
+      lname     = 'Value of power loss exponent for zooplankton'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => zoo_mort2_exp
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'QCaCO3_max'
+      lname     = 'Max CaCO3/C ratio for implicit calcifiers'
+      units     = 'mmol CaCO3/mmol C'
+      datatype  = 'real'
+      rptr      => QCaCO3_max
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      sname     = 'f_graze_CaCO3_remin'
+      lname     = 'Fraction of spCaCO3 grazing which is remineralized in zooplankton guts'
+      units     = 'unitless'
+      datatype  = 'real'
+      rptr      => f_graze_CaCO3_remin
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, rptr=rptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+    end if
+
+    if (ciso_on) then
+      sname     = 'ciso_fract_factors'
+      lname     = 'Option for which biological fractionation calculation to use'
+      units     = 'unitless'
+      datatype  = 'string'
+      sptr      => ciso_fract_factors
+      call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, sptr=sptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    ! -----------------------------
-    category  = 'general parmeters'
-    ! -----------------------------
-
-    sname     = 'particulate_flux_ref_depth'
-    lname     = 'reference depth for particulate flux diagnostics'
-    units     = 'm'
-    datatype  = 'real'
-    rptr      => particulate_flux_ref_depth
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'bftt_dz_sum_thres'
-    lname     = 'MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => bftt_dz_sum_thres
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'Jint_Ctot_thres_molpm2pyr'
-    lname     = 'MARBL will abort if abs(Jint_Ctot) exceeds this threshold'
-    units     = 'mol m-2 yr-1'
-    datatype  = 'real'
-    rptr      => Jint_Ctot_thres_molpm2pyr
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'gQsi_0'
-    lname     = 'initial Si/C ratio for growth'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => gQsi_0
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'gQsi_max'
-    lname     = 'max Si/C ratio for growth'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => gQsi_max
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'gQsi_min'
-    lname     = 'min Si/C ratio for growth'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => gQsi_min
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'gQ_Fe_kFe_thres'
-    lname     = 'Fe:kFe ratio threshold in uptake ratio computations'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => gQ_Fe_kFe_thres
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'gQ_Si_kSi_thres'
-    lname     = 'Si:kSi ratio threshold in uptake ratio computations'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => gQ_Si_kSi_thres
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_Fe_bioavail'
-    lname     = 'Fraction of Fe flux that is bioavailable'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => parm_Fe_bioavail
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_o2_min'
-    lname     = 'Minimum O2 needed for production and consumption'
-    units     = 'nmol/cm^3'
-    datatype  = 'real'
-    rptr      => parm_o2_min
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_o2_min_delta'
-    lname     = 'Width of minimum O2 range'
-    units     = 'nmol/cm^3'
-    datatype  = 'real'
-    rptr      => parm_o2_min_delta
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_kappa_nitrif_per_day'
-    lname     = 'Nitrification inverse time constant'
-    units     = '1/day'
-    datatype  = 'real'
-    rptr      => parm_kappa_nitrif_per_day
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_nitrif_par_lim'
-    lname     = 'PAR limit for nitrification'
-    units     = 'W/m^2'
-    datatype  = 'real'
-    rptr      => parm_nitrif_par_lim
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_labile_ratio'
-    lname     = 'Fraction of loss to DOC that is routed directly to DIC'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => parm_labile_ratio
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_init_POC_bury_coeff'
-    lname     = 'initial scale factor for burial of POC, PON'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => parm_init_POC_bury_coeff
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_init_POP_bury_coeff'
-    lname     = 'initial scale factor for burial of POP'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => parm_init_POP_bury_coeff
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_init_bSi_bury_coeff'
-    lname     = 'initial scale factor for burial of bSi'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => parm_init_bSi_bury_coeff
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_Fe_scavenge_rate0'
-    lname     = 'scavenging base rate for Fe'
-    units     = 'cm^2/ng s/yr'
-    datatype  = 'real'
-    rptr      => parm_Fe_scavenge_rate0
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_Lig_scavenge_rate0'
-    lname     = 'scavenging base rate for bound ligand'
-    units     = 'cm^2/ng s/yr'
-    datatype  = 'real'
-    rptr      => parm_Lig_scavenge_rate0
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_FeLig_scavenge_rate0'
-    lname     = 'scavenging base rate for bound iron'
-    units     = 'cm^2/ng s/yr'
-    datatype  = 'real'
-    rptr      => parm_FeLig_scavenge_rate0
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_Lig_degrade_rate0'
-    lname     = 'Fe-binding ligand bacterial degradation rate coefficient'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_Lig_degrade_rate0
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_Fe_desorption_rate0'
-    lname     = 'desorption rate for scavenged Fe from particles'
-    units     = '1/cm'
-    datatype  = 'real'
-    rptr      => parm_Fe_desorption_rate0
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_f_prod_sp_CaCO3'
-    lname     = 'Fraction of sp production as CaCO3 production'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => parm_f_prod_sp_CaCO3
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_POC_diss'
-    lname     = 'base POC dissolution length scale'
-    units     = 'cm'
-    datatype  = 'real'
-    rptr      => parm_POC_diss
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_SiO2_diss'
-    lname     = 'base SiO2 dissolution length scale'
-    units     = 'cm'
-    datatype  = 'real'
-    rptr      => parm_SiO2_diss
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_SiO2_gamma'
-    lname     = 'SiO2 gamma (fraction of production -> hard subclass)'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_SiO2_gamma
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_hPOC_SiO2_ratio'
-    lname     = 'hPOC to SiO2 ratio'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_hPOC_SiO2_ratio
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_CaCO3_diss'
-    lname     = 'base CaCO3 dissolution length scale'
-    units     = 'cm'
-    datatype  = 'real'
-    rptr      => parm_CaCO3_diss
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_CaCO3_gamma'
-    lname     = 'CaCO3 gamma (fraction of production -> hard subclass)'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_CaCO3_gamma
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_hPOC_CaCO3_ratio'
-    lname     = 'hPOC to CaCO3 ratio'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_hPOC_CaCO3_ratio
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_hPOC_dust_ratio'
-    lname     = 'hPOC to dust ratio'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_hPOC_dust_ratio
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'o2_sf_o2_range_hi'
-    lname     = 'o2_scalefactor is applied to diss length scales for O2 less than this'
-    units     = 'mmol/m^3'
-    datatype  = 'real'
-    rptr      => o2_sf_o2_range_hi
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'o2_sf_o2_range_lo'
-    lname     = 'o2_scalefactor is constant for O2 less than this'
-    units     = 'mmol/m^3'
-    datatype  = 'real'
-    rptr      => o2_sf_o2_range_lo
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'o2_sf_val_lo_o2'
-    lname     = 'o2_scalefactor constant for O2 less than o2_sf_o2_range_lo'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => o2_sf_val_lo_o2
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_sed_denitrif_coeff'
-    lname     = 'global scaling factor for sed_denitrif'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => parm_sed_denitrif_coeff
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'bury_coeff_rmean_timescale_years'
-    lname     = 'Timescale for bury coefficient running means'
-    units     = 'yr'
-    datatype  = 'real'
-    rptr      => bury_coeff_rmean_timescale_years
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    ! -------------------------
-    category  = 'Scale lengths'
-    ! -------------------------
-
-    sname     = 'parm_scalelen_z'
-    lname     = 'Depths of prescribed scale length values'
-    units     = 'cm'
-    call this%add_var_1d_r8(sname, lname, units, category,             &
-                              parm_scalelen_z, marbl_status_log)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'parm_scalelen_vals'
-    lname     = 'Prescribed scale length values'
-    units     = 'cm'
-    call this%add_var_1d_r8(sname, lname, units, category,             &
-                              parm_scalelen_vals, marbl_status_log)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    ! -----------------------------
-    category  = 'general parameters'
-    ! -----------------------------
-
-    sname     = 'caco3_bury_thres_opt'
-    lname     = 'Option for CaCO3 burial threshold'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => caco3_bury_thres_opt
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, sptr=sptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'caco3_bury_thres_depth'
-    lname     = 'Threshold depth for CaCO3 burial (if using fixed_depth option)'
-    units     = 'cm'
-    datatype  = 'real'
-    rptr      => caco3_bury_thres_depth
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'caco3_bury_thres_omega_calc'
-    lname     = 'omega calcite threshold for CaCO3 burial (if using omega_calc option)'
-    units     = '1'
-    datatype  = 'real'
-    rptr      => caco3_bury_thres_omega_calc
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'PON_bury_coeff'
-    lname     = 'scale factor for burial of PON'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => PON_bury_coeff
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'POM_bury_frac_max'
-    lname     = 'maximum bury fraction for POM'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => POM_bury_frac_max
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'bSi_bury_frac_max'
-    lname     = 'maximum bury fraction for bSi'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => bSi_bury_frac_max
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'ciso_fract_factors'
-    lname     = 'Option for which biological fractionation calculation to use'
-    units     = 'unitless'
-    datatype  = 'string'
-    sptr      => ciso_fract_factors
-    call this%add_var(sname, lname, units, datatype, category,       &
-                      marbl_status_log, sptr=sptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'auto_mort2_exp'
-    lname     = 'Value of power loss exponent for autotrophs'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => auto_mort2_exp
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-    sname     = 'zoo_mort2_exp'
-    lname     = 'Value of power loss exponent for zooplankton'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => zoo_mort2_exp
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-
-    sname     = 'QCaCO3_max'
-    lname     = 'Max CaCO3/C ratio for implicit calcifiers'
-    units     = 'mmol CaCO3/mmol C'
-    datatype  = 'real'
-    rptr      => QCaCO3_max
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-
-    sname     = 'f_graze_CaCO3_remin'
-    lname     = 'Fraction of spCaCO3 grazing which is remineralized in zooplankton guts'
-    units     = 'unitless'
-    datatype  = 'real'
-    rptr      => f_graze_CaCO3_remin
-    call this%add_var(sname, lname, units, datatype, category,       &
-                        marbl_status_log, rptr=rptr)
-
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+    end if
 
     marbl_status_log%labort_marbl = labort_marbl_loc
     if (marbl_status_log%labort_marbl) return
@@ -1203,12 +1284,12 @@ contains
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_define_PFT_counts'
-    character(len=char_len)     :: log_message
 
     character(len=char_len)    :: sname, lname, units, datatype, category
     integer(int_kind), pointer :: iptr => NULL()
-    integer                    :: m,n
     logical                    :: labort_marbl_loc
+
+    if (.not. base_bio_on) return
 
     labort_marbl_loc = .false.
 
@@ -1253,6 +1334,16 @@ contains
     marbl_status_log%labort_marbl = labort_marbl_loc
     if (marbl_status_log%labort_marbl) return
 
+  end subroutine marbl_settings_define_PFT_counts
+
+  subroutine marbl_settings_allocate_PFT_types(marbl_status_log)
+
+    type(marbl_log_type), intent(inout) :: marbl_status_log
+
+    character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_allocate_PFT_types'
+    character(len=char_len)     :: log_message
+    integer :: m, n
+
     ! FIXME #69: this is not ideal for threaded runs
     if (.not. allocated(autotroph_settings)) &
       allocate(autotroph_settings(autotroph_cnt))
@@ -1272,7 +1363,7 @@ contains
       end do
     end if
 
-  end subroutine marbl_settings_define_PFT_counts
+  end subroutine marbl_settings_allocate_PFT_types
 
   !*****************************************************************************
 
@@ -1292,6 +1383,8 @@ contains
     logical :: labort_marbl_loc
     integer :: m, n, cnt
     character(len=char_len) :: prefix
+
+    if (.not. base_bio_on) return
 
     labort_marbl_loc = .false.
     do n=1,autotroph_cnt
@@ -2120,12 +2213,23 @@ contains
     character(len=*), parameter :: subname = 'marbl_settings_mod:marbl_settings_consistency_check'
     character(len=char_len) :: log_message
 
-    !  Abort if GCM doesn't support global ops but configuration requires them
-    if (ladjust_bury_coeff .and. (.not.lallow_glo_ops)) then
+    ! Abort if no tracer modules are enabled
+    if (.not. (base_bio_on .or. abio_dic_on .or. ciso_on)) then
+      write(log_message, '(A)') 'You must enable at least one tracer package in MARBL'
+      call marbl_status_log%log_error(log_message, subname)
+    end if
+
+    ! Abort if ciso is on but base_bio is not
+    if (ciso_on .and. (.not. base_bio_on)) then
+      write(log_message, '(A)') 'You can not run with carbon isotopes without the base biotic tracers'
+      call marbl_status_log%log_error(log_message, subname)
+    end if
+
+    ! Abort if GCM doesn't support global ops but configuration requires them
+    if (ladjust_bury_coeff .and. (.not. lallow_glo_ops)) then
       write(log_message,'(2A)') 'Can not run with ladjust_bury_coeff = ',     &
              '.true. unless GCM can perform global operations'
       call marbl_status_log%log_error(log_message, subname)
-      return
     end if
 
   end subroutine marbl_settings_consistency_check
@@ -2398,7 +2502,7 @@ contains
     end if
 
     ! 4) Append new entry to list
-    if (.not.associated(this%vars)) then
+    if (.not. associated(this%vars)) then
       this%vars => new_entry
     else
       ll_prev%next => new_entry
@@ -2784,7 +2888,7 @@ contains
       new_entry%datatype = 'unknown'
     end if
 
-    if (.not.associated(this%VarsFromPut)) then
+    if (.not. associated(this%VarsFromPut)) then
       this%VarsFromPut => new_entry
     else
       this%LastVarFromPut%next => new_entry
@@ -2829,7 +2933,7 @@ contains
       if (case_insensitive_eq((ll_ptr%short_name), trim(var))) exit
       ll_ptr => ll_ptr%next
     end do
-    if (.not.associated(ll_ptr)) then
+    if (.not. associated(ll_ptr)) then
       write(log_message, "(2A)") trim(var), 'not found!'
       call marbl_status_log%log_error(log_message, subname)
       return

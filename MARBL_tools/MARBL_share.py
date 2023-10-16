@@ -2,6 +2,8 @@
     and MARBL_diagnostics_file_class.py
 """
 
+import logging
+
 ################################################################################
 #                            PUBLIC MODULE METHODS                             #
 ################################################################################
@@ -12,6 +14,15 @@ def abort(err_code=0):
     import sys
     sys.exit(err_code)
 
+################################################################################
+
+class LogFormatter(logging.Formatter):
+    def format(self, record):
+        if record.levelno == logging.ERROR:
+            self._style._fmt = '%(levelname)s: %(message)s'
+        else:
+            self._style._fmt = '%(message)s'
+        return super().format(record)
 ################################################################################
 
 def sort(list_in, sort_key=lambda s: s.lower()):
@@ -30,7 +41,7 @@ def natural_sort_key(string_):
 
 ################################################################################
 
-def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq=False):
+def expand_template_value(key_name, MARBL_settings, unit_system, unprocessed_dict, check_freq=False):
     """ unprocessed_dict is a dictionary whose keys / values have templated strings (e.g.
         strings that depend on tracer name or PFT name). This subroutine replaces the
         templated values and adds the appropriate entry / entries to processed_dict
@@ -47,27 +58,45 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
 
     template = re.search('\(\(.*\)\)', key_name).group()
     template_fill_dict = dict()
+
+    # Find counts
+    try:
+        autotroph_cnt = MARBL_settings.settings_dict['autotroph_cnt']['value']
+    except:
+        autotroph_cnt = 0
+    try:
+        zooplankton_cnt = MARBL_settings.settings_dict['zooplankton_cnt']['value']
+    except:
+        zooplankton_cnt = 0
+
     if template == '((tracer_short_name))':
         fill_source = 'tracers'
         # diag name will replace template with key_fill_vals
         loop_for_replacement = MARBL_settings.tracers_dict.keys()
     elif template == '((autotroph_sname))':
         fill_source = 'autotrophs'
-        loop_for_replacement = range(1,MARBL_settings.settings_dict['autotroph_cnt']['value']+1)
+        loop_for_replacement = range(1,autotroph_cnt+1)
     elif template == '((zooplankton_sname))':
         fill_source = 'zooplankton'
-        loop_for_replacement = range(1,MARBL_settings.settings_dict['zooplankton_cnt']['value']+1)
+        loop_for_replacement = range(1,zooplankton_cnt+1)
     elif '_((zooplankton_sname))' in template:
         first_half = re.search('\(\(.*\)\)_', template).group()[:-1]
         if first_half == '((autotroph_sname))':
-            loop_for_replacement = range(1,(MARBL_settings.settings_dict['autotroph_cnt']['value'] * MARBL_settings.settings_dict['zooplankton_cnt']['value'])+1)
+            loop_for_replacement = range(1,(autotroph_cnt * zooplankton_cnt)+1)
             fill_source = 'phyto_graze_zoo'
         elif first_half == '((zooplankton_sname))':
-            loop_for_replacement = range(1, (MARBL_settings.settings_dict['zooplankton_cnt']['value'] * MARBL_settings.settings_dict['zooplankton_cnt']['value'])+1)
+            loop_for_replacement = range(1, (zooplankton_cnt * zooplankton_cnt)+1)
             fill_source = 'zoo_graze_zoo'
     elif template == '((particulate_flux_ref_depth_str))':
         fill_source = 'strings'
-        particulate_flux_ref_depth_str = '%dm' % MARBL_settings.settings_dict['particulate_flux_ref_depth']['value']
+        try:
+            particulate_flux_ref_depth = float(MARBL_settings.settings_dict['particulate_flux_ref_depth']['value'])
+            if MARBL_settings.settings_dict['particulate_flux_ref_depth']['attrs']['units'] == 'cm':
+                particulate_flux_ref_depth = particulate_flux_ref_depth / 100.
+        except:
+            # If base_biotic_on is False, we don't need particulate_flux_ref_depth
+            particulate_flux_ref_depth = 0
+        particulate_flux_ref_depth_str = '%dm' % particulate_flux_ref_depth
         loop_for_replacement = [ particulate_flux_ref_depth_str ]
     else:
         logger.error("%s is not a valid template value" % template)
@@ -109,21 +138,21 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix + "sname"]['value'].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"]['value'].strip('"')
         elif fill_source == 'phyto_graze_zoo':
-            auto_ind = (item-1) % MARBL_settings.settings_dict['autotroph_cnt']['value'] + 1
+            auto_ind = (item-1) % autotroph_cnt + 1
             auto_prefix = "autotroph_settings(%d)%%" % auto_ind
-            zoo_ind = (item-1) // MARBL_settings.settings_dict['autotroph_cnt']['value'] + 1
+            zoo_ind = (item-1) // autotroph_cnt + 1
             zoo_prefix = "zooplankton_settings(%d)%%" % zoo_ind
             key_fill_val = MARBL_settings.settings_dict[auto_prefix + "sname"]['value'].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix + "sname"]['value'].strip('"')
             template_fill_dict['((autotroph_lname))'] = MARBL_settings.settings_dict[auto_prefix + "lname"]['value'].strip('"')
             template_fill_dict['((zooplankton_lname))'] = MARBL_settings.settings_dict[zoo_prefix + "lname"]['value'].strip('"')
         elif fill_source == 'zoo_graze_zoo':
-            zoo_ind1 = (item-1) % MARBL_settings.settings_dict['zooplankton_cnt']['value'] + 1
+            zoo_ind1 = (item-1) % zooplankton_cnt + 1
             zoo_prefix1 = "zooplankton_settings(%d)%%" % zoo_ind1
-            zoo_ind2 = (item-1) // MARBL_settings.settings_dict['zooplankton_cnt']['value'] + 1
+            zoo_ind2 = (item-1) // zooplankton_cnt + 1
             zoo_prefix2 = "zooplankton_settings(%d)%%" % zoo_ind2
             key_fill_val = MARBL_settings.settings_dict[zoo_prefix1 + "sname"]['value'].strip('"') + '_' + MARBL_settings.settings_dict[zoo_prefix2 + "sname"]['value'].strip('"')
-            template_fill_dict['((zooplankton_lname))1'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"]['value'].strip('"')
-            template_fill_dict['((zooplankton_lname))2'] = MARBL_settings.settings_dict[zoo_prefix2 + "lname"]['value'].strip('"')
+            template_fill_dict['((zooplankton_lname1))'] = MARBL_settings.settings_dict[zoo_prefix1 + "lname"]['value'].strip('"')
+            template_fill_dict['((zooplankton_lname2))'] = MARBL_settings.settings_dict[zoo_prefix2 + "lname"]['value'].strip('"')
         elif fill_source == 'strings':
             key_fill_val = item
             template_fill_dict[template] = item
@@ -144,9 +173,6 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
                     else:
                         template2 = re.findall('\(\(.*?\)\)', unprocessed_dict[key])
                         try:
-                            if (len(template2)==2) and (template2[0] == template2[1]):
-                                template2[0] = template2[0]+'1'
-                                template2[1] = template2[1]+'2'
                             replacement_text = [template_fill_dict[i] for i in template2]
                         except:
                             logger.error("Can not replace '%s'" % template2)
@@ -195,11 +221,22 @@ def expand_template_value(key_name, MARBL_settings, unprocessed_dict, check_freq
 ################################################################################
 
 def meet_dependencies(input_dict, MARBL_settings):
+    import logging
+    logger = logging.getLogger(__name__)
+
+    dependencies_or = input_dict.get('dependencies_or', False)
     if "dependencies" in input_dict.keys():
-        for dependency in input_dict["dependencies"].keys():
-            if dependency not in MARBL_settings.settings_dict.keys():
-                logger.error("'%s' is not a valid dependency" % dependency)
-                abort(1)
-            if input_dict["dependencies"][dependency] != MARBL_settings.settings_dict[dependency]['value']:
-                return False
+        if dependencies_or:
+            for dependency in input_dict["dependencies"].keys():
+                if dependency in MARBL_settings.settings_dict.keys():
+                    if input_dict["dependencies"][dependency] == MARBL_settings.settings_dict[dependency]['value']:
+                        return True
+            return False
+        else:
+            for dependency in input_dict["dependencies"].keys():
+                if dependency not in MARBL_settings.settings_dict.keys():
+                    logger.error("'%s' is not a valid dependency" % dependency)
+                    abort(1)
+                if input_dict["dependencies"][dependency] != MARBL_settings.settings_dict[dependency]['value']:
+                    return False
     return True

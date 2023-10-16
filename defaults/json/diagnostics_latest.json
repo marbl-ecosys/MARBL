@@ -114,7 +114,7 @@
          "lvariable_PtoC": ".true."
       },
       "frequency": "medium",
-      "longname": "((autotroph_lname))",
+      "longname": "((autotroph_lname)) P:C ratio",
       "operator": "average",
       "truncate": true,
       "units": 1,
@@ -142,7 +142,7 @@
    },
    "((autotroph_sname))_agg": {
       "frequency": "medium",
-      "longname": "((autotroph_lname)) Aggregate",
+      "longname": "((autotroph_lname)) Aggregation",
       "operator": "average",
       "truncate": true,
       "units": "mmol/m^3/s",
@@ -358,7 +358,130 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "ABIO_ALK_SURF": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface Alkalinity for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "meq/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_CO2STAR": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "CO2 Star for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_D14C_atm": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Atmospheric Delta 14C for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "none"
+   },
+   "ABIO_D14C_ocn": {
+      "dependencies": {
+         "abio_dic_on": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Oceanic Delta 14C for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "permil",
+      "vertical_grid": "layer_avg"
+   },
+   "ABIO_DCO2STAR": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "D CO2 Star for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
+   "ABIO_DpCO2": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "D pCO2 for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
+   "ABIO_FG_DI14C": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface Gas Flux of Abiotic DI14C",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "ABIO_FG_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface Gas Flux of Abiotic DIC",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "ABIO_PH": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface pH for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": 1,
+      "vertical_grid": "none"
+   },
+   "ABIO_pCO2": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "CO2 Atmospheric Partial Pressure for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "ppm",
+      "vertical_grid": "none"
+   },
+   "ABIO_pCO2SURF": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "medium",
+      "longname": "Surface pCO2 for Abiotic DIC Tracer Fluxes",
+      "operator": "average",
+      "units": "ppmv",
+      "vertical_grid": "none"
+   },
    "AOU": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Apparent O2 Utilization",
       "operator": "average",
@@ -366,15 +489,21 @@
       "vertical_grid": "layer_avg"
    },
    "ATM_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
-      "longname": "Atomspheric CO2",
+      "longname": "Atmospheric Alternative CO2",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
    },
    "ATM_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
-      "longname": "Atomspheric CO2",
+      "longname": "Atmospheric CO2",
       "operator": "average",
       "units": "ppmv",
       "vertical_grid": "none"
@@ -490,7 +619,7 @@
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atmospheric Delta 13C in permil",
+      "longname": "Atmospheric Delta 13C",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
@@ -500,7 +629,7 @@
          "ciso_on": ".true."
       },
       "frequency": "medium",
-      "longname": "Atmospheric Delta 14C in permil",
+      "longname": "Atmospheric Delta 14C",
       "operator": "average",
       "units": "permil",
       "vertical_grid": "none"
@@ -884,7 +1013,7 @@
       "frequency": "medium",
       "longname": "((autotroph_lname)) instanteous growth rate over [CO2*]",
       "operator": "average",
-      "units": "m^3/mmol/s",
+      "units": "(mmol/m^3)^-1 s^-1",
       "vertical_grid": "layer_avg"
    },
    "CISO_photo13C_((autotroph_sname))": {
@@ -990,6 +1119,9 @@
       "vertical_grid": "layer_avg"
    },
    "CO2STAR": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "CO2 Star",
       "operator": "average",
@@ -997,13 +1129,19 @@
       "vertical_grid": "none"
    },
    "CO2STAR_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
-      "longname": "CO2 Star, Alternate CO2",
+      "longname": "CO2 Star, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
    "CO3": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Carbonate Ion Concentration",
       "operator": "average",
@@ -1011,6 +1149,9 @@
       "vertical_grid": "layer_avg"
    },
    "CO3_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Carbonate Ion Concentration, Alternative CO2",
       "operator": "average",
@@ -1018,6 +1159,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "CaCO3 Flux into Cell, Alternative CO2",
       "operator": "average",
@@ -1025,6 +1169,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_PROD": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "CaCO3 Production, Alternative CO2",
       "operator": "average",
@@ -1032,6 +1179,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_ALT_CO2_REMIN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "CaCO3 Remineralization, Alternative CO2",
       "operator": "average",
@@ -1039,6 +1189,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_FLUX_((particulate_flux_ref_depth_str))": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "CaCO3 Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -1046,6 +1199,9 @@
       "vertical_grid": "none"
    },
    "CaCO3_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "CaCO3 Flux into Cell",
       "operator": "average",
@@ -1053,6 +1209,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_PROD": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "CaCO3 Production",
       "operator": "average",
@@ -1060,6 +1219,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_PROD_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of CaCO3 Production",
       "operator": "average",
@@ -1067,6 +1229,9 @@
       "vertical_grid": "none"
    },
    "CaCO3_PROD_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of CaCO3 Production, 0-100m",
       "operator": "average",
@@ -1074,6 +1239,9 @@
       "vertical_grid": "none"
    },
    "CaCO3_REMIN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "CaCO3 Remineralization",
       "operator": "average",
@@ -1081,6 +1249,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_REMIN_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of CaCO3 Remineralization",
       "operator": "average",
@@ -1088,6 +1259,9 @@
       "vertical_grid": "none"
    },
    "CaCO3_REMIN_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of CaCO3 Remineralization, 0-100m",
       "operator": "average",
@@ -1095,6 +1269,9 @@
       "vertical_grid": "none"
    },
    "CaCO3_form": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "Total CaCO3 Formation",
       "operator": "average",
@@ -1102,6 +1279,9 @@
       "vertical_grid": "layer_avg"
    },
    "CaCO3_form_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": [
          "medium",
          "high"
@@ -1115,6 +1295,9 @@
       "vertical_grid": "none"
    },
    "CaCO3_form_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total CaCO3 Formation Vertical Integral, 0-100m",
       "operator": "average",
@@ -1122,6 +1305,9 @@
       "vertical_grid": "none"
    },
    "DCO2STAR": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "D CO2 Star",
       "operator": "average",
@@ -1129,6 +1315,9 @@
       "vertical_grid": "none"
    },
    "DCO2STAR_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "D CO2 Star, Alternative CO2",
       "operator": "average",
@@ -1136,6 +1325,9 @@
       "vertical_grid": "none"
    },
    "DENITRIF": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Denitrification",
       "operator": "average",
@@ -1143,6 +1335,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOC_prod": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DOC Production",
       "operator": "average",
@@ -1150,6 +1345,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOC_prod_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of DOC Production",
       "operator": "average",
@@ -1157,6 +1355,9 @@
       "vertical_grid": "none"
    },
    "DOC_prod_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of DOC Production, 0-100m",
       "operator": "average",
@@ -1164,6 +1365,9 @@
       "vertical_grid": "none"
    },
    "DOC_remin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "DOC Remineralization",
       "operator": "average",
@@ -1171,6 +1375,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOC_remin_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of DOC Remineralization",
       "operator": "average",
@@ -1178,6 +1385,9 @@
       "vertical_grid": "none"
    },
    "DOC_remin_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of DOC Remineralization, 0-100m",
       "operator": "average",
@@ -1185,6 +1395,9 @@
       "vertical_grid": "none"
    },
    "DOCr_remin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "DOCr Remineralization",
       "operator": "average",
@@ -1192,6 +1405,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOCr_remin_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of DOCr Remineralization",
       "operator": "average",
@@ -1199,6 +1415,9 @@
       "vertical_grid": "none"
    },
    "DOCr_remin_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of DOCr Remineralization, 0-100m",
       "operator": "average",
@@ -1206,6 +1425,9 @@
       "vertical_grid": "none"
    },
    "DON_prod": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DON Production",
       "operator": "average",
@@ -1213,6 +1435,9 @@
       "vertical_grid": "layer_avg"
    },
    "DON_remin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "DON Remineralization",
       "operator": "average",
@@ -1220,6 +1445,9 @@
       "vertical_grid": "layer_avg"
    },
    "DONr_remin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "DONr Remineralization",
       "operator": "average",
@@ -1235,6 +1463,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_loss_P_bal": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "DOP loss, due to P budget balancing",
       "operator": "average",
@@ -1242,6 +1473,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_prod": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DOP Production",
       "operator": "average",
@@ -1249,6 +1483,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_remin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "DOP Remineralization",
       "operator": "average",
@@ -1256,6 +1493,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOPr_remin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "DOPr Remineralization",
       "operator": "average",
@@ -1263,13 +1503,19 @@
       "vertical_grid": "layer_avg"
    },
    "DUST_FLUX": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
-      "longname": "Dust Flux",
+      "longname": "Atmospheric Dust Flux",
       "operator": "average",
       "units": "g/cm^2/s",
       "vertical_grid": "none"
    },
    "DpCO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": [
          "medium",
          "high"
@@ -1283,6 +1529,9 @@
       "vertical_grid": "none"
    },
    "DpCO2_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "D pCO2, Alternative CO2",
       "operator": "average",
@@ -1290,18 +1539,28 @@
       "vertical_grid": "none"
    },
    "ECOSYS_ATM_PRESS": {
+      "dependencies": {
+         "lflux_gas_co2": ".true.",
+         "lflux_gas_o2": ".true."
+      },
+      "dependencies_or": true,
       "frequency": "medium",
-      "longname": "Atmospheric Pressure for ecosys fluxes",
+      "longname": "Atmospheric Pressure",
       "operator": "average",
       "units": "atmospheres",
       "vertical_grid": "none"
    },
    "ECOSYS_IFRAC": {
+      "dependencies": {
+         "lflux_gas_co2": ".true.",
+         "lflux_gas_o2": ".true."
+      },
+      "dependencies_or": true,
       "frequency": [
          "medium",
          "high"
       ],
-      "longname": "Ice Fraction for ecosys fluxes",
+      "longname": "Ice Fraction",
       "operator": [
          "average",
          "average"
@@ -1310,11 +1569,16 @@
       "vertical_grid": "none"
    },
    "ECOSYS_XKW": {
+      "dependencies": {
+         "lflux_gas_co2": ".true.",
+         "lflux_gas_o2": ".true."
+      },
+      "dependencies_or": true,
       "frequency": [
          "medium",
          "high"
       ],
-      "longname": "XKW for ecosys fluxes",
+      "longname": "XKW",
       "operator": [
          "average",
          "average"
@@ -1323,6 +1587,9 @@
       "vertical_grid": "none"
    },
    "FESEDFLUX": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Iron Sediment Flux",
       "operator": "average",
@@ -1330,6 +1597,9 @@
       "vertical_grid": "layer_avg"
    },
    "FG_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "DIC Surface Gas Flux, Alternative CO2",
       "operator": "average",
@@ -1337,6 +1607,9 @@
       "vertical_grid": "none"
    },
    "FG_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": [
          "medium",
          "high"
@@ -1350,6 +1623,9 @@
       "vertical_grid": "none"
    },
    "Fe_scavenge": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Iron Scavenging",
       "operator": "average",
@@ -1357,6 +1633,9 @@
       "vertical_grid": "layer_avg"
    },
    "Fe_scavenge_rate": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Iron Scavenging Rate",
       "operator": "average",
@@ -1364,6 +1643,9 @@
       "vertical_grid": "layer_avg"
    },
    "Fefree": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Fe not bound to Ligand",
       "operator": "average",
@@ -1371,6 +1653,9 @@
       "vertical_grid": "layer_avg"
    },
    "H2CO3": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Carbonic Acid Concentration",
       "operator": "average",
@@ -1378,6 +1663,9 @@
       "vertical_grid": "layer_avg"
    },
    "H2CO3_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Carbonic Acid Concentration, Alternative CO2",
       "operator": "average",
@@ -1385,6 +1673,9 @@
       "vertical_grid": "layer_avg"
    },
    "HCO3": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Bicarbonate Ion Concentration",
       "operator": "average",
@@ -1392,6 +1683,9 @@
       "vertical_grid": "layer_avg"
    },
    "HCO3_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Bicarbonate Ion Concentration, Alternative CO2",
       "operator": "average",
@@ -1399,6 +1693,9 @@
       "vertical_grid": "layer_avg"
    },
    "IRON_FLUX": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Atmospheric Iron Flux",
       "operator": "average",
@@ -1406,6 +1703,9 @@
       "vertical_grid": "none"
    },
    "Jint_Ctot": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ctot",
       "operator": "average",
@@ -1413,6 +1713,9 @@
       "vertical_grid": "none"
    },
    "Jint_Fetot": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Fetot",
       "operator": "average",
@@ -1420,6 +1723,9 @@
       "vertical_grid": "none"
    },
    "Jint_Ntot": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ntot",
       "operator": "average",
@@ -1427,6 +1733,9 @@
       "vertical_grid": "none"
    },
    "Jint_Ptot": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Ptot",
       "operator": "average",
@@ -1434,6 +1743,9 @@
       "vertical_grid": "none"
    },
    "Jint_Sitot": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Vertical Integral of Conservative Subterms of Source Sink Term for Sitot",
       "operator": "average",
@@ -1441,6 +1753,9 @@
       "vertical_grid": "none"
    },
    "Lig_deg": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Loss of Fe-binding Ligand from Bacterial Degradation",
       "operator": "average",
@@ -1448,6 +1763,9 @@
       "vertical_grid": "layer_avg"
    },
    "Lig_loss": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Loss of Fe-binding Ligand",
       "operator": "average",
@@ -1455,6 +1773,9 @@
       "vertical_grid": "layer_avg"
    },
    "Lig_photochem": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Loss of Fe-binding Ligand from UV radiation",
       "operator": "average",
@@ -1462,6 +1783,9 @@
       "vertical_grid": "layer_avg"
    },
    "Lig_prod": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Production of Fe-binding Ligand",
       "operator": "average",
@@ -1469,13 +1793,19 @@
       "vertical_grid": "layer_avg"
    },
    "Lig_scavenge": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
-      "longname": "Fe not bound to Ligand",
+      "longname": "Loss of Fe-binding Ligand from Scavenging",
       "operator": "average",
-      "units": "mmol/m^3",
+      "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
    "NHx_SURFACE_EMIS": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Emission of NHx to Atmosphere",
       "operator": "average",
@@ -1483,6 +1813,9 @@
       "vertical_grid": "none"
    },
    "NHy_FLUX": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Flux of NHy from Atmosphere",
       "operator": "average",
@@ -1490,6 +1823,9 @@
       "vertical_grid": "none"
    },
    "NITRIF": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Nitrification",
       "operator": "average",
@@ -1497,6 +1833,9 @@
       "vertical_grid": "layer_avg"
    },
    "NOx_FLUX": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Flux of NOx from Atmosphere",
       "operator": "average",
@@ -1504,6 +1843,9 @@
       "vertical_grid": "none"
    },
    "Nfix": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "Total N Fixation",
       "operator": "average",
@@ -1511,6 +1853,9 @@
       "vertical_grid": "layer_avg"
    },
    "O2SAT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "O2 Saturation",
       "operator": "average",
@@ -1518,6 +1863,9 @@
       "vertical_grid": "none"
    },
    "O2_CONSUMPTION": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "O2 Consumption",
       "operator": "average",
@@ -1526,6 +1874,7 @@
    },
    "O2_CONSUMPTION_SCALEF": {
       "dependencies": {
+         "base_bio_on": ".true.",
          "lo2_consumption_scalef": ".true."
       },
       "frequency": "never",
@@ -1535,6 +1884,9 @@
       "vertical_grid": "layer_avg"
    },
    "O2_PRODUCTION": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "O2 Production",
       "operator": "average",
@@ -1542,6 +1894,9 @@
       "vertical_grid": "layer_avg"
    },
    "O2_ZMIN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Minimum of O2",
       "operator": "average",
@@ -1549,13 +1904,19 @@
       "vertical_grid": "none"
    },
    "O2_ZMIN_DEPTH": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
-      "longname": "Vertical Minimum of O2",
+      "longname": "Depth of Vertical Minimum of O2",
       "operator": "average",
       "units": "cm",
       "vertical_grid": "none"
    },
    "OtherRemin": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "non-oxic,non-dentr remin in Sediments",
       "operator": "average",
@@ -1563,6 +1924,9 @@
       "vertical_grid": "none"
    },
    "PAR_avg": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "PAR Average over Model Cell",
       "operator": "average",
@@ -1570,6 +1934,9 @@
       "vertical_grid": "layer_avg"
    },
    "PH": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Surface pH",
       "operator": "average",
@@ -1577,6 +1944,9 @@
       "vertical_grid": "none"
    },
    "PH_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Surface pH, Alternative CO2",
       "operator": "average",
@@ -1592,6 +1962,9 @@
       "vertical_grid": "layer_avg"
    },
    "POC_FLUX_((particulate_flux_ref_depth_str))": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POC Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -1599,6 +1972,9 @@
       "vertical_grid": "none"
    },
    "POC_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POC Flux into Cell",
       "operator": "average",
@@ -1606,6 +1982,9 @@
       "vertical_grid": "layer_avg"
    },
    "POC_PROD": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POC Production",
       "operator": "average",
@@ -1613,6 +1992,9 @@
       "vertical_grid": "layer_avg"
    },
    "POC_PROD_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of POC Production",
       "operator": "average",
@@ -1620,6 +2002,9 @@
       "vertical_grid": "none"
    },
    "POC_PROD_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of POC Production, 0-100m",
       "operator": "average",
@@ -1627,6 +2012,9 @@
       "vertical_grid": "none"
    },
    "POC_REMIN_DIC": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "POC Remineralization routed to DIC",
       "operator": "average",
@@ -1634,6 +2022,9 @@
       "vertical_grid": "layer_avg"
    },
    "POC_REMIN_DIC_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of POC Remineralization routed to DIC",
       "operator": "average",
@@ -1641,6 +2032,9 @@
       "vertical_grid": "none"
    },
    "POC_REMIN_DIC_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of POC Remineralization routed to DIC, 0-100m",
       "operator": "average",
@@ -1648,6 +2042,9 @@
       "vertical_grid": "none"
    },
    "POC_REMIN_DOCr": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "POC Remineralization routed to DOCr",
       "operator": "average",
@@ -1655,6 +2052,9 @@
       "vertical_grid": "layer_avg"
    },
    "POC_REMIN_DOCr_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of POC Remineralization routed to DOCr",
       "operator": "average",
@@ -1662,6 +2062,9 @@
       "vertical_grid": "none"
    },
    "POC_REMIN_DOCr_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Vertical Integral of POC Remineralization routed to DOCr, 0-100m",
       "operator": "average",
@@ -1669,6 +2072,9 @@
       "vertical_grid": "none"
    },
    "POC_hFLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "POC hFlux into Cell",
       "operator": "average",
@@ -1676,6 +2082,9 @@
       "vertical_grid": "layer_avg"
    },
    "POC_sFLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "POC sFlux into Cell",
       "operator": "average",
@@ -1683,6 +2092,9 @@
       "vertical_grid": "layer_avg"
    },
    "PON_REMIN_DONr": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "PON Remineralization routed to DONr",
       "operator": "average",
@@ -1690,6 +2102,9 @@
       "vertical_grid": "layer_avg"
    },
    "PON_REMIN_NH4": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "PON Remineralization routed to NH4",
       "operator": "average",
@@ -1697,6 +2112,9 @@
       "vertical_grid": "layer_avg"
    },
    "POP_FLUX_((particulate_flux_ref_depth_str))": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POP Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -1704,6 +2122,9 @@
       "vertical_grid": "none"
    },
    "POP_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POP Flux into Cell",
       "operator": "average",
@@ -1711,6 +2132,9 @@
       "vertical_grid": "layer_avg"
    },
    "POP_PROD": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POP Production",
       "operator": "average",
@@ -1718,6 +2142,9 @@
       "vertical_grid": "layer_avg"
    },
    "POP_REMIN_DOPr": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "POP Remineralization routed to DOPr",
       "operator": "average",
@@ -1725,6 +2152,9 @@
       "vertical_grid": "layer_avg"
    },
    "POP_REMIN_PO4": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "POP Remineralization routed to PO4",
       "operator": "average",
@@ -1732,6 +2162,9 @@
       "vertical_grid": "layer_avg"
    },
    "PV_CO2": {
+      "dependencies": {
+         "lflux_gas_co2": ".true."
+      },
       "frequency": "never",
       "longname": "CO2 Piston Velocity",
       "operator": "average",
@@ -1739,14 +2172,18 @@
       "vertical_grid": "none"
    },
    "PV_O2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
-      "longname": "PV_O2",
+      "longname": "O2 Piston Velocity",
       "operator": "average",
       "units": "cm/s",
       "vertical_grid": "none"
    },
    "P_REMIN_SCALEF": {
       "dependencies": {
+         "base_bio_on": ".true.",
          "lp_remin_scalef": ".true."
       },
       "frequency": "never",
@@ -1756,6 +2193,9 @@
       "vertical_grid": "layer_avg"
    },
    "P_iron_FLUX_((particulate_flux_ref_depth_str))": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "P_iron Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -1763,6 +2203,9 @@
       "vertical_grid": "none"
    },
    "P_iron_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "P_iron Flux into Cell",
       "operator": "average",
@@ -1770,6 +2213,9 @@
       "vertical_grid": "layer_avg"
    },
    "P_iron_PROD": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "P_iron Production",
       "operator": "average",
@@ -1777,6 +2223,9 @@
       "vertical_grid": "layer_avg"
    },
    "P_iron_REMIN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "P_iron Remineralization",
       "operator": "average",
@@ -1784,13 +2233,19 @@
       "vertical_grid": "layer_avg"
    },
    "SCHMIDT_CO2": {
+      "dependencies": {
+         "lflux_gas_co2": ".true."
+      },
       "frequency": "medium",
-      "longname": "CO2 Schmidt Number",
+      "longname": "CO2 Schmidt Number for base biotic tracers fluxes",
       "operator": "average",
       "units": 1,
       "vertical_grid": "none"
    },
    "SCHMIDT_O2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "O2 Schmidt Number",
       "operator": "average",
@@ -1798,6 +2253,9 @@
       "vertical_grid": "none"
    },
    "SedDenitrif": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "nitrogen loss in Sediments",
       "operator": "average",
@@ -1805,6 +2263,9 @@
       "vertical_grid": "none"
    },
    "SiO2_FLUX_((particulate_flux_ref_depth_str))": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "SiO2 Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -1812,6 +2273,9 @@
       "vertical_grid": "none"
    },
    "SiO2_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "SiO2 Flux into Cell",
       "operator": "average",
@@ -1819,6 +2283,9 @@
       "vertical_grid": "layer_avg"
    },
    "SiO2_PROD": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "SiO2 Production",
       "operator": "average",
@@ -1826,6 +2293,9 @@
       "vertical_grid": "layer_avg"
    },
    "SiO2_REMIN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "SiO2 Remineralization",
       "operator": "average",
@@ -1833,6 +2303,9 @@
       "vertical_grid": "layer_avg"
    },
    "bSi_form": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total Si Uptake",
       "operator": "average",
@@ -1840,6 +2313,9 @@
       "vertical_grid": "layer_avg"
    },
    "bsiToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
       "operator": "average",
@@ -1847,6 +2323,9 @@
       "vertical_grid": "none"
    },
    "calcToFloor": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "CaCO3 Flux Hitting Sea Floor",
       "operator": "average",
@@ -1854,6 +2333,9 @@
       "vertical_grid": "none"
    },
    "calcToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments",
       "operator": "average",
@@ -1881,6 +2363,9 @@
       "vertical_grid": "none"
    },
    "calcToSed_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments, Alternative CO2",
       "operator": "average",
@@ -1888,6 +2373,9 @@
       "vertical_grid": "none"
    },
    "co3_sat_arag": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "CO3 concentration at aragonite saturation",
       "operator": "average",
@@ -1895,13 +2383,55 @@
       "vertical_grid": "layer_avg"
    },
    "co3_sat_calc": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "CO3 concentration at calcite saturation",
       "operator": "average",
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
    },
+   "d_SF_ABIO_DI14C_d_ABIO_DI14C": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "labio_derivative_diags": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "never",
+      "longname": "Derivative of ABIO_FG_DI14C wrt ABIO_DI14C",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "d_SF_ABIO_DI14C_d_ABIO_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "labio_derivative_diags": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "never",
+      "longname": "Derivative of ABIO_FG_DI14C wrt ABIO_DIC",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "d_SF_ABIO_DIC_d_ABIO_DIC": {
+      "dependencies": {
+         "abio_dic_on": ".true.",
+         "labio_derivative_diags": ".true.",
+         "lflux_gas_co2": ".true."
+      },
+      "frequency": "never",
+      "longname": "Derivative of ABIO_FG_DIC wrt ABIO_DIC",
+      "operator": "average",
+      "units": "cm/s",
+      "vertical_grid": "none"
+   },
    "dustToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "dust Flux to Sediments",
       "operator": "average",
@@ -1909,6 +2439,9 @@
       "vertical_grid": "none"
    },
    "dust_FLUX_IN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Dust Flux into Cell",
       "operator": "average",
@@ -1916,6 +2449,9 @@
       "vertical_grid": "layer_avg"
    },
    "dust_REMIN": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Dust Remineralization",
       "operator": "average",
@@ -2028,7 +2564,7 @@
    },
    "graze_((zooplankton_sname))_((zooplankton_sname))": {
       "frequency": "never",
-      "longname": "((zooplankton_lname)) grazing loss to ((zooplankton_lname))",
+      "longname": "((zooplankton_lname1)) grazing loss to ((zooplankton_lname2))",
       "operator": "average",
       "truncate": true,
       "units": "mmol/m^3/s",
@@ -2036,14 +2572,14 @@
    },
    "graze_((zooplankton_sname))_((zooplankton_sname))_zint": {
       "frequency": "never",
-      "longname": "((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral",
+      "longname": "((zooplankton_lname1)) Grazing to ((zooplankton_lname2)) Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
    "graze_((zooplankton_sname))_((zooplankton_sname))_zint_100m": {
       "frequency": "never",
-      "longname": "((zooplankton_lname)) Grazing to ((zooplankton_lname)) Vertical Integral, 0-100m",
+      "longname": "((zooplankton_lname1)) Grazing to ((zooplankton_lname2)) Vertical Integral, 0-100m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
@@ -2115,6 +2651,9 @@
       "vertical_grid": "layer_avg"
    },
    "graze_auto_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "low",
       "longname": "Total Autotroph Grazing",
       "operator": "average",
@@ -2122,6 +2661,9 @@
       "vertical_grid": "layer_avg"
    },
    "insitu_temp": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "in situ temperature",
       "operator": "average",
@@ -2129,6 +2671,9 @@
       "vertical_grid": "layer_avg"
    },
    "pCO2SURF": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "surface pCO2",
       "operator": "average",
@@ -2136,6 +2681,9 @@
       "vertical_grid": "none"
    },
    "pCO2SURF_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "surface pCO2, Alternative CO2",
       "operator": "average",
@@ -2143,6 +2691,9 @@
       "vertical_grid": "none"
    },
    "pH_3D": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "pH",
       "operator": "average",
@@ -2150,6 +2701,9 @@
       "vertical_grid": "layer_avg"
    },
    "pH_3D_ALT_CO2": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "never",
       "longname": "pH, Alternative CO2",
       "operator": "average",
@@ -2157,6 +2711,9 @@
       "vertical_grid": "layer_avg"
    },
    "pfeToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "pFe Flux to Sediments",
       "operator": "average",
@@ -2207,6 +2764,9 @@
       "vertical_grid": "none"
    },
    "photoC_NO3_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total C Fixation from NO3",
       "operator": "average",
@@ -2214,6 +2774,9 @@
       "vertical_grid": "layer_avg"
    },
    "photoC_NO3_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total C Fixation from NO3 Vertical Integral",
       "operator": "average",
@@ -2221,6 +2784,9 @@
       "vertical_grid": "none"
    },
    "photoC_NO3_TOT_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total C Fixation from NO3 Vertical Integral, 0-100m",
       "operator": "average",
@@ -2228,6 +2794,9 @@
       "vertical_grid": "none"
    },
    "photoC_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total C Fixation",
       "operator": "average",
@@ -2235,6 +2804,9 @@
       "vertical_grid": "layer_avg"
    },
    "photoC_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total C Fixation Vertical Integral",
       "operator": "average",
@@ -2242,6 +2814,9 @@
       "vertical_grid": "none"
    },
    "photoC_TOT_zint_100m": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Total C Fixation Vertical Integral, 0-100m",
       "operator": "average",
@@ -2273,6 +2848,9 @@
       "vertical_grid": "layer_avg"
    },
    "pocToFloor": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": [
          "medium",
          "high"
@@ -2286,6 +2864,9 @@
       "vertical_grid": "none"
    },
    "pocToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "POC Flux to Sediments",
       "operator": "average",
@@ -2313,6 +2894,9 @@
       "vertical_grid": "none"
    },
    "ponToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "nitrogen burial Flux to Sediments",
       "operator": "average",
@@ -2320,6 +2904,9 @@
       "vertical_grid": "none"
    },
    "popToSed": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "phosphorus Flux to Sediments",
       "operator": "average",
@@ -2349,6 +2936,9 @@
       "vertical_grid": "none"
    },
    "zsatarag": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Aragonite Saturation Depth",
       "operator": "average",
@@ -2356,6 +2946,9 @@
       "vertical_grid": "none"
    },
    "zsatcalc": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "frequency": "medium",
       "longname": "Calcite Saturation Depth",
       "operator": "average",

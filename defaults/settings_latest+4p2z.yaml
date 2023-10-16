@@ -41,6 +41,7 @@
 
 # Order in which the categories are parsed
 _order :
+   - tracer_modules
    - general_parms
    - general_parms2
    - PFT_counts
@@ -51,55 +52,111 @@ _order :
 _tracer_list :
    # Non-living tracers
    PO4 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Inorganic Phosphate
       units : mmol/m^3
    NO3 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Inorganic Nitrate
       units : mmol/m^3
    SiO3 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Inorganic Silicate
       units : mmol/m^3
    NH4 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Ammonia
       units : mmol/m^3
    Fe :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Inorganic Iron
       units : mmol/m^3
    Lig :
+      dependencies :
+         base_bio_on : .true.
       long_name : Iron Binding Ligand
       units : mmol/m^3
    O2 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Oxygen
       units : mmol/m^3
    DIC :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Inorganic Carbon
       units : mmol/m^3
    DIC_ALT_CO2 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Inorganic Carbon, Alternative CO2
       units : mmol/m^3
    ALK :
+      dependencies :
+         base_bio_on : .true.
       long_name : Alkalinity
       units : meq/m^3
    ALK_ALT_CO2 :
+      dependencies :
+         base_bio_on : .true.
       long_name : Alkalinity, Alternative CO2
       units : meq/m^3
    DOC :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Organic Carbon
       units : mmol/m^3
    DON :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Organic Nitrogen
       units : mmol/m^3
    DOP :
+      dependencies :
+         base_bio_on : .true.
       long_name : Dissolved Organic Phosphorus
       units : mmol/m^3
    DOPr :
+      dependencies :
+         base_bio_on : .true.
       long_name : Refractory DOP
       units : mmol/m^3
    DONr :
+      dependencies :
+         base_bio_on : .true.
       long_name : Refractory DON
       units : mmol/m^3
    DOCr :
+      dependencies :
+         base_bio_on : .true.
       long_name : Refractory DOC
+      units : mmol/m^3
+   # Non-living (abiotic only)
+   ABIO_DIC :
+      dependencies :
+         abio_dic_on : .true.
+      long_name : Abiotic Dissolved Inorganic Carbon
+      units : mmol/m^3
+   ABIO_DI14C :
+      dependencies :
+         abio_dic_on : .true.
+      long_name : Abiotic Dissolved Inorganic Carbon-14
+      units : mmol/m^3
+   # Non-living (abiotic only)
+   ABIO_DIC :
+      dependencies :
+         abio_dic_on : .true.
+      long_name : Abiotic Dissolved Inorganic Carbon
+      units : mmol/m^3
+   ABIO_DI14C :
+      dependencies :
+         abio_dic_on : .true.
+      long_name : Abiotic Dissolved Inorganic Carbon-14
       units : mmol/m^3
    # Non-living (ciso only)
    DI13C :
@@ -110,7 +167,7 @@ _tracer_list :
    DO13Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-13 (semi-labile+refractoy)
+      long_name : Dissolved Organic Carbon-13 (semi-labile+refractory)
       units : mmol/m^3
    DI14C :
       dependencies :
@@ -120,31 +177,40 @@ _tracer_list :
    DO14Ctot :
       dependencies :
          ciso_on : .true.
-      long_name : Dissolved Organic Carbon-14 (semi-labile+refractoy)
+      long_name : Dissolved Organic Carbon-14 (semi-labile+refractory)
       units : mmol/m^3
 
    # Per-autotroph tracers
    ((autotroph_sname))Chl :
+      dependencies :
+         base_bio_on : .true.
       long_name : ((autotroph_lname)) Chlorophyll
-      units : mmol/m^3
+      units : mg/m^3
    ((autotroph_sname))C :
+      dependencies :
+         base_bio_on : .true.
       long_name : ((autotroph_lname)) Carbon
       units : mmol/m^3
    ((autotroph_sname))Fe :
+      dependencies :
+         base_bio_on : .true.
       long_name : ((autotroph_lname)) Iron
       units : mmol/m^3
    ((autotroph_sname))Si :
       dependencies :
+         base_bio_on : .true.
          ((autotroph_silicifier)) : True
       long_name : ((autotroph_lname)) Silicon
       units : mmol/m^3
    ((autotroph_sname))CaCO3 :
       dependencies :
+         base_bio_on : .true.
          ((autotroph_calcifier)) : True
       long_name : ((autotroph_lname)) CaCO3
       units : mmol/m^3
    ((autotroph_sname))P :
       dependencies :
+         base_bio_on : .true.
          lvariable_PtoC : .true.
       long_name : ((autotroph_lname)) Phosphorus
       units : mmol/m^3
@@ -174,6 +240,8 @@ _tracer_list :
 
    # Per-zooplankton tracers
    ((zooplankton_sname))C :
+      dependencies :
+         base_bio_on : .true.
       long_name : ((zooplankton_lname)) Carbon
       units : mmol/m^3
    # Total zooplankton tracers (ciso only)
@@ -189,13 +257,41 @@ _tracer_list :
       units : mmol/m^3
 
 ################################################################################
+#                        Category 0: Tracer Modules                            #
+################################################################################
+
+tracer_modules :
+   base_bio_on :
+      longname : Control whether the base ecosystem tracer module is active
+      subcategory : 1. tracer modules
+      units : unitless
+      datatype : logical
+      default_value : .true.
+      _append_to_config_keywords : true
+   abio_dic_on :
+      longname : Control whether abiotic carbon tracer module is active
+      subcategory : 1. tracer modules
+      units : unitless
+      datatype : logical
+      default_value : .false.
+      _append_to_config_keywords : true
+   ciso_on :
+      longname : Control whether CISO tracer module is active
+      subcategory : 1. tracer modules
+      units : unitless
+      datatype : logical
+      default_value : .false.
+      _append_to_config_keywords : true
+
+################################################################################
 #                        Category 1: General Parameters                        #
 ################################################################################
 
 general_parms :
    PFT_defaults :
+      dependencies : base_bio_on
       longname : Define how PFTs are initialized
-      subcategory : 1. config PFTs
+      subcategory : 2. config PFTs
       units : unitless
       datatype : string
       default_value : 4p2z
@@ -221,310 +317,355 @@ general_parms :
             - "null"
             - microzoo_mesozoo
       _append_to_config_keywords : true
-   ciso_on :
-      longname : Control whether CISO tracer module is active
-      subcategory : 2. config flags
-      units : unitless
-      datatype : logical
-      default_value : .false.
    lsource_sink :
       longname : Control which portions of code are executed (useful for debugging)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.
    ciso_lsource_sink :
+      dependencies : ciso_on
       longname : Control which portions of the carbon isotope code are executed (useful for debugging)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.
    lcheck_forcing :
       longname : Control whether consistency checks are performed on forcing input (useful for debugging)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .false.
    lecovars_full_depth_tavg :
       longname : If .false., MARBL will recommend truncating the column for some diagnostics
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .false.
    lflux_gas_o2 :
+      dependencies : base_bio_on
       longname : Control which portions of code are executed (useful for debugging)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.
    lflux_gas_co2 :
       longname : Control which portions of code are executed (useful for debugging)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.
    lcompute_nhx_surface_emis :
+      dependencies : base_bio_on
       longname : Control if NHx emissions are computed
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.
    lvariable_PtoC :
+      dependencies : base_bio_on
       longname : Control if PtoC ratios in autotrophs vary
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.
    ladjust_bury_coeff :
+      dependencies : base_bio_on
       longname : Control if bury coefficients are adjusted (rather than constant)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .false.
       _append_to_config_keywords : true
    lo2_consumption_scalef :
+      dependencies : base_bio_on
       longname : Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : # default value is resolution dependent!
          default : .false.
          GRID == "CESM_x1" : .true.
    lp_remin_scalef :
+      dependencies : base_bio_on
       longname : Apply p_remin_scalef to particulate remin (and request it as a forcing)
-      subcategory : 2. config flags
+      subcategory : 3. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
+   labio_derivative_diags :
+      dependencies : abio_dic_on
+      longname : Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .false.
    bftt_dz_sum_thres:
+      dependencies : base_bio_on
       longname : MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 1.0e-14
    Jint_Ctot_thres_molpm2pyr :
+      dependencies : base_bio_on
       longname : MARBL will abort if abs(Jint_Ctot) exceeds this threshold
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : mol m-2 yr-1
       datatype : real
       default_value : 1.0e-9
    gQsi_0 :
+      dependencies : base_bio_on
       longname : initial Si/C ratio for growth
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.137
    gQsi_max :
+      dependencies : base_bio_on
       longname : max Si/C ratio for growth
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.685
    gQsi_min :
+      dependencies : base_bio_on
       longname : min Si/C ratio for growth
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.0457
    gQ_Fe_kFe_thres :
+      dependencies : base_bio_on
       longname : Fe:kFe ratio threshold in uptake ratio computations
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 10.0
    gQ_Si_kSi_thres :
+      dependencies : base_bio_on
       longname : Si:kSi ratio threshold in uptake ratio computations
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 5.0
    parm_Fe_bioavail :
+      dependencies : base_bio_on
       longname : Fraction of Fe flux that is bioavailable
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 1.0
    particulate_flux_ref_depth :
+      dependencies : base_bio_on
       longname : reference depth for particulate flux diagnostics
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : m
       datatype : real
       default_value : 100.0
    parm_o2_min :
+      dependencies : base_bio_on
       longname : Minimum O2 needed for production & consumption
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : nmol/cm^3
       datatype : real
       default_value : 5.0
    parm_o2_min_delta :
+      dependencies : base_bio_on
       longname : Width of min O2 range
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : nmol/cm^3
       datatype : real
       default_value : 5.0
    parm_kappa_nitrif_per_day :
+      dependencies : base_bio_on
       longname : Nitrification inverse time constant
-      subcategory : 4. general parameters (nitrification)
+      subcategory : 5. general parameters (nitrification)
       units : 1/day
       datatype : real
       default_value : 0.06
    parm_nitrif_par_lim :
+      dependencies : base_bio_on
       longname : PAR limit for nitrification
-      subcategory : 4. general parameters (nitrification)
+      subcategory : 5. general parameters (nitrification)
       units : W/m^2
       datatype : real
       default_value : 1.0
    parm_labile_ratio :
+      dependencies : base_bio_on
       longname : Fraction of loss to DOC that routed directly to DIC
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 0.94
    parm_init_POC_bury_coeff :
+      dependencies : base_bio_on
       longname : Initial scale factor for burial of POC, PON
-      subcategory : 4. general parameters (bury coeffs)
+      subcategory : 5. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.1
          GRID == "CESM_x3" : 5.0
    parm_init_POP_bury_coeff :
+      dependencies : base_bio_on
       longname : Initial scale factor for burial of POP
-      subcategory : 4. general parameters (bury coeffs)
+      subcategory : 5. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.1
          GRID == "CESM_x3" : 5.0
    parm_init_bSi_bury_coeff :
+      dependencies : base_bio_on
       longname : Initial scale factor for burial of bSi
-      subcategory : 4. general parameters (bury coeffs)
+      subcategory : 5. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
          default : 1.0
          GRID == "CESM_x3" : 1.1
    parm_Fe_scavenge_rate0 :
+      dependencies : base_bio_on
       longname : Scavenging base rate for Fe
-      subcategory : 4. general parameters (scavenging)
+      subcategory : 5. general parameters (scavenging)
       units : cm^2/ng s/yr
       datatype : real
       default_value : 24.0
    parm_Lig_scavenge_rate0 :
+      dependencies : base_bio_on
       longname : Scavenging base rate for bound ligand
-      subcategory : 4. general parameters (scavenging)
+      subcategory : 5. general parameters (scavenging)
       units : cm^2/ng s/yr
       datatype : real
       default_value : 0.015
    parm_FeLig_scavenge_rate0 :
+      dependencies : base_bio_on
       longname : Scavenging base rate for bound iron
-      subcategory : 4. general parameters (scavenging)
+      subcategory : 5. general parameters (scavenging)
       units : cm^2/ng s/yr
       datatype : real
       default_value : 1.3
    parm_Lig_degrade_rate0 :
+      dependencies : base_bio_on
       longname : Fe-binding ligand bacterial degradation base rate coefficient
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 0.000094
    parm_Fe_desorption_rate0 :
+      dependencies : base_bio_on
       longname : Desorption rate for scavenged Fe from particles
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1/cm
       datatype : real
       default_value : 1e-6
    parm_f_prod_sp_CaCO3 :
+      dependencies : base_bio_on
       longname : Fraction of sp production as CaCO3 production
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : # default value is resolution dependent!
          default : 0.07
          GRID == "CESM_x3" : 0.075
    parm_POC_diss :
+      dependencies : base_bio_on
       longname : Base POC dissolution length scale
-      subcategory : 4. general parameters (dissolution)
+      subcategory : 5. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 100e2
    parm_SiO2_diss :
+      dependencies : base_bio_on
       longname : Base SiO2 dissolution length scale
-      subcategory : 4. general parameters (dissolution)
+      subcategory : 5. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 650e2
    parm_SiO2_gamma :
+      dependencies : base_bio_on
       longname : SiO2 gamma (fraction of production -> hard subclass)
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.1
    parm_hPOC_SiO2_ratio :
+      dependencies : base_bio_on
       longname : hPOC to SiO2 ratio
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.05
    parm_CaCO3_diss :
+      dependencies : base_bio_on
       longname : Base CaCO3 dissolution length scale
-      subcategory : 4. general parameters (dissolution)
+      subcategory : 5. general parameters (dissolution)
       units : cm
       datatype : real
       default_value : 500e2
    parm_CaCO3_gamma :
+      dependencies : base_bio_on
       longname : CaCO3 gamma (fraction of production -> hard subclass)
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.1
    parm_hPOC_CaCO3_ratio :
+      dependencies : base_bio_on
       longname : hPOC to CaCO3 ratio
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.05
    parm_hPOC_dust_ratio :
+      dependencies : base_bio_on
       longname : hPOC to dust ratio
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 0.05
    o2_sf_o2_range_hi :
+      dependencies : base_bio_on
       longname : o2_scalefactor is applied to diss length scales for O2 less than this
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : mmol/m^3
       datatype : real
       default_value : 45.0
    o2_sf_o2_range_lo :
+      dependencies : base_bio_on
       longname : o2_scalefactor is constant for O2 less than this
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : mmol/m^3
       datatype : real
       default_value : 5.0
    o2_sf_val_lo_o2 :
+      dependencies : base_bio_on
       longname : o2_scalefactor constant for O2 less than o2_sf_o2_range_lo
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 3.0
    parm_sed_denitrif_coeff :
+      dependencies : base_bio_on
       longname : Global scaling factor for sed_denitrif
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value :
          default : 1
          GRID == "CESM_x3" : 1.4
    bury_coeff_rmean_timescale_years :
+      dependencies : base_bio_on
       longname : Running mean time scale for bury coefficients
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : years
       datatype : real
       default_value : 10
    parm_scalelen_z :
+      dependencies : base_bio_on
       longname : Depths of prescribed scalelen values
-      subcategory : 5. Scale lengths
+      subcategory : 6. Scale lengths
       units : cm
       datatype : real
       _array_shape : 4
@@ -534,8 +675,9 @@ general_parms :
          - 500.0e2
          - 1000.0e2
    parm_scalelen_vals :
+      dependencies : base_bio_on
       longname : Prescribed scalelen values
-      subcategory : 5. Scale lengths
+      subcategory : 6. Scale lengths
       units : unitless
       datatype : real
       _array_shape : 4
@@ -551,8 +693,9 @@ general_parms :
             - 4.2
             - 4.4
    caco3_bury_thres_opt :
+      dependencies : base_bio_on
       longname : Option of threshold of CaCO3 burial
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : non-numeric
       datatype : string
       default_value : omega_calc
@@ -560,62 +703,72 @@ general_parms :
          - fixed_depth
          - omega_calc
    caco3_bury_thres_depth :
+      dependencies : base_bio_on
       longname : Threshold depth for CaCO3 burial when opt = 'fixed_depth'
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : cm
       datatype : real
       default_value : 3000e2
    caco3_bury_thres_omega_calc :
+      dependencies : base_bio_on
       longname : omega calcite threshold for CaCO3 burial when opt = 'omega_calc'
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : 1
       datatype : real
       default_value : 1.0
    PON_bury_coeff :
+      dependencies : base_bio_on
       longname : Scale factor for burial of PON
-      subcategory : 4. general parameters (bury coeffs)
+      subcategory : 5. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : 0.5
    POM_bury_frac_max :
+      dependencies : base_bio_on
       longname : maximum bury fraction for POM
-      subcategory : 4. general parameters (bury coeffs)
+      subcategory : 5. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : 0.8
    bSi_bury_frac_max :
+      dependencies : base_bio_on
       longname : maximum bury fraction for bSi
-      subcategory : 4. general parameters (bury coeffs)
+      subcategory : 5. general parameters (bury coeffs)
       units : unitless
       datatype : real
       default_value : 1.0
    ciso_fract_factors :
+      dependencies : ciso_on
       longname : Option for which biological fractionation calculation to use
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : non-numeric
       datatype : string
       default_value : Laws
    auto_mort2_exp :
+      dependencies : base_bio_on
       longname : Value of power loss exponent for autotrophs
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 1.75
    zoo_mort2_exp :
+      dependencies : base_bio_on
       longname : Value of power loss exponent for zooplankton
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 2.0
    QCaCO3_max :
+      dependencies : base_bio_on
       longname : Max CaCO3/C ratio for calcifiers
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : mmol CaCO3/mmol C
       datatype : real
       default_value : 1.0
    f_graze_CaCO3_remin :
+      dependencies : base_bio_on
       longname : Fraction of spCaCO3 grazing which is remineralized in zooplankton guts
-      subcategory : 4. general parameters
+      subcategory : 5. general parameters
       units : unitless
       datatype : real
       default_value : 0.5
@@ -626,8 +779,9 @@ general_parms :
 
 general_parms2 :
    init_bury_coeff_opt :
+      dependencies : base_bio_on
       longname : Source of initial burial coefficient
-      subcategory : 3. config strings
+      subcategory : 4. config strings
       units : unitless
       datatype : string
       default_value :
@@ -647,8 +801,9 @@ general_parms2 :
 
 PFT_counts :
    autotroph_cnt :
+      dependencies : base_bio_on
       longname : Number of autotroph classes
-      subcategory : 1. config PFTs
+      subcategory : 2. config PFTs
       units : unitless
       datatype : integer
       default_value :
@@ -657,16 +812,18 @@ PFT_counts :
       cannot change : PFT_defaults == '4p2z'
       must set : PFT_defaults == 'user-specified'
    zooplankton_cnt :
+      dependencies : base_bio_on
       longname : Number of zooplankton classes
-      subcategory : 1. config PFTs
+      subcategory : 2. config PFTs
       units : unitless
       datatype : integer
       default_value :
          default : 1
          PFT_defaults == "4p2z" : 2
    max_grazer_prey_cnt :
+      dependencies : base_bio_on
       longname : Number of grazer prey classes
-      subcategory : 1. config PFTs
+      subcategory : 2. config PFTs
       units : unitless
       datatype : integer
       default_value :
@@ -1289,3 +1446,4 @@ tracer_dependent :
             - 'ALK_ALT_CO2'
          GRID == "CESM_x3" : *CESM_TRACER_RESTORE
          GRID == "CESM_x1" : *CESM_TRACER_RESTORE
+         not base_bio_on : ''

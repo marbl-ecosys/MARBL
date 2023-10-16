@@ -396,14 +396,19 @@ Program marbl
                 ' (units: ', trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
+
         ! Log requested interior forcing fields
         call driver_status_log%log_header('Requested interior forcing fields', subname)
+        ! Provide message if no itnerior tendency forcings are requested
+        if (size(marbl_instances(1)%interior_tendency_forcings) == 0) &
+          call driver_status_log%log_noerror('No forcing fields requested for interior_tendency_compute()!', subname)
         do n=1,size(marbl_instances(1)%interior_tendency_forcings)
           write(log_message, "(I0, 5A)") n, '. ', &
                trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname), &
                ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
+
         call marbl_instances(1)%shutdown()
       end if
 
@@ -425,6 +430,7 @@ Program marbl
             call driver_status_log%log_noerror(log_message, subname)
           end if
         end do
+        ! Provide message if no tracers are restored
         if (cnt.eq.0) then
           call driver_status_log%log_noerror('No tracers to restore!', subname)
         end if

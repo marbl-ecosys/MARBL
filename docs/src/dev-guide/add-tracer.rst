@@ -26,15 +26,20 @@ Due to the many ways to introduce tracers (different modules, living tracers, et
   type, public :: marbl_tracer_index_type
     ! Book-keeping (tracer count and index ranges)
     integer (int_kind) :: total_cnt = 0
-    type (marbl_tracer_count_type) :: ecosys_base
+    type (marbl_tracer_count_type) :: base_bio
+    type (marbl_tracer_count_type) :: abio_dic
     type (marbl_tracer_count_type) :: ciso
 
-    ! General tracers
+    ! base biotic tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
     .
     .
     .
-    ! CISO tracers
+    ! abiotic dic tracers
+    integer (int_kind) :: abio_dic_ind    = 0 ! abiotic dissolved inorganic carbon
+    integer (int_kind) :: abio_di14c_ind  = 0 ! abiotic dissolved inorganic carbon 14
+
+    ! carbon isotope tracers
     integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
     .
     .
@@ -66,19 +71,20 @@ For example, here we set in index for the refractory DOC tracer:
 .. block comes from marbl_interface_private_types
 .. code-block:: fortran
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, autotroph_settings, &
-             zooplankton_settings, marbl_status_log)
+  subroutine tracer_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, &
+                                      autotroph_settings, zooplankton_settings, marbl_status_log)
     .
     .
     .
-    ! General ecosys tracers
-    .
-    .
-    .
-    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
-    .
-    .
-    .
+    ! Base biotic tracers
+    if (base_bio_on) then
+      .
+      .
+      .
+      call this%add_tracer_index('docr', 'base_bio', this%docr_ind, marbl_status_log)
+      .
+      .
+      .
   end subroutine tracer_index_constructor
 
 .. note::
@@ -106,40 +112,39 @@ MARBL provides the following metadata to describe each tracer:
 
 Note that the ``units`` will depend on whether MARBL is running in ``cgs`` or ``mks``,
 so a ``unit_system_type`` object will be passed around in this step.
-There are a few different subroutines in ``marbl_init_mod.F90`` to define the metadata for different classes of tracers.
-(Metadata for carbon isotope tracers is handled in ``marbl_ciso_init_mod::marbl_ciso_init_tracer_metadata``.)
+There are a few different subroutines in ``marbl_init_tracer_metadata_mod.F90`` to define the metadata for different classes of tracers.
 
-.. block comes from marbl_init_mod
+.. block comes from marbl_init_tracer_metadata_mod
 .. code-block:: fortran
 
   subroutine marbl_init_tracer_metadata
-  subroutine marbl_init_non_autotroph_tracer_metadata
-  subroutine marbl_init_non_autotroph_tracers_metadata
-  subroutine marbl_init_zooplankton_tracer_metadata
-  subroutine marbl_init_autotroph_tracer_metadata
+  subroutine init_non_autotroph_tracer_metadata
+  subroutine init_zooplankton_tracer_metadata
+  subroutine init_autotroph_tracer_metadata
 
-The last three subroutines above are called from ``marbl_init_tracer_metadata()``, and ``marbl_init_non_autotroph_tracer_metadata()`` is called from ``marbl_init_non_autotroph_tracers_metadata()``
-Prior to those calls, ``marbl_init_tracer_metadata()`` sets two attributes in the metadata type:
+The last three subroutines above are called from ``marbl_init_tracer_metadata()``.
+Prior to those calls, ``marbl_init_tracer_metadata()`` sets the `lfull_depth_tavg` attribute in the metadata type:
 
-.. block from marbl_init_mod
+.. block from marbl_init_tracer_metadata_mod
 .. code-block:: fortran
 
     marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
-    marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
 
-Metadata for all base ecosystem non-living tracers is set in ``marbl_init_non_autotroph_tracers_metadata()``.
+This value may be overwritten by the `lecovars_full_depth_tavg` setting for some tracers.
+
+Metadata for all non-living tracers is set in ``marbl_init_non_autotroph_tracers_metadata()``.
 For example, here is where the dissolved inorganic phosphate index is set:
 
-.. block from marbl_init_mod
+.. block from marbl_init_tracer_metadata_mod
 .. code-block:: fortran
 
-  subroutine marbl_init_non_autotroph_tracer_metadata(short_name, long_name, unit_system, &
-                                                      marbl_tracer_metadata)
-    .
-    .
-    .
-    call marbl_init_non_autotroph_tracer_metadata('PO4', 'Dissolved Inorganic Phosphate', &
-               unit_system, marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
+  subroutine marbl_init_tracer_metadata(unit_system, marbl_tracer_indices, marbl_tracer_metadata)
+     .
+     .
+     .
+     if (base_bio_on) then
+      call init_non_autotroph_tracer_metadata('PO4', 'Dissolved Inorganic Phosphate', 'base_bio', &
+                unit_system, marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 4. Compute surface flux for new tracer (if necessary)
@@ -175,21 +180,17 @@ Surface fluxes are computed in ``marbl_surface_flux_mod::marbl_surface_flux_comp
     .
     .
     !-----------------------------------------------------------------------
-    !  compute CO2 flux, computing disequilibrium one row at a time
+    !  compute O2 flux (if necessary)
     !-----------------------------------------------------------------------
 
-    if (lflux_gas_o2 .or. lflux_gas_co2) then
-       .
-       .
-       .
-       if (lflux_gas_o2) then
-          .
-          .
-          .
-          pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
-          o2sat(:) = ap_used(:) * o2sat_1atm(:)
-          flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
-          surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
+    if (lflux_gas_o2) then
+      .
+      .
+      .
+      pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
+      o2sat(:) = ap_used(:) * o2sat_1atm(:)
+      flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
+      surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Step 5. Compute tracer tendency
@@ -207,7 +208,7 @@ This is done in ``marbl_interior_tendency_mod::interior_tendency_compute``:
     .
     .
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
-                     totalChl_local, unit_system, PAR)
+                     autotroph_local, unit_system, PAR)
 
     call compute_autotroph_elemental_ratios(km, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms)
@@ -349,9 +350,13 @@ The block of code defining the tracers looks like this:
   _tracer_list :
      # Non-living tracers
      PO4 :
+        dependencies :
+          base_bio_on : .true.
         long_name : Dissolved Inorganic Phosphate
         units : mmol/m^3
      NO3 :
+        dependencies :
+          base_bio_on : .true.
         long_name : Dissolved Inorganic Nitrate
         units : mmol/m^3
   .

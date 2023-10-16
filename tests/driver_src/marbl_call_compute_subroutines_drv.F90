@@ -1,5 +1,6 @@
 module marbl_call_compute_subroutines_drv
 
+  use marbl_constants_mod, only : c0
   use marbl_interface, only : marbl_interface_class
   use marbl_kinds_mod, only : r8, char_len
   use marbl_logging,   only : marbl_log_type
@@ -42,7 +43,7 @@ Contains
     real(r8),                  allocatable, dimension(:,:)   :: surface_flux_output         ! num_cols x num_vars
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
     real(r8),                  allocatable, dimension(:,:)   :: total_Chl                   ! num_levels x num_cols
-    type(forcing_fields_type), allocatable, dimension(:)     :: bot_flux_to_tend            ! num_levels
+    real(r8),                  allocatable, dimension(:,:)   :: bot_flux_to_tend            ! num_levels x num_cols
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
     real(r8),                  allocatable, dimension(:)     :: lat                         ! num_cols
     type(forcing_fields_type), allocatable, dimension(:)     :: surface_flux_forcings       ! num_forcings
@@ -129,7 +130,10 @@ Contains
     !        as well as fields that driver reads (forcing fields)
     allocate(surface_fluxes(num_cols, num_tracers))
     allocate(interior_tendencies(num_tracers, num_levels, num_cols))
-    allocate(bot_flux_to_tend(num_levels))
+    allocate(bot_flux_to_tend(num_levels, num_cols), source=c0)
+    do col_id = 1, num_cols
+      bot_flux_to_tend(active_level_cnt(col_id),col_id) = 1._r8 / grid_data%delta_z(active_level_cnt(col_id))
+    end do
     allocate(tracer_initial_vals(num_tracers, num_levels, num_cols))
     allocate(surface_flux_forcings(size(marbl_instances(1)%surface_flux_forcings)))
     allocate(interior_tendency_forcings(size(marbl_instances(1)%interior_tendency_forcings)))
@@ -213,7 +217,7 @@ Contains
 
       !    (d) populate marbl_instances(n)%surface_flux_saved_state (with 0s)
       do m=1, size(marbl_instances(n)%surface_flux_saved_state%state)
-        marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = 0._r8
+        marbl_instances(n)%surface_flux_saved_state%state(m)%field_2d(:) = c0
       end do
 
       !    (e) call surface_flux_compute()
@@ -266,15 +270,14 @@ Contains
         !  (e) populate marbl_instances(n)%interior_tendency_saved_state (with 0s)
         do m=1, size(marbl_instances(n)%interior_tendency_saved_state%state)
           if (allocated(marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d)) then
-            marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = 0._r8
+            marbl_instances(n)%interior_tendency_saved_state%state(m)%field_2d(:) = c0
           else
-            marbl_instances(n)%interior_tendency_saved_state%state(m)%field_3d(:,1) = 0._r8
+            marbl_instances(n)%interior_tendency_saved_state%state(m)%field_3d(:,1) = c0
           end if
         end do
 
         !  (f) set bot_flux_to_tend(:) [1/dz in level kmt, 0 elsewhere]
-        marbl_instances(n)%bot_flux_to_tend(:) = 0._r8
-        marbl_instances(n)%bot_flux_to_tend(active_level_cnt(col_id)) = 1._r8 / grid_data%delta_z(active_level_cnt(col_id))
+        marbl_instances(n)%bot_flux_to_tend(:) = bot_flux_to_tend(:,col_id)
 
         !  (g) call interior_tendency_compute()
         call marbl_instances(n)%interior_tendency_compute()

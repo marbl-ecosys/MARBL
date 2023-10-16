@@ -51,7 +51,7 @@ class MARBL_settings_class(object):
             # 5b. Need tracer count after determining PFT_derived_types, which means
             #     determining which tracers are active
             if cat_name == "PFT_derived_types":
-                self.tracers_dict = self._get_tracers()
+                self.tracers_dict = self._get_tracers(unit_system)
 
         # 6. Abort if not all values from input file were processed
         #    (That implies at least one variable from input file was not recognized)
@@ -180,7 +180,7 @@ class MARBL_settings_class(object):
 
     ################################################################################
 
-    def _get_tracers(self):
+    def _get_tracers(self, unit_system):
         """ Parses self._settings['_tracer_list'] to determine what tracers
             are enabled given other MARBL settings
         """
@@ -196,7 +196,7 @@ class MARBL_settings_class(object):
             if re.search('\(\(.*\)\)', tracer_name) == None:
                 tracer_dict[tracer_name] = dict(self._settings['_tracer_list'][tracer_name])
             else:
-                tracer_dict.update(MARBL_tools.expand_template_value(tracer_name, self, self._settings['_tracer_list'][tracer_name]))
+                tracer_dict.update(MARBL_tools.expand_template_value(tracer_name, self, unit_system, self._settings['_tracer_list'][tracer_name]))
 
         # 2. Delete tracers where dependencies are not met
         #    (Some tracers have already been removed via expand_template_value())
@@ -207,7 +207,10 @@ class MARBL_settings_class(object):
 
             # 3. Add tend_units and flux_units to dictionary
             tracer_dict[tracer_name][u'tend_units'] = tracer_dict[tracer_name]['units'] + '/s'
-            tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' cm/s'
+            if unit_system == 'cgs':
+                tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' cm/s'
+            else:
+                tracer_dict[tracer_name][u'flux_units'] = tracer_dict[tracer_name]['units'] + ' m/s'
 
         for tracer_name in tracers_to_delete:
             del tracer_dict[tracer_name]
@@ -270,6 +273,12 @@ class MARBL_settings_class(object):
                     # Remove PFT-specific key
                     del self._config_keyword[-1]
 
+        # If array is length 0, remove it from settings dictionary
+        if len(_get_array_info(this_var["_array_shape"], self.settings_dict, self.tracers_dict)) == 0:
+            for key in self.get_category_names():
+                if variable_name in self._settings[key]:
+                    del self._settings[key][variable_name]
+
     ################################################################################
 
     def _update_settings_dict(self, this_var, var_name, unit_system, base_name=''):
@@ -281,6 +290,11 @@ class MARBL_settings_class(object):
             is populated with a list of all the keys added to self.settings_dict for this variable
             (just varname for scalars, but multiple keys for arrays)
         """
+
+        # Return immediately if variable should not be in settings file
+        if 'dependencies' in this_var:
+            if this_var['dependencies'] not in self._config_keyword:
+                return
 
         # Keys copied out of the settings file into settings_dict[varname]['attrs']
         settings_dict_attrs = ['longname', 'units']
@@ -342,6 +356,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
     # (Fortran vars are case-insensitive)
     if varname.lower() in input_dict.keys():
         # Ignore ' and " from strings
+        from_input_dict = True
         def_value = input_dict[varname.lower()].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
@@ -349,11 +364,13 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
     # Note that if variable foo is an array, then foo = bar in the input file
     # should be treated as foo(1) = bar
     elif varname[-3:] == "(1)" and varname.lower()[:-3] in input_dict.keys():
+        from_input_dict = True
         def_value = input_dict[varname.lower()[:-3]].strip('"').strip("'")
         # Remove from input file dictionary; if dictionary is not empty after processing
         # all input file lines, then it included a bad variable in it
         del input_dict[varname.lower()[:-3]]
     else:
+        from_input_dict = False
         # is default value a dictionary? If so, it depends on self._config_keyword
         # Otherwise we're interested in default value
         if isinstance(var_dict["default_value"], dict):
@@ -378,7 +395,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
             def_value = var_dict["default_value"]
 
     # call translate value from JSON file to format F90 expects
-    value = _translate_JSON_value(def_value, var_dict["datatype"], units, unit_system)
+    value = _translate_JSON_value(def_value, var_dict["datatype"], units, unit_system, from_input_dict=from_input_dict)
 
     # Append to config keywords if JSON wants it
     if "_append_to_config_keywords" in var_dict.keys():
@@ -395,7 +412,7 @@ def _get_var_value(varname, var_dict, provided_keys, input_dict, units, unit_sys
 
 ################################################################################
 
-def _translate_JSON_value(value, datatype, units, unit_system):
+def _translate_JSON_value(value, datatype, units, unit_system, from_input_dict=False):
     """ The value provided in the JSON file needs to be adjusted depending on the datatype
         of the variable. Strings need to be wrapped in "", and numbers written in
         scientific notation need to be formatted consistently.
@@ -414,9 +431,9 @@ def _translate_JSON_value(value, datatype, units, unit_system):
         # if variable is a real but value is unicode evaluate it
         if datatype == "real":
             if isinstance(value, str):
-                return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system))
+                return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system, from_input_dict))
             else:
-                return value*_get_scale_factor(units, unit_system)
+                return value*_get_scale_factor(units, unit_system, from_input_dict)
         # if variable is an integer but value is unicode convert it
         if datatype == "integer" and isinstance(value, str):
             return int(value)
@@ -439,7 +456,10 @@ def _unit_conv_dict():
     new_dict['cgs']['m^2/mg s/yr'] = {'new_units': 'cm^2/ng s/yr', 'scale_factor': 0.01}
     return new_dict
 
-def _get_scale_factor(units, unit_system):
+def _get_scale_factor(units, unit_system, from_input_dict=False):
+    if from_input_dict:
+        # Do not apply scale factor to user-specified values
+        return 1.
     try:
         return _unit_conv_dict()[unit_system][units]['scale_factor']
     except:
@@ -494,7 +514,7 @@ def _sort_with_specific_suffix_first(list_in, suffix=None, sort_key=lambda s: s.
 
 ################################################################################
 
-def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
+def _get_value(val_in, settings_dict, tracers_dict, dict_prefix='', return_zero_for_unfound=False):
     """ Translate val_in (which may be a variable name) to an integer value
     """
 
@@ -520,6 +540,8 @@ def _get_value(val_in, settings_dict, tracers_dict, dict_prefix=''):
             try:
                 val_out = settings_dict[val_in]['value']
             except:
+                if return_zero_for_unfound:
+                    return 0
                 logger.error('Unknown variable name in _get_value: %s' % val_in)
                 MARBL_tools.abort(1)
         return val_out
@@ -551,13 +573,13 @@ def _get_array_info(array_size_in, settings_dict, tracers_dict, dict_prefix=''):
             logger.error("_get_array_info() only supports 1D and 2D arrays")
             MARBL_tools.abort(1)
 
-        for i in range(0, _get_value(array_size_in[0], settings_dict, tracers_dict, dict_prefix)):
-            for j in range(0, _get_value(array_size_in[1], settings_dict, tracers_dict, dict_prefix)):
+        for i in range(0, _get_value(array_size_in[0], settings_dict, tracers_dict, dict_prefix, return_zero_for_unfound=True)):
+            for j in range(0, _get_value(array_size_in[1], settings_dict, tracers_dict, dict_prefix, return_zero_for_unfound=True)):
                 str_index.append("(%d,%d)" % (i+1,j+1))
         return str_index
 
     # How many elements? May be an integer or an entry in self.settings_dict
-    for i in range(0, _get_value(array_size_in, settings_dict, tracers_dict, dict_prefix)):
+    for i in range(0, _get_value(array_size_in, settings_dict, tracers_dict, dict_prefix, return_zero_for_unfound=True)):
         str_index.append("(%d)" % (i+1))
     return str_index
 

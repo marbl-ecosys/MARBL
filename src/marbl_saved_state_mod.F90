@@ -35,25 +35,37 @@ Contains
 
     call surface_state%construct(num_elements_surface_flux, num_levels)
 
-    lname = 'surface pH'
+    lname = 'surface pH for base biotic tracers'
     sname = 'PH_SURF'
     units = 'pH'
     vgrid = 'none'
     rank  = 2
     call surface_state%add_state(lname, sname, units, vgrid, rank,            &
-         surf_ind%ph_surf, marbl_status_log)
+         surf_ind%base_bio_ph_surf, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("add_state(PH_SURF)", subname)
       return
     end if
 
-    lname = 'surface pH (alternate CO2)'
+    lname = 'surface pH for abiotic tracers'
+    sname = 'ABIO_PH_SURF'
+    units = 'pH'
+    vgrid = 'none'
+    rank  = 2
+    call surface_state%add_state(lname, sname, units, vgrid, rank,            &
+         surf_ind%abio_dic_ph_surf, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("add_state(ABIO_PH_SURF)", subname)
+      return
+    end if
+
+    lname = 'surface pH for base biotic tracers (alternate CO2)'
     sname = 'PH_SURF_ALT_CO2'
     units = 'pH'
     vgrid = 'none'
     rank  = 2
     call surface_state%add_state(lname, sname, units, vgrid, rank,            &
-         surf_ind%ph_alt_co2_surf, marbl_status_log)
+         surf_ind%base_bio_ph_alt_co2_surf, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("add_state(PH_SURF_ALT_CO2)", subname)
       return
