@@ -36,6 +36,7 @@ module marbl_surface_flux_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
   use marbl_diagnostics_mod , only : marbl_diagnostics_surface_flux_compute
+  use marbl_diagnostics_mod , only : marbl_diagnostics_surface_flux_share
 
   use marbl_logging         , only : marbl_log_type
 
@@ -85,9 +86,11 @@ contains
     use marbl_co2calc_mod, only : marbl_co2calc_surface
     use marbl_oxygen, only : o2sat_surf
     use marbl_nhx_surface_emis_mod, only : marbl_nhx_surface_emis_compute
+    use marbl_settings_mod, only : base_bio_on
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
     use marbl_settings_mod, only : xkw_coeff
     use marbl_surface_flux_share_mod, only : marbl_surface_flux_share_export_variables
+    use marbl_abio_dic_surface_flux_mod, only : marbl_abio_dic_surface_flux_compute
     use marbl_ciso_surface_flux_mod, only : marbl_ciso_surface_flux_compute
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_C_input
     use marbl_glo_avg_mod, only : glo_avg_field_ind_surface_flux_P_input
@@ -116,13 +119,13 @@ contains
     !-----------------------------------------------------------------------
     character(len=*), parameter :: subname = 'marbl_surface_flux_mod:marbl_surface_flux_compute'
 
-    integer (int_kind) :: auto_ind                 ! autotroph functional group index
-    real (r8)          :: phlo(num_elements)       ! lower bound for ph in solver
-    real (r8)          :: phhi(num_elements)       ! upper bound for ph in solver
-    real (r8)          :: xkw_ice(num_elements)    ! common portion of piston vel., (1-fice)*xkw (L/T)
-    real (r8)          :: o2sat_1atm(num_elements) ! o2 saturation @ 1 atm (conc units)
-    real (r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
-    real (r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
+    integer(int_kind) :: auto_ind                    ! autotroph functional group index
+    real(r8)          :: phlo(num_elements)          ! lower bound for ph in solver
+    real(r8)          :: phhi(num_elements)          ! upper bound for ph in solver
+    real(r8)          :: xkw_ice(num_elements)       ! common portion of piston vel., (1-fice)*xkw (cm/s)
+    real(r8)          :: o2sat_1atm(num_elements)    ! o2 saturation @ 1 atm (conc units)
+    real(r8)          :: totalChl_loc(num_elements)  ! local value of totalChl
+    real(r8)          :: flux_o2_loc(num_elements)   ! local value of o2 flux
     !-----------------------------------------------------------------------
 
     associate(                                             &
@@ -140,38 +143,38 @@ contains
          nox_flux     => surface_flux_forcings(surface_flux_forcing_ind%nox_flux_id)%field_0d,     &
          nhy_flux     => surface_flux_forcings(surface_flux_forcing_ind%nhy_flux_id)%field_0d,     &
 
-         piston_velocity      => surface_flux_internal%piston_velocity(:),                       &
-         flux_co2             => surface_flux_internal%flux_co2(:),                              &
-         co2star              => surface_flux_internal%co2star(:),                               &
-         dco2star             => surface_flux_internal%dco2star(:),                              &
-         pco2surf             => surface_flux_internal%pco2surf(:),                              &
-         dpco2                => surface_flux_internal%dpco2(:),                                 &
-         co3                  => surface_flux_internal%co3(:),                                   &
-         co2star_alt          => surface_flux_internal%co2star_alt(:),                           &
-         dco2star_alt         => surface_flux_internal%dco2star_alt(:),                          &
-         pco2surf_alt         => surface_flux_internal%pco2surf_alt(:),                          &
-         dpco2_alt            => surface_flux_internal%dpco2_alt(:),                             &
-         schmidt_co2          => surface_flux_internal%schmidt_co2(:),                           &
-         schmidt_o2           => surface_flux_internal%schmidt_o2(:),                            &
-         pv_o2                => surface_flux_internal%pv_o2(:),                                 &
-         pv_co2               => surface_flux_internal%pv_co2(:),                                &
-         o2sat                => surface_flux_internal%o2sat(:),                                 &
-         flux_alt_co2         => surface_flux_internal%flux_alt_co2(:),                          &
-         nhx_surface_emis     => surface_flux_internal%nhx_surface_emis(:),                      &
+         piston_velocity      => surface_flux_internal%piston_velocity(:),   &
+         flux_co2             => surface_flux_internal%flux_co2(:),          &
+         co2star              => surface_flux_internal%co2star(:),           &
+         dco2star             => surface_flux_internal%dco2star(:),          &
+         pco2surf             => surface_flux_internal%pco2surf(:),          &
+         dpco2                => surface_flux_internal%dpco2(:),             &
+         co3                  => surface_flux_internal%co3(:),               &
+         co2star_alt          => surface_flux_internal%co2star_alt(:),       &
+         dco2star_alt         => surface_flux_internal%dco2star_alt(:),      &
+         pco2surf_alt         => surface_flux_internal%pco2surf_alt(:),      &
+         dpco2_alt            => surface_flux_internal%dpco2_alt(:),         &
+         schmidt_co2          => surface_flux_internal%schmidt_co2(:),       &
+         schmidt_o2           => surface_flux_internal%schmidt_o2(:),        &
+         pv_o2                => surface_flux_internal%pv_o2(:),             &
+         pv_co2               => surface_flux_internal%pv_co2(:),            &
+         o2sat                => surface_flux_internal%o2sat(:),             &
+         flux_alt_co2         => surface_flux_internal%flux_alt_co2(:),      &
+         nhx_surface_emis     => surface_flux_internal%nhx_surface_emis(:),  &
 
-         ph_prev_surf         => saved_state%state(saved_state_ind%ph_surf)%field_2d,               &
-         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%ph_alt_co2_surf)%field_2d,       &
+         ph_prev_surf         => saved_state%state(saved_state_ind%base_bio_ph_surf)%field_2d,         &
+         ph_prev_alt_co2_surf => saved_state%state(saved_state_ind%base_bio_ph_alt_co2_surf)%field_2d, &
 
-         po4_ind           => marbl_tracer_indices%po4_ind,                                     &
-         no3_ind           => marbl_tracer_indices%no3_ind,                                     &
-         sio3_ind          => marbl_tracer_indices%sio3_ind,                                    &
-         nh4_ind           => marbl_tracer_indices%nh4_ind,                                     &
-         fe_ind            => marbl_tracer_indices%fe_ind,                                      &
-         o2_ind            => marbl_tracer_indices%o2_ind,                                      &
-         dic_ind           => marbl_tracer_indices%dic_ind,                                     &
-         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind,                             &
-         alk_ind           => marbl_tracer_indices%alk_ind,                                     &
-         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind                              &
+         po4_ind           => marbl_tracer_indices%po4_ind,         &
+         no3_ind           => marbl_tracer_indices%no3_ind,         &
+         sio3_ind          => marbl_tracer_indices%sio3_ind,        &
+         nh4_ind           => marbl_tracer_indices%nh4_ind,         &
+         fe_ind            => marbl_tracer_indices%fe_ind,          &
+         o2_ind            => marbl_tracer_indices%o2_ind,          &
+         dic_ind           => marbl_tracer_indices%dic_ind,         &
+         dic_alt_co2_ind   => marbl_tracer_indices%dic_alt_co2_ind, &
+         alk_ind           => marbl_tracer_indices%alk_ind,         &
+         alk_alt_co2_ind   => marbl_tracer_indices%alk_alt_co2_ind  &
          )
 
     !-----------------------------------------------------------------------
@@ -179,6 +182,58 @@ contains
     !-----------------------------------------------------------------------
 
     surface_fluxes(:, :) = c0
+
+    !-----------------------------------------------------------------------
+    ! fields used for both abiotic and biotic surface flux computation
+    !-----------------------------------------------------------------------
+
+    if (lflux_gas_o2 .or. lflux_gas_co2) then
+      piston_velocity = xkw_coeff*u10_sqr(:)
+      xkw_ice(:) = (c1 - ifrac(:)) * piston_velocity
+    end if
+    if (lflux_gas_co2) then
+      schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
+      pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
+    else
+      schmidt_co2(:) = c0
+      pv_co2(:)      = c0
+    end if
+
+    !-----------------------------------------------------------------------
+    ! Compute surface flux-related diagnostics for fields used by
+    ! both abiotic and biotic tracers
+    !-----------------------------------------------------------------------
+
+    call marbl_diagnostics_surface_flux_share(                &
+         surface_flux_forcing_ind = ind,                      &
+         surface_flux_forcings    = surface_flux_forcings,    &
+         surface_flux_internal    = surface_flux_internal,    &
+         surface_flux_diags       = surface_flux_diags)
+
+    !-----------------------------------------------------------------------
+    ! Compute carbon isotopes surface fluxes
+    !-----------------------------------------------------------------------
+
+    call marbl_abio_dic_surface_flux_compute(&
+         num_elements             = num_elements, &
+         tracers_at_surface       = tracers_at_surface, &
+         marbl_tracer_indices     = marbl_tracer_indices, &
+         saved_state_ind          = saved_state_ind, &
+         surface_flux_forcing_ind = surface_flux_forcing_ind, &
+         surface_flux_forcings    = surface_flux_forcings, &
+         unit_system              = unit_system, &
+         saved_state              = saved_state, &
+         surface_flux_internal    = surface_flux_internal, &
+         surface_flux_diags       = surface_flux_diags, &
+         surface_fluxes           = surface_fluxes, &
+         co2calc_coeffs           = co2calc_coeffs, &
+         co2calc_state            = co2calc_state, &
+         marbl_status_log         = marbl_status_log)
+
+    !-----------------------------------------------------------------------
+
+    ! Return if not using base biotic tracers
+    if (.not. base_bio_on) return
 
     !-----------------------------------------------------------------------
     !  Compute surface chlorophyll
@@ -194,172 +249,146 @@ contains
     end if
 
     !-----------------------------------------------------------------------
-    !  calculate gas flux quantities if necessary
+    !  compute O2 flux (if necessary)
     !-----------------------------------------------------------------------
 
+    if (lflux_gas_o2) then
+      schmidt_o2(:) = schmidt_o2_surf(num_elements, sst)
+
+      o2sat_1atm(:) = o2sat_surf(num_elements, sst, sss)
+
+      pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
+      o2sat(:) = ap_used(:) * o2sat_1atm(:)
+      flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
+      surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
+      if (sfo_ind%flux_o2_id.ne.0) then
+        surface_flux_output%outputs_for_GCM(sfo_ind%flux_o2_id)%forcing_field_0d(:) = flux_o2_loc
+      end if
+    else
+      schmidt_o2(:) = c0
+      pv_o2(:)      = c0
+      o2sat(:)      = c0
+    endif  ! lflux_gas_o2
+
     !-----------------------------------------------------------------------
-    !  compute CO2 flux, computing disequilibrium one row at a time
+    !  compute CO2 flux, computing disequilibrium (if necessary)
     !-----------------------------------------------------------------------
 
-    if (lflux_gas_o2 .or. lflux_gas_co2) then
+    if (lflux_gas_co2) then
 
-       !-----------------------------------------------------------------------
-       !  Compute XKW_ICE. XKW is zero over land, so XKW_ICE is too.
-       !-----------------------------------------------------------------------
+      !-----------------------------------------------------------------------
+      !  Set flux_co2
+      !-----------------------------------------------------------------------
 
-       piston_velocity = xkw_coeff*u10_sqr(:)
-       xkw_ice(:) = (c1 - ifrac(:)) * piston_velocity
+      where (ph_prev_surf(:) /= c0)
+        phlo(:) = ph_prev_surf(:) - del_ph
+        phhi(:) = ph_prev_surf(:) + del_ph
+      elsewhere
+        phlo(:) = phlo_surf_init
+        phhi(:) = phhi_surf_init
+      end where
 
-       !-----------------------------------------------------------------------
-       !  compute O2 flux
-       !-----------------------------------------------------------------------
+      ! Note the following computes a new ph_prev_surf
+      ! pass in sections of surface_flux_forcings instead of associated vars because of problems with intel/15.0.3
+      call marbl_co2calc_surface(                                      &
+           num_elements     = num_elements,                            &
+           lcomp_co2calc_coeffs = .true.,                              &
+           dic_in     = tracers_at_surface(:,dic_ind),                 &
+           xco2_in    = xco2(:),                                       &
+           ta_in      = tracers_at_surface(:,alk_ind),                 &
+           pt_in      = tracers_at_surface(:,po4_ind),                 &
+           sit_in     = tracers_at_surface(:,sio3_ind),                &
+           temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
+           salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
+           atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
+           unit_system = unit_system,                                  &
+           co2calc_coeffs = co2calc_coeffs,                            &
+           co2calc_state = co2calc_state,                              &
+           co3        = co3,                                           &
+           co2star    = co2star,                                       &
+           dco2star   = dco2star,                                      &
+           pco2surf   = pco2surf,                                      &
+           dpco2      = dpco2,                                         &
+           phlo       = phlo,                                          &
+           phhi       = phhi,                                          &
+           ph         = ph_prev_surf,                                  &
+           marbl_status_log = marbl_status_log)
 
-       if (lflux_gas_o2) then
-          schmidt_o2(:) = schmidt_o2_surf(num_elements, sst)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_co2', subname)
+        return
+      end if
 
-          o2sat_1atm(:) = o2sat_surf(num_elements, sst, sss)
+      if (marbl_status_log%lwarning) then
+        call marbl_status_log%log_warning_trace('marbl_co2calc_surface() with flux_co2', subname)
+      end if
 
-          pv_o2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_o2(:))
-          o2sat(:) = ap_used(:) * o2sat_1atm(:)
-          flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
-          surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
-          if (sfo_ind%flux_o2_id.ne.0) then
-            surface_flux_output%outputs_for_GCM(sfo_ind%flux_o2_id)%forcing_field_0d(:) = flux_o2_loc
-          end if
-       else
-          schmidt_o2(:) = c0
-          pv_o2(:)      = c0
-          o2sat(:)      = c0
-       endif  ! lflux_gas_o2
+      flux_co2(:) = pv_co2(:) * dco2star(:)
+      if (sfo_ind%flux_co2_id.ne.0) then
+        surface_flux_output%outputs_for_GCM(sfo_ind%flux_co2_id)%forcing_field_0d(:) = flux_co2
+      end if
 
-       !-----------------------------------------------------------------------
-       !  compute CO2 flux, computing disequilibrium
-       !-----------------------------------------------------------------------
+      !-------------------------------------------------------------------
+      !  The following variables need to be shared with other modules,
+      !  and are now defined in marbl_share as targets.
+      !-------------------------------------------------------------------
 
-       if (lflux_gas_co2) then
+      call marbl_surface_flux_share_export_variables(surface_flux_internal, tracers_at_surface, &
+           marbl_tracer_indices, surface_flux_share)
 
-          schmidt_co2(:) = schmidt_co2_surf(num_elements, sst)
+      !-----------------------------------------------------------------------
+      !  Set flux_alt_co2
+      !-----------------------------------------------------------------------
 
-          pv_co2(:) = xkw_ice(:) * sqrt(660.0_r8 / schmidt_co2(:))
+      where (ph_prev_alt_co2_surf(:) /= c0)
+        phlo(:) = ph_prev_alt_co2_surf(:) - del_ph
+        phhi(:) = ph_prev_alt_co2_surf(:) + del_ph
+      elsewhere
+        phlo(:) = phlo_surf_init
+        phhi(:) = phhi_surf_init
+      end where
 
-          !-----------------------------------------------------------------------
-          !  Set flux_co2
-          !-----------------------------------------------------------------------
+      ! Note the following computes a new ph_prev_alt_co2
+      ! pass in sections of surface_flux_forcings instead of associated vars because of problems with intel/15.0.3
+      call marbl_co2calc_surface(                                      &
+           num_elements     = num_elements,                            &
+           lcomp_co2calc_coeffs = .false.,                             &
+           dic_in     = tracers_at_surface(:,dic_alt_co2_ind),         &
+           xco2_in    = xco2_alt_co2(:),                               &
+           ta_in      = tracers_at_surface(:,alk_alt_co2_ind),         &
+           pt_in      = tracers_at_surface(:,po4_ind),                 &
+           sit_in     = tracers_at_surface(:,sio3_ind),                &
+           temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
+           salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
+           atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
+           unit_system = unit_system,                                  &
+           co2calc_coeffs = co2calc_coeffs,                            &
+           co2calc_state = co2calc_state,                              &
+           co3        = co3,                                           &
+           co2star    = co2star_alt,                                   &
+           dco2star   = dco2star_alt,                                  &
+           pco2surf   = pco2surf_alt,                                  &
+           dpco2      = dpco2_alt,                                     &
+           phlo       = phlo,                                          &
+           phhi       = phhi,                                          &
+           ph         = ph_prev_alt_co2_surf,                          &
+           marbl_status_log = marbl_status_log)
 
-          where (ph_prev_surf(:) /= c0)
-             phlo(:) = ph_prev_surf(:) - del_ph
-             phhi(:) = ph_prev_surf(:) + del_ph
-          elsewhere
-             phlo(:) = phlo_surf_init
-             phhi(:) = phhi_surf_init
-          end where
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
+        return
+      end if
 
-          ! Note the following computes a new ph_prev_surf
-          ! pass in sections of surface_flux_forcings instead of associated vars because of problems with intel/15.0.3
-          call marbl_co2calc_surface(                                      &
-               num_elements     = num_elements,                            &
-               lcomp_co2calc_coeffs = .true.,                              &
-               dic_in     = tracers_at_surface(:,dic_ind),                 &
-               xco2_in    = surface_flux_forcings(ind%xco2_id)%field_0d,   &
-               ta_in      = tracers_at_surface(:,alk_ind),                 &
-               pt_in      = tracers_at_surface(:,po4_ind),                 &
-               sit_in     = tracers_at_surface(:,sio3_ind),                &
-               temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
-               salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
-               atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
-               unit_system = unit_system,                                  &
-               co2calc_coeffs = co2calc_coeffs,                            &
-               co2calc_state = co2calc_state,                              &
-               co3        = co3,                                           &
-               co2star    = co2star,                                       &
-               dco2star   = dco2star,                                      &
-               pco2surf   = pco2surf,                                      &
-               dpco2      = dpco2,                                         &
-               phlo       = phlo,                                          &
-               phhi       = phhi,                                          &
-               ph         = ph_prev_surf,                                  &
-               marbl_status_log = marbl_status_log)
+      if (marbl_status_log%lwarning) then
+        call marbl_status_log%log_warning_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
+      end if
 
-          if (marbl_status_log%labort_marbl) then
-             call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_co2', subname)
-             return
-          end if
+      flux_alt_co2(:) = pv_co2(:) * dco2star_alt(:)
 
-          if (marbl_status_log%lwarning) then
-             call marbl_status_log%log_warning_trace('marbl_co2calc_surface() with flux_co2', subname)
-          end if
+      surface_fluxes(:, dic_ind)         = surface_fluxes(:, dic_ind)         + flux_co2(:)
+      surface_fluxes(:, dic_alt_co2_ind) = surface_fluxes(:, dic_alt_co2_ind) + flux_alt_co2(:)
 
-          flux_co2(:) = pv_co2(:) * dco2star(:)
-          if (sfo_ind%flux_co2_id.ne.0) then
-            surface_flux_output%outputs_for_GCM(sfo_ind%flux_co2_id)%forcing_field_0d(:) = flux_co2
-          end if
-
-          !-------------------------------------------------------------------
-          !  The following variables need to be shared with other modules,
-          !  and are now defined in marbl_share as targets.
-          !-------------------------------------------------------------------
-
-          call marbl_surface_flux_share_export_variables(surface_flux_internal, tracers_at_surface, &
-               marbl_tracer_indices, surface_flux_share)
-
-          !-----------------------------------------------------------------------
-          !  Set flux_alt_co2
-          !-----------------------------------------------------------------------
-
-          where (ph_prev_alt_co2_surf(:) /= c0)
-             phlo(:) = ph_prev_alt_co2_surf(:) - del_ph
-             phhi(:) = ph_prev_alt_co2_surf(:) + del_ph
-          elsewhere
-             phlo(:) = phlo_surf_init
-             phhi(:) = phhi_surf_init
-          end where
-
-          ! Note the following computes a new ph_prev_alt_co2
-          ! pass in sections of surface_flux_forcings instead of associated vars because of problems with intel/15.0.3
-          call marbl_co2calc_surface(                                      &
-               num_elements     = num_elements,                            &
-               lcomp_co2calc_coeffs = .false.,                             &
-               dic_in     = tracers_at_surface(:,dic_alt_co2_ind),         &
-               xco2_in    = surface_flux_forcings(ind%xco2_alt_co2_id)%field_0d, &
-               ta_in      = tracers_at_surface(:,alk_alt_co2_ind),         &
-               pt_in      = tracers_at_surface(:,po4_ind),                 &
-               sit_in     = tracers_at_surface(:,sio3_ind),                &
-               temp       = surface_flux_forcings(ind%sst_id)%field_0d,    &
-               salt       = surface_flux_forcings(ind%sss_id)%field_0d,    &
-               atmpres    = surface_flux_forcings(ind%atm_pressure_id)%field_0d, &
-               unit_system = unit_system,                                  &
-               co2calc_coeffs = co2calc_coeffs,                            &
-               co2calc_state = co2calc_state,                              &
-               co3        = co3,                                           &
-               co2star    = co2star_alt,                                   &
-               dco2star   = dco2star_alt,                                  &
-               pco2surf   = pco2surf_alt,                                  &
-               dpco2      = dpco2_alt,                                     &
-               phlo       = phlo,                                          &
-               phhi       = phhi,                                          &
-               ph         = ph_prev_alt_co2_surf,                          &
-               marbl_status_log = marbl_status_log)
-
-          if (marbl_status_log%labort_marbl) then
-             call marbl_status_log%log_error_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
-             return
-          end if
-
-          if (marbl_status_log%lwarning) then
-             call marbl_status_log%log_warning_trace('marbl_co2calc_surface() with flux_alt_co2', subname)
-          end if
-
-          flux_alt_co2(:) = pv_co2(:) * dco2star_alt(:)
-
-          surface_fluxes(:, dic_ind)         = surface_fluxes(:, dic_ind)         + flux_co2(:)
-          surface_fluxes(:, dic_alt_co2_ind) = surface_fluxes(:, dic_alt_co2_ind) + flux_alt_co2(:)
-
-       else
-          schmidt_co2(:) = c0
-          pv_co2(:)      = c0
-       endif  !  lflux_gas_co2
-
-    endif  ! lflux_gas_o2 .or. lflux_gas_co2
+    endif  !  lflux_gas_co2
 
     !-----------------------------------------------------------------------
     !  compute NHx emissions

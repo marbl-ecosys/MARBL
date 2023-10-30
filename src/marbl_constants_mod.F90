@@ -61,8 +61,8 @@ module marbl_constants_mod
       molw_P    =  30.974_r8,          & ! molecular weight of phosphorus (gP / mol P)
       molw_Si   =  28.085_r8,          & ! molecular weight of silicon (gSi / mol Si)
       R13C_std  =   1.0_r8,            & ! actual 13C/12C PDB standard ratio (Craig, 1957) = 1123.72e-5_r8
-      R14C_std =    1.0_r8               ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
-
+      R14C_std  =   1.0_r8,            & ! actual 14C/12C NOSAMS standard ratio = 11.76e-13_r8
+      c14_lambda = log(c2) / (5730.0_r8 * spy) ! C14 decay factor (1/sec); note halflife of 5730 years
   !---------------------------------------------------------------------
   ! Physical constants that need to be set after unit system
   ! has been chosen

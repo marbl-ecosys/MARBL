@@ -40,6 +40,7 @@ module marbl_interior_tendency_mod
 
   use marbl_logging, only : marbl_log_type
 
+  use marbl_settings_mod, only : base_bio_on
   use marbl_settings_mod, only : autotroph_cnt
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : max_grazer_prey_cnt
@@ -128,6 +129,7 @@ contains
     !  Compute time derivatives for ecosystem state variables
 
     use marbl_temperature, only : marbl_temperature_potemp
+    use marbl_abio_dic_interior_tendency_mod, only : marbl_abio_dic_interior_tendency_compute
     use marbl_ciso_interior_tendency_mod, only : marbl_ciso_interior_tendency_compute
     use marbl_diagnostics_mod , only : marbl_diagnostics_interior_tendency_compute
     use marbl_interface_private_types, only : marbl_internal_timers_type
@@ -205,7 +207,6 @@ contains
     real (r8) :: Lig_photochem(domain%km)    ! loss of Fe-binding Ligand from UV radiation
     real (r8) :: Lig_deg(domain%km)          ! loss of Fe-binding Ligand from bacterial degradation
     real (r8) :: Lig_loss(domain%km)         ! loss of Fe-binding Ligand
-    real (r8) :: totalChl_local(domain%km)   ! local value of totalChl
 
     ! NOTE(bja, 2015-07) vectorization: arrays that are (n, k, c, i)
     ! probably can not be vectorized reasonably over c without memory
@@ -213,11 +214,10 @@ contains
     ! can probably be vectorized over k and / or c!
     !-----------------------------------------------------------------------
 
-    ! NOTE(bja, 2015-07) interior_tendencies=0 must come before the "not
-    ! lsource_sink check to ensure correct answer when not doing
-    ! computations.
-
     interior_tendencies(:, :) = c0
+
+    ! Return with interior_tendencies = 0 if not performing computations
+    if (.not. lsource_sink) return
 
     if (abs(c1 - sum(domain%delta_z(:) * bot_flux_to_tend(:))) > bftt_dz_sum_thres) then
       write(log_message, "(A, E11.3, A)") "1 - sum(bot_flux_to_tend * dz) = ", &
@@ -232,12 +232,44 @@ contains
       return
     end if
 
-    if (.not. lsource_sink) then
-       !-----------------------------------------------------------------------
-       !  exit immediately if computations are not to be performed
-       !-----------------------------------------------------------------------
+    !-----------------------------------------------------------------------
+    !  create local copies of model tracers
+    !-----------------------------------------------------------------------
+
+    call setup_local_tracers(domain%kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
+         tracer_local(:,:), zooplankton_local)
+
+    !-----------------------------------------------------------------------
+    !  Set all interior diagnostics to zero
+    !  This is useful to prevent deep values persisting
+    !  when computing diagnostics in shallow columns
+    !-----------------------------------------------------------------------
+
+    call interior_tendency_diags%set_to_zero(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace(&
+           'interior_tendency_diags%set_to_zero', subname)
+      return
+    end if
+
+    !-----------------------------------------------------------------------
+    !  Compute tendencies for abiotic tracers
+    !-----------------------------------------------------------------------
+
+    call marbl_abio_dic_interior_tendency_compute(&
+         marbl_tracer_indices = marbl_tracer_indices, &
+         tracer_local = tracer_local, &
+         interior_tendency_diags = interior_tendency_diags, &
+         interior_tendencies = interior_tendencies)
+
+    if (marbl_status_log%labort_marbl) then
+       call marbl_status_log%log_error_trace(&
+            'marbl_abio_dic_interior_tendency_compute()', subname)
        return
-    endif
+    end if
+
+    ! Return if not using base biotic tracers or not performing computations
+    if (.not. base_bio_on) return
 
     ! Verify forcing is consistent
     if (lcheck_forcing) &
@@ -322,13 +354,6 @@ contains
                interior_tendency_forcing_indices,           &
                interior_restore)
 
-    !-----------------------------------------------------------------------
-    !  create local copies of model tracers
-    !-----------------------------------------------------------------------
-
-    call setup_local_tracers(kmt, marbl_tracer_indices, tracers(:,:), autotroph_local, &
-         tracer_local(:,:), zooplankton_local, totalChl_local)
-
     call set_surface_particulate_terms(surface_flux_forcing_indices, unit_system, POC, POP, &
          P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, QA_dust_def(:), dust_flux_in)
 
@@ -348,7 +373,7 @@ contains
     end if
 
     call compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_indices, &
-                     totalChl_local, unit_system, PAR)
+                     autotroph_local, unit_system, PAR)
 
     call compute_autotroph_elemental_ratios(kmt, autotroph_local, marbl_tracer_indices, tracer_local, &
          autotroph_derived_terms) !!! tested
@@ -530,7 +555,7 @@ contains
   ! changed "column_kmt" to "kmt"
   ! changed "dkm" to "km"
   subroutine compute_PAR(domain, interior_tendency_forcings, interior_tendency_forcing_ind, &
-                         totalChl_local, unit_system, PAR)
+                         autotroph_local, unit_system, PAR)
 
     !-----------------------------------------------------------------------
     !  compute PAR related quantities
@@ -542,12 +567,12 @@ contains
 
     ! PAR is intent(inout) because it components, while entirely set here, are allocated elsewhere
 
-    type(marbl_domain_type)                   , intent(in)    :: domain
-    type(marbl_forcing_fields_type)           , intent(in)    :: interior_tendency_forcings(:)
-    type(marbl_interior_tendency_forcing_indexing_type), intent(in) :: interior_tendency_forcing_ind
-    real(r8)                                  , intent(in)    :: totalChl_local(:)
-    type(unit_system_type)                    , intent(in)    :: unit_system
-    type(marbl_PAR_type)                      , intent(inout) :: PAR
+    type(marbl_domain_type),                             intent(in)    :: domain
+    type(marbl_forcing_fields_type),                     intent(in)    :: interior_tendency_forcings(:)
+    type(marbl_interior_tendency_forcing_indexing_type), intent(in)    :: interior_tendency_forcing_ind
+    type(autotroph_local_type),                          intent(in)    :: autotroph_local
+    type(unit_system_type),                              intent(in)    :: unit_system
+    type(marbl_PAR_type),                                intent(inout) :: PAR
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -558,6 +583,7 @@ contains
     real (r8), parameter :: PAR_threshold = 1.0e-19_r8
 
     real (r8) :: WORK1(domain%kmt)
+    real (r8) :: totalChl_local(domain%kmt)
     integer(int_kind) :: k, subcol_ind
     !-----------------------------------------------------------------------
 
@@ -608,7 +634,8 @@ contains
       ! compute attenuation coefficient over column
       !-----------------------------------------------------------------------
 
-      WORK1(:) = max(totalChl_local(1:kmt), 0.02_r8)
+      totalChl_local(:) = sum(autotroph_local%Chl(:,1:kmt), dim=1)
+      WORK1(:) = max(totalChl_local(:), 0.02_r8)
       do k = 1, kmt
         if (WORK1(k) < 0.13224_r8) then
           PAR%KPARdz(k) = (0.0919_r8*unit_system%len2m)*(WORK1(k)**0.3536_r8)
@@ -734,10 +761,9 @@ contains
   end subroutine marbl_interior_tendency_adjust_bury_coeff
 
   !***********************************************************************
-  ! changed "column_kmt" to "kmt"
-  subroutine setup_local_tracers(kmt, marbl_tracer_indices, tracers, &
-       autotroph_local, tracer_local, zooplankton_local, totalChl_local)
 
+  subroutine setup_local_tracers(kmt, marbl_tracer_indices, tracers, &
+       autotroph_local, tracer_local, zooplankton_local)
     !-----------------------------------------------------------------------
     !  create local copies of model tracers
     !  treat negative values as zero,  apply mask to local copies
@@ -749,7 +775,6 @@ contains
     type(autotroph_local_type)   , intent(inout) :: autotroph_local
     real (r8)                    , intent(out)   :: tracer_local(:,:)
     type(zooplankton_local_type) , intent(inout) :: zooplankton_local
-    real (r8)                    , intent(out)   :: totalChl_local(:)
 
     !-----------------------------------------------------------------------
     !  local variables
@@ -829,9 +854,6 @@ contains
 
     ! autotroph consistency check
     call autotroph_zero_consistency_enforce(kmt, marbl_tracer_indices, autotroph_local)
-
-    ! set totalChl_local
-    totalChl_local = sum(autotroph_local%Chl(:,:), dim=1)
 
   end subroutine setup_local_tracers
 

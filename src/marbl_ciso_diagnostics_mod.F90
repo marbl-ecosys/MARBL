@@ -26,7 +26,7 @@ module marbl_ciso_diagnostics_mod
 
   public :: marbl_ciso_diagnostics_init
   public :: marbl_ciso_diagnostics_surface_flux_compute
-  public :: store_diagnostics_ciso_interior
+  public :: marbl_ciso_diagnostics_interior_tendency_compute
 
 contains
 
@@ -113,7 +113,7 @@ contains
        return
       end if
 
-      lname    = 'Atmospheric Delta 13C in permil'
+      lname    = 'Atmospheric Delta 13C'
       sname    = 'CISO_D13C_atm'
       units    = 'permil'
       vgrid    = 'none'
@@ -221,7 +221,7 @@ contains
        return
       end if
 
-      lname    = 'Atmospheric Delta 14C in permil'
+      lname    = 'Atmospheric Delta 14C'
       sname    = 'CISO_D14C_atm'
       units    = 'permil'
       vgrid    = 'none'
@@ -608,7 +608,7 @@ contains
       end if
 
       !  Nonstandard autotroph 2D and 3D fields for each autotroph
-      if (.not.ind%lconstructed()) then
+      if (.not.ind%lallocated()) then
        allocate(ind%CISO_eps_autotroph(autotroph_cnt))
        allocate(ind%CISO_mui_to_co2star(autotroph_cnt))
        allocate(ind%CISO_Ca13CO3_form(autotroph_cnt))
@@ -968,8 +968,8 @@ contains
   end subroutine marbl_ciso_diagnostics_surface_flux_compute
 
   !*****************************************************************************
-  ! changed loop limits from km to kmt
-  subroutine store_diagnostics_ciso_interior(&
+
+  subroutine marbl_ciso_diagnostics_interior_tendency_compute(&
        marbl_domain,        &
        autotroph_d13C,      &
        autotroph_d14C,      &
@@ -1063,7 +1063,7 @@ contains
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_ciso_diagnostics_mod:store_diagnostics_ciso_interior'
+    character(len=*), parameter :: subname = 'marbl_ciso_diagnostics_mod:marbl_ciso_diagnostics_interior_tendency_compute'
     character(len=char_len)     :: log_message
     integer (int_kind) :: k, n, auto_ind
     real (r8)          :: work(marbl_domain%km)
@@ -1222,7 +1222,7 @@ contains
 
     end associate
 
-  end subroutine store_diagnostics_ciso_interior
+  end subroutine marbl_ciso_diagnostics_interior_tendency_compute
 
   !***********************************************************************
 

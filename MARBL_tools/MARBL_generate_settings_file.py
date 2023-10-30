@@ -45,12 +45,19 @@ def generate_settings_file(MARBL_settings, settings_file_out):
 
     fout = open(settings_file_out,"w")
     # Sort variables by subcategory
+    written_any = False
     for subcat_name in MARBL_settings.get_subcategory_names():
-        fout.write("! %s\n" % subcat_name.split('. ')[1])
+        header = "! %s\n" % subcat_name.split('. ')[1]
+        var_values = []
         for varname in MARBL_settings.get_settings_dict_variable_names(subcat_name):
-            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]['value']))
-        if subcat_name != MARBL_settings.get_subcategory_names()[-1]:
-            fout.write("\n")
+            var_values.append("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]['value']))
+        if len(var_values) > 0:
+            if written_any:
+                fout.write("\n")
+            written_any = True
+            fout.write(header)
+            for line in var_values:
+                fout.write(line)
     fout.close()
 
 #######################################

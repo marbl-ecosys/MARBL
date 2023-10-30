@@ -615,6 +615,12 @@ contains
       case('diaz14C')
         tracer_name_file = 'diazC'
         scale_factor = c1
+      case('ABIO_DIC')
+        tracer_name_file = 'DIC'
+        scale_factor = 1.025_r8
+      case('ABIO_DI14C')
+        tracer_name_file = 'DIC'
+        scale_factor = 0.9225_r8
       case DEFAULT
         write(log_message, "(3A)") "Can not read ", trim(tracer_name), " and no fallback field provided!"
         call driver_status_log%log_error(log_message, subname)
@@ -645,6 +651,7 @@ contains
       ! Hard-code in mechanism for falling back:
       ! 1. read 3p1z tracers when 4p2z tracers are not available
       ! 2. read non-isotopic tracers when CISO tracers are not available
+      ! 3. read DIC when ABIO tracers are not available
       call get_tracer_name_file_and_scale_factor(tracer_metadata(n)%short_name, tracer_name_file, &
                                                  scale_factor, driver_status_log)
       if (driver_status_log%labort_marbl) then
