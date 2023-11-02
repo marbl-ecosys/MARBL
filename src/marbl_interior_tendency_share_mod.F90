@@ -40,6 +40,10 @@ contains
     integer (int_kind), intent(in) :: kmt
     type(column_sinking_particle_type), intent(inout) :: sinking_particle
 
+    !! 20231102
+    sinking_particle%hflux_in(kmt+1:) = c0
+    sinking_particle%sflux_in(kmt+1:) = c0
+    !! /20231102
     sinking_particle%sflux_out(kmt+1:) = c0
     sinking_particle%hflux_out(kmt+1:) = c0
     sinking_particle%remin(kmt+1:) = c0

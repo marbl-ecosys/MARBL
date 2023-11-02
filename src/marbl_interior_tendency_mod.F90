@@ -384,6 +384,10 @@ contains
     call compute_temperature_functional_form(temperature(:), zooplankton_settings(:)%Tref, &
          zooplankton_settings(:)%temp_func_form_iopt, zooplankton_settings(:)%Ea, Tfunc_zoo(:,:))
 
+!!!20231101
+    autotroph_derived_terms%Pprime(:,:) = c0
+!!!/20231101
+    
     call compute_Pprime(kmt, domain%zt, autotroph_local, temperature, autotroph_derived_terms%Pprime) !! tested
 
     call compute_autotroph_uptake(km, marbl_tracer_indices, tracer_local(:, :), carbonate, autotroph_derived_terms)
@@ -418,6 +422,14 @@ contains
     call marbl_interior_tendency_share_subfloor_particle_terms_to_zero(kmt, POP)
     PON_remin(kmt+1:km) = c0     
 
+    !20231102
+    denitrif(:)     = c0
+    sed_denitrif(:) = c0
+    other_remin( :) = c0
+    PON_sed_loss(:) = c0
+    Fe_scavenge_rate(:) = c0
+    !/20231102
+    
     do k = 1, kmt !! tested 
        call compute_scavenging(k, kmt, marbl_tracer_indices, tracer_local(:,1:kmt), &
             POC, P_CaCO3, P_SiO2, dust, Fefree(1:kmt), Fe_scavenge_rate(1:kmt), &
@@ -1409,7 +1421,15 @@ contains
          photoacc  => autotroph_derived_terms%photoacc(:,:)   &
          )
 
+      ! 20231101 - ML - initialise with constant value
+      light_lim(:,:) = c0
+      PCphoto(  :,:) = c0
+      photoacc( :,:) = c0
+      photoC(   :,:) = c0
+      !/20231101
+               
       do auto_ind = 1, autotroph_cnt
+
         do k=1,kmt
 
           if (temperature(k) < autotroph_settings(auto_ind)%temp_thres) then
@@ -1419,10 +1439,12 @@ contains
           end if
 
           if (thetaC(auto_ind,k) > c0) then
-            light_lim(auto_ind,k) = c0
-            PCphoto(auto_ind,k)   = c0
-            photoacc(auto_ind,k)  = c0
-
+             !20231101
+             !light_lim(auto_ind,k) = c0
+             !PCphoto(auto_ind,k)   = c0
+             !photoacc(auto_ind,k)  = c0
+             !/20231101
+             
             do subcol_ind = 1, PAR_nsubcols
               work = autotroph_settings(auto_ind)%alphaPI * thetaC(auto_ind,k) * PAR_avg(k,subcol_ind)
               if (work > c0) then
@@ -1718,7 +1740,7 @@ contains
         !  Get nutrient uptake by diatoms based on C fixation
         !-----------------------------------------------------------------------
 
-        photoFe(auto_ind,:) = photoC(auto_ind,:) * gQfe(auto_ind,:)
+        photoFe(auto_ind,:) = photoC(auto_ind,:) * gQfe(auto_ind,:) ! Here's the first error
 
         if (marbl_tracer_indices%auto_inds(auto_ind)%Si_ind > 0) then
           photoSi(auto_ind,:) = photoC(auto_ind,:) * gQsi(auto_ind,:)
@@ -1821,6 +1843,8 @@ contains
          zoo_loss_basal => zooplankton_derived_terms%zoo_loss_basal(:,:) & !(zooplankton_cnt) output
          )
 
+      zoo_loss_bulk(:,:) = c0 !20231101
+      
       !  calculate the loss threshold interpolation factor
       f_loss_thres(:) = min(max((thres_z2_zoo - zt(:))/(thres_z2_zoo - thres_z1_zoo), c0), c1)
 
@@ -1900,20 +1924,21 @@ contains
          )
 
       auto_graze(:,:)     = c0 ! total grazing losses from autotroph pool at auto_ind
+      auto_graze_poc(:,:) = c0 ! autotroph grazing losses routed to poc
+      auto_graze_dic(:,:) = c0 ! autotroph grazing losses routed to dic (computed by residual)
+      auto_graze_doc(:,:) = c0 ! autotroph grazing losses routed to doc      
       auto_graze_zoo(:,:,:) = c0 ! autotroph grazing losses routed to zooplankton at auto_ind
       auto_graze_zootot(:,:) = c0 ! autotroph grazing losses routed to total zooplankton at auto_ind
-      auto_graze_poc(:,:) = c0 ! autotroph grazing losses routed to poc
-      auto_graze_doc(:,:) = c0 ! autotroph grazing losses routed to doc
-      auto_graze_dic(:,:) = c0 ! autotroph grazing losses routed to dic (computed by residual)
 
-      zoo_graze(:,:)     = c0 ! total grazing losses from zooplankton pool at zoo_ind
-      zoo_graze_zoo(:,:,:) = c0 ! zooplankton grazing losses routed to zooplankton at zoo_ind
+
+      zoo_graze(       :,:) = c0 ! total grazing losses from zooplankton pool at zoo_ind
+      zoo_graze_poc(   :,:) = c0 ! zooplankton grazing losses routed to poc
+      zoo_graze_dic(   :,:) = c0 ! zooplankton grazing losses routed to dic (computed by residual)
+      zoo_graze_doc(   :,:) = c0 ! zooplankton grazing losses routed to doc      
+      zoo_graze_zoo( :,:,:) = c0 ! zooplankton grazing losses routed to zooplankton at zoo_ind
       zoo_graze_zootot(:,:) = c0 ! zooplankton grazing losses routed to total zooplankton at zoo_ind
-      zoo_graze_poc(:,:) = c0 ! zooplankton grazing losses routed to poc
-      zoo_graze_doc(:,:) = c0 ! zooplankton grazing losses routed to doc
-      zoo_graze_dic(:,:) = c0 ! zooplankton grazing losses routed to dic (computed by residual)
-
-      x_graze_zoo(:,:)   = c0 ! grazing gains by zooplankton at zoo_ind
+      x_graze_zoo(     :,:) = c0 ! grazing gains by zooplankton at zoo_ind
+      f_zoo_detr(      :,:) = c0 !20231101
 
       do k=1, kmt
         do pred_ind = 1, zooplankton_cnt
@@ -2093,6 +2118,18 @@ contains
          zoo_loss_dic    => zooplankton_derived_terms%zoo_loss_dic(:,:)   & ! output
          )
 
+      !20231101
+      auto_graze_dic( :,:) = c0
+      remaining_P_dop(:,:) = c0
+      remaining_P_pop(:,:) = c0
+      remaining_P_dip(:,:) = c0            
+      zoo_graze_dic(  :,:) = c0
+      
+      zoo_loss_poc(:,:) = c0
+      zoo_loss_doc(:,:) = c0
+      zoo_loss_dic(:,:) = c0
+      !/20231101
+      
       do k=1,kmt
         !-----------------------------------------------------------------------
         ! compute routing to dic of grazed material
@@ -2112,12 +2149,12 @@ contains
         !   - zooplankton linear and quadratic losses get routed to DOC, DIC, and POC
         !   - basal respiration losses only contribute to DIC
         !-----------------------------------------------------------------------
-
+        
         do zoo_ind = 1, zooplankton_cnt
-          zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss_bulk(zoo_ind,k)
-          zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)
-          zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)) + &
-                                    zoo_loss_basal(zoo_ind,k)
+           zoo_loss_poc(zoo_ind,k) = f_zoo_detr(zoo_ind,k) * zoo_loss_bulk(zoo_ind,k) ! line that throws the error
+           zoo_loss_doc(zoo_ind,k) = (c1 - parm_labile_ratio) * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)
+           zoo_loss_dic(zoo_ind,k) = (parm_labile_ratio * (c1 - f_zoo_detr(zoo_ind,k)) * zoo_loss_bulk(zoo_ind,k)) + &
+                zoo_loss_basal(zoo_ind,k)
 
         end do
 
@@ -3828,6 +3865,7 @@ contains
     type(column_sinking_particle_type) , intent(inout) :: POC, POP, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron
     real(r8)                           , intent(inout) :: QA_dust_def(:) !(km)
 
+    
     ! NOTE(bja, 2015-04) assume that k == ksurf condition was handled by
     ! call to marbl_set_surface_particulate_terms()
     if (k > 1) then
