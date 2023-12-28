@@ -93,9 +93,13 @@ endif
 ifneq ($(COMP_NAME),NONE)
   INFO_FILE = $(EXE_SRC_DIR)/.netcdf_info.$(COMP_NAME)
   ifeq ($(USE_NETCDF),TRUE)
-    NETCDF_INC=-D_NETCDF -I$(shell nc-config --includedir)
-    # hobart_intel version of nc-config does not have --libdir option
-    NETCDF_LNK=-L$(shell nc-config --prefix)/lib -lnetcdf -lnetcdff
+    ifneq (${shell which nf-config},)
+      CONFIG=nf-config
+    else
+      CONFIG=nc-config
+    endif
+    NETCDF_INC=-D_NETCDF -I$(shell $(CONFIG) --includedir)
+    NETCDF_LNK=-L$(shell $(CONFIG) --prefix)/lib -lnetcdff
   endif
 
   # Determine if existing build used netCDF
@@ -151,7 +155,7 @@ all: gnu
 
 .PHONY: gnu
 gnu:
-	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-Wall -Wextra -Wno-compare-reals -Werror -O2 -ffree-form -cpp -finit-real=snan -ffpe-trap=invalid" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(EXE) COMP_NAME=gnu$(MPISUF) FC=gfortran FCFLAGS="-g -Wall -Wextra -Wno-compare-reals -Werror -O2 -ffree-form -cpp -finit-real=snan -ffpe-trap=invalid" INC="-J $(OBJ_ROOT)/gnu$(MPISUF)" INC2="-J $(OBJ_ROOT)/gnu$(MPISUF)/driver"
 
 .PHONY: intel
 intel:
