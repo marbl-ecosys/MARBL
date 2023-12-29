@@ -20,6 +20,7 @@ function print_status() {
   TAIL=""
   if [ "${STATUS}" == "FAIL" ]; then
     FAIL_CNT=$((FAIL_CNT+1))
+    echo "${FAIL_CNT}. $1" >> ${FAILURE_CACHE}
     HEAD="***"
     TAIL=" ***"
   fi
@@ -34,9 +35,11 @@ function print_status() {
 
 MARBL_ROOT=`(cd ..; pwd -P)`
 RESULTS_CACHE=${MARBL_ROOT}/MARBL_tools/.test_suite.cache
+FAILURE_CACHE=${MARBL_ROOT}/MARBL_tools/.test_suite.failures.cache
 TEST_CNT=0
 FAIL_CNT=0
 echo "Test Results:" > ${RESULTS_CACHE}
+echo "Failed Tests:" > ${FAILURE_CACHE}
 
 #########
 # TESTS #
@@ -365,5 +368,9 @@ cat ${RESULTS_CACHE}
 rm -f ${RESULTS_CACHE}
 echo ""
 echo "${TEST_CNT} tests were run, and $FAIL_CNT failed."
+if [ ${FAIL_CNT} -gt 0 ]; then
+  cat ${FAILURE_CACHE}
+fi
+rm -f ${FAILURE_CACHE}
 exit ${FAIL_CNT}
 

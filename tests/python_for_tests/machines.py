@@ -28,11 +28,21 @@ def load_module(mach, compiler, module_name):
     sys.path.insert(0, os.path.join(os.sep, 'glade', 'u', 'apps', 'derecho', '23.06', 'spack', 'opt', 'spack', 'lmod', '8.7.20', 'gcc', '7.5.0', 'pdxb', 'lmod', 'lmod', 'init'))
     from env_modules_python import module
     module('--force', 'purge')
-    module('load', 'ncarenv/23.06')
-    module('load', 'craype')
+    module('load', 'cesmdev/1.0')
+    if compiler == 'cray':
+        module('load', 'ncarenv/23.06')
+        module('load', 'craype')
+    elif compiler == 'nvhpc':
+        module('load', 'ncarenv/23.06')
+    else:
+        module('load', 'ncarenv/23.09')
     module('load', module_name)
+    module('load', 'ncarcompilers/1.0.0')
+    if compiler == 'cray':
+        module('load', 'cray-mpich/8.1.25')
+    else:
+        module('load', 'cray-mpich/8.1.27')
     module('load', 'netcdf/4.9.2')
-    module('load', 'ncarcompilers')
     if compiler in ['gnu', 'cray']:
         module('load', 'cray-libsci/23.02.1.1')
 
@@ -88,7 +98,7 @@ def machine_specific(mach, supported_compilers, module_names):
     supported_compilers.append('gnu')
     supported_compilers.append('cray')
     supported_compilers.append('nvhpc')
-    module_names['intel'] = 'intel/2023.0.0'
+    module_names['intel'] = 'intel/2023.2.1'
     module_names['gnu'] = 'gcc/12.2.0'
     module_names['cray'] = 'cce/15.0.1'
     module_names['nvhpc'] = 'nvhpc/23.1'
