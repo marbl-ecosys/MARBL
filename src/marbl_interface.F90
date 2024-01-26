@@ -790,6 +790,7 @@ contains
   subroutine get_output_for_GCM(this, field_ind, array_out)
 
     use marbl_constants_mod, only : c0
+    use marbl_settings_mod,  only : base_bio_on
     use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
 
     class (marbl_interface_class),        intent(inout) :: this
@@ -802,6 +803,10 @@ contains
 
     select case(field_ind)
       case (output_for_GCM_iopt_total_Chl_3d)
+        if (.not. base_bio_on) then
+          log_message = "Can not provide 3D Chl without the base biotic tracers"
+          call this%StatusLog%log_error(log_message, subname)
+        end if
         array_out(:) = c0
         do auto_ind=1,size(this%tracer_indices%auto_inds)
           tr_ind = this%tracer_indices%auto_inds(auto_ind)%Chl_ind
