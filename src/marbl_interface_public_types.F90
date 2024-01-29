@@ -138,9 +138,9 @@ module marbl_interface_public_types
   !*****************************************************************************
 
   type, public :: marbl_output_for_GCM_type
-     integer :: output_cnt
      type(marbl_single_output_type), dimension(:), pointer :: outputs_for_GCM => NULL()
    contains
+     procedure, public :: size       => get_marbl_output_for_GCM_cnt
      procedure, public :: add_output => marbl_output_add
   end type marbl_output_for_GCM_type
 
@@ -442,7 +442,7 @@ contains
   !*****************************************************************************
 
   subroutine marbl_single_output_constructor(this, num_elements, num_levels, field_name, id, &
-                                             conc_flux_units, marbl_status_log)
+                                             conc_flux_units, base_bio_on, marbl_status_log)
 
     class(marbl_single_output_type), intent(out)   :: this
     character(len=*),                intent(in)    :: field_name
@@ -450,28 +450,35 @@ contains
     integer(int_kind),               intent(in)    :: num_levels
     integer(int_kind),               intent(in)    :: id
     character(len=*),                intent(in)    :: conc_flux_units
+    logical,                         intent(in)    :: base_bio_on
     type(marbl_log_type),            intent(inout) :: marbl_status_log
 
     character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_output_constructor'
     character(len=char_len)     :: log_message
+    logical                     :: requires_base_bio
 
+    requires_base_bio = .false.
     select case (trim(field_name))
       case("flux_o2")
+        requires_base_bio = .true.
         this%long_name  = "Oxygen Flux"
         this%short_name = "flux_o2"
         this%units      = conc_flux_units
         sfo_ind%flux_o2_id = id
       case("flux_co2")
+        requires_base_bio = .true.
         this%long_name  = "Carbon Dioxide Flux"
         this%short_name = "flux_co2"
         this%units      = conc_flux_units
         sfo_ind%flux_co2_id = id
       case("flux_nhx")
+        requires_base_bio = .true.
         this%long_name  = "NHx Surface Emissions"
         this%short_name = "flux_nhx"
         this%units      = conc_flux_units
         sfo_ind%flux_nhx_id = id
       case("total_surfChl")
+        requires_base_bio = .true.
         this%long_name  = "Total Chlorophyll Concentration"
         this%short_name = "total_surfChl"
         this%units      = "mg/m^3"
@@ -481,6 +488,11 @@ contains
         call marbl_status_log%log_error(log_message, subname)
         return
     end select
+    if (requires_base_bio .and. (.not. base_bio_on)) then
+      write(log_message, "(3A)") "Can not add ", trim(field_name), " to outputs without base biotic tracers"
+      call marbl_status_log%log_error(log_message, subname)
+      return
+    end if
     write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
     call marbl_status_log%log_noerror(log_message, subname)
 
@@ -496,8 +508,8 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_output_add(this, num_elements, field_name, conc_flux_units, output_id, &
-                              marbl_status_log, num_levels)
+  subroutine marbl_output_add(this, num_elements, field_name, conc_flux_units, base_bio_on, &
+                              output_id, marbl_status_log, num_levels)
 
   ! MARBL uses pointers to create an extensible allocatable array. The output
   ! fields (part of the intent(out) of this routine) are stored in
@@ -517,6 +529,7 @@ contains
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
     character(len=*),     intent(in)    :: conc_flux_units
+    logical,              intent(in)    :: base_bio_on
     integer(int_kind),    intent(out)   :: output_id
     type(marbl_log_type), intent(inout) :: marbl_status_log
     integer(int_kind),    optional, intent(in) :: num_levels
@@ -564,8 +577,8 @@ contains
     end do
 
     ! 3) newest surface flux output (field_name) is Nth element of new_output
-    call new_output(output_id)%construct(num_elements, num_levels_loc, field_name,  &
-                                      output_id, conc_flux_units, marbl_status_log)
+    call new_output(output_id)%construct(num_elements, num_levels_loc, field_name, output_id, &
+                                         conc_flux_units, base_bio_on, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('new_output%construct()', subname)
       return
@@ -583,6 +596,21 @@ contains
   end subroutine marbl_output_add
 
   !*****************************************************************************
+
+  function get_marbl_output_for_GCM_cnt(this)
+
+    class (marbl_output_for_GCM_type), intent(in) :: this
+    integer :: get_marbl_output_for_GCM_cnt
+
+    if (associated(this%outputs_for_GCM)) then
+      get_marbl_output_for_GCM_cnt = size(this%outputs_for_GCM)
+    else
+      get_marbl_output_for_GCM_cnt = 0
+    end if
+
+  end function get_marbl_output_for_GCM_cnt
+
+  !***********************************************************************
 
   subroutine marbl_diagnostics_constructor(this, num_elements, num_levels)
 

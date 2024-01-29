@@ -770,18 +770,27 @@ contains
     ! If we introduce this%interior_tendency_output then this function will need
     ! a field_source argument (either 'surface_flux' or 'interior_tendency')
 
+    use marbl_settings_mod, only : base_bio_on
+
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
     integer(int_kind),    intent(out)   :: output_id
     integer(int_kind),    optional, intent(in) :: num_levels
 
+    character(len=*), parameter :: subname = 'marbl_interface:add_output_for_GCM'
+
     call this%surface_flux_output%add_output(num_elements, &
                                              field_name, &
                                              this%unit_system%conc_flux_units, &
+                                             base_bio_on, &
                                              output_id, &
                                              this%StatusLog, &
                                              num_levels)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace('surface_flux_output%add_output()', subname)
+      return
+    end if
 
   end subroutine add_output_for_GCM
 
