@@ -19,6 +19,7 @@ module marbl_interface
 
   use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
+  use marbl_settings_mod, only : base_bio_on
   use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
@@ -27,6 +28,7 @@ module marbl_interface
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_registry_type
   use marbl_interface_public_types, only : marbl_output_for_GCM_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
@@ -92,12 +94,13 @@ module marbl_interface
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
-     real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)     ! input
-     type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
-     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
-     real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
-     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output         ! output
-     type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
+     real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)      ! input
+     type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)     ! input
+     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind     ! FIXME #311: should be private
+     real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)          ! output
+     type(marbl_output_for_GCM_registry_type)       , public               :: surface_flux_output_registry ! internal
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output          ! output
+     type(marbl_diagnostics_type)                   , public               :: surface_flux_diags           ! output
 
      ! public data - global averages
      real (r8)                                 , public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
@@ -296,6 +299,12 @@ contains
          delta_z                        = gcm_delta_z,                    &
          zw                             = gcm_zw,                         &
          zt                             = gcm_zt)
+
+    !-----------------------------------------------------------------------
+    !  Register variables for add_output()
+    !-----------------------------------------------------------------------
+
+    call this%surface_flux_output_registry%create_registry(base_bio_on, this%unit_system%conc_flux_units)
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -770,8 +779,6 @@ contains
     ! If we introduce this%interior_tendency_output then this function will need
     ! a field_source argument (either 'surface_flux' or 'interior_tendency')
 
-    use marbl_settings_mod, only : base_bio_on
-
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
@@ -780,10 +787,9 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:add_output_for_GCM'
 
-    call this%surface_flux_output%add_output(num_elements, &
+    call this%surface_flux_output%add_output(this%surface_flux_output_registry, &
+                                             num_elements, &
                                              field_name, &
-                                             this%unit_system%conc_flux_units, &
-                                             base_bio_on, &
                                              output_id, &
                                              this%StatusLog, &
                                              num_levels)
@@ -799,7 +805,6 @@ contains
   subroutine get_output_for_GCM(this, field_ind, array_out)
 
     use marbl_constants_mod, only : c0
-    use marbl_settings_mod,  only : base_bio_on
     use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
 
     class (marbl_interface_class),        intent(inout) :: this
