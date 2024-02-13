@@ -370,7 +370,6 @@ module marbl_settings_mod
   integer (int_kind), parameter :: temp_func_form_iopt_q10           = 1
   integer (int_kind), parameter :: temp_func_form_iopt_arrhenius     = 2
   integer (int_kind), parameter :: temp_func_form_iopt_power         = 3
-  integer (int_kind), parameter :: output_for_GCM_iopt_total_Chl_3d  = 1
 
   !*****************************************************************************
 

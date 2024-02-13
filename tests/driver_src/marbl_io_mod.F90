@@ -687,7 +687,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_io_define_history(marbl_instances, col_cnt, unit_system_opt, base_bio_on, driver_status_log)
+  subroutine marbl_io_define_history(marbl_instances, col_cnt, unit_system_opt, driver_status_log)
 
     use marbl_netcdf_mod, only : marbl_netcdf_def_dim
     use marbl_netcdf_mod, only : marbl_netcdf_enddef
@@ -695,7 +695,6 @@ contains
     type(marbl_interface_class), dimension(:), intent(in)    :: marbl_instances
     integer,                     dimension(:), intent(in)    :: col_cnt
     character(len=*),                          intent(in)    :: unit_system_opt
-    logical,                                   intent(in)    :: base_bio_on
     type(marbl_log_type),                      intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_io_define_history'
@@ -804,33 +803,24 @@ contains
     end do
 
     ! Output from surface_flux_compute() for GCM to use
-    do n=1, marbl_instances(1)%surface_flux_output%size()
+    do n=1, marbl_instances(1)%output_for_gcm%size()
       write(varname, "(2A)") "output_for_GCM_", &
-                             trim(marbl_instances(1)%surface_flux_output%outputs_for_GCM(n)%short_name)
-      long_name = marbl_instances(1)%surface_flux_output%outputs_for_GCM(n)%long_name
-      units = marbl_instances(1)%surface_flux_output%outputs_for_GCM(n)%units
-      call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_cols/), long_name, units, &
-                                driver_status_log)
+                             trim(marbl_instances(1)%output_for_gcm%outputs_for_GCM(n)%short_name)
+      long_name = marbl_instances(1)%output_for_gcm%outputs_for_GCM(n)%long_name
+      units = marbl_instances(1)%output_for_gcm%outputs_for_GCM(n)%units
+      if (allocated(marbl_instances(1)%output_for_gcm%outputs_for_GCM(n)%forcing_field_0d)) then
+        call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_cols/), long_name, units, &
+                                  driver_status_log)
+      else
+        call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_levels, dimid_num_cols/), &
+                                  long_name, units, driver_status_log, ldef_fillval=.true.)
+      end if
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_def_var(', varname, ')'
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
     end do
-
-    if (base_bio_on) then
-      ! We will request total_Chl_3d from the model
-      varname = "output_for_GCM_total_Chl"
-      long_name = "Total Chlorophyll Concentration"
-      units = "mg/m^3"
-      call marbl_netcdf_def_var(ncid_out, varname, 'double', (/dimid_num_levels, dimid_num_cols/), &
-                                long_name, units, driver_status_log, ldef_fillval=.true.)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'marbl_netcdf_def_var(', varname, ')'
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
-    end if
 
     ! Exit define mode
     call marbl_netcdf_enddef(ncid_out, driver_status_log)
@@ -890,23 +880,22 @@ contains
   !*****************************************************************************
 
   subroutine marbl_io_write_history(marbl_instance, surface_fluxes, interior_tendencies, &
-                                    surface_flux_output, total_Chl, tracer_initial_vals, &
-                                    active_level_cnt, base_bio_on, driver_status_log)
+                                    surface_flux_output, interior_tendency_output, tracer_initial_vals, &
+                                    active_level_cnt, driver_status_log)
 
     type(marbl_interface_class),                   intent(in)    :: marbl_instance
     real(r8),                    dimension(:,:),   intent(in)    :: surface_fluxes            ! num_cols x num_tracers
     real(r8),                    dimension(:,:,:), intent(in)    :: interior_tendencies       ! num_tracers x num_levels x num_cols
     real(r8),                    dimension(:,:),   intent(in)    :: surface_flux_output       ! num_cols x num_vars
-    real(r8),                    dimension(:,:),   intent(in)    :: total_Chl                 ! num_levels x num_cols
+    real(r8),                    dimension(:,:,:), intent(in)    :: interior_tendency_output  ! num_levels x num_cols x num_vars
     real(r8),                    dimension(:,:,:), intent(in)    :: tracer_initial_vals       ! num_tracers x num_levels x num_cols
     integer,                     dimension(:),     intent(in)    :: active_level_cnt
-    logical,                                       intent(in)    :: base_bio_on
     type(marbl_log_type),                          intent(inout) :: driver_status_log
 
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_io_write_history'
     character(len=char_len) :: log_message
     character(len=char_len) :: varname
-    integer :: col_id, varid, n
+    integer :: col_id, varid, n, ofg_2d_ind, ofg_3d_ind
     real(r8), dimension(size(active_level_cnt)) :: bot_depth
 
     ! 1) Domain variables
@@ -996,37 +985,36 @@ contains
     end do
 
     ! 4) Output for GCM to use
-    do n=1, marbl_instance%surface_flux_output%size()
+    ofg_2d_ind = 0
+    ofg_3d_ind = 0
+    do n=1, marbl_instance%output_for_gcm%size()
       write(varname, "(2A)") "output_for_GCM_", &
-                             trim(marbl_instance%surface_flux_output%outputs_for_GCM(n)%short_name)
+                             trim(marbl_instance%output_for_gcm%outputs_for_GCM(n)%short_name)
       call marbl_netcdf_inq_varid(ncid_out, varname, varid, driver_status_log)
       if (driver_status_log%labort_marbl) then
         write(log_message, "(3A)") 'marbl_netcdf_inq_varid(', trim(varname), ')'
         call driver_status_log%log_error_trace(log_message, subname)
         return
       end if
-      call marbl_netcdf_put_var(ncid_out, varid, surface_flux_output(:, n), driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'marbl_netcdf_put_var(', trim(varname), ')'
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
+      if (allocated(marbl_instance%output_for_gcm%outputs_for_GCM(n)%forcing_field_0d)) then
+        ofg_2d_ind = ofg_2d_ind + 1
+        call marbl_netcdf_put_var(ncid_out, varid, surface_flux_output(:, ofg_2d_ind), driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'marbl_netcdf_put_var(', trim(varname), ')'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
+      else
+        ofg_3d_ind = ofg_3d_ind + 1
+        call marbl_netcdf_put_var(ncid_out, varid, interior_tendency_output(:, :, ofg_3d_ind), &
+                                  active_level_cnt, driver_status_log)
+        if (driver_status_log%labort_marbl) then
+          write(log_message, "(3A)") 'marbl_netcdf_put_var(', trim(varname), ')'
+          call driver_status_log%log_error_trace(log_message, subname)
+          return
+        end if
       end if
     end do
-
-    if (base_bio_on) then
-      call marbl_netcdf_inq_varid(ncid_out, "output_for_GCM_total_Chl", varid, driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'marbl_netcdf_inq_varid(', trim(varname), ')'
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
-      call marbl_netcdf_put_var(ncid_out, varid, total_Chl(:, :), active_level_cnt, driver_status_log)
-      if (driver_status_log%labort_marbl) then
-        write(log_message, "(3A)") 'marbl_netcdf_put_var(', trim(varname), ')'
-        call driver_status_log%log_error_trace(log_message, subname)
-        return
-      end if
-    end if
 
   end subroutine marbl_io_write_history
 

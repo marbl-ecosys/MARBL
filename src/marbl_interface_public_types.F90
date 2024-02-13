@@ -16,13 +16,14 @@ module marbl_interface_public_types
   !       to add a new index for it as well.
   !     * There are no interior tendency outputs at this time, so the type
   !       and ito_ind will need to be created when the first is added
-  type, public :: marbl_surface_flux_output_indexing_type
+  type, public :: marbl_output_for_GCM_indexing_type
     integer(int_kind), pointer :: flux_o2_id
     integer(int_kind), pointer :: flux_co2_id
     integer(int_kind), pointer :: flux_nhx_id
     integer(int_kind), pointer :: total_surfChl_id
-  end type marbl_surface_flux_output_indexing_type
-  type(marbl_surface_flux_output_indexing_type), public :: sfo_ind
+    integer(int_kind), pointer :: total_Chl_id
+  end type marbl_output_for_GCM_indexing_type
+  type(marbl_output_for_GCM_indexing_type), public :: ofg_ind
 
   !*****************************************************************************
 
@@ -123,6 +124,7 @@ module marbl_interface_public_types
     character(len=char_len)    :: short_name
     character(len=char_len)    :: long_name
     character(len=char_len)    :: units
+    character(len=char_len)    :: field_source
     character(len=char_len)    :: err_message
     integer(int_kind), pointer :: id
   end type marbl_output_for_GCM_single_register_type
@@ -145,9 +147,10 @@ module marbl_interface_public_types
      ! that needs to be passed to the GCM / flux coupler.
      ! Data must be accessed via the marbl_output_for_GCM_type
      ! data structure.
-     character (len=char_len)              :: long_name
-     character (len=char_len)              :: short_name
-     character (len=char_len)              :: units
+     character(len=char_len)               :: long_name
+     character(len=char_len)               :: short_name
+     character(len=char_len)               :: units
+     character(len=char_len)               :: field_source
      real(r8), allocatable, dimension(:)   :: forcing_field_0d
      real(r8), allocatable, dimension(:,:) :: forcing_field_1d
    contains
@@ -484,9 +487,11 @@ contains
         write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
         call marbl_status_log%log_noerror(log_message, subname)
 
-        this%short_name = output_registry%registered_outputs(m)%short_name
-        this%long_name  = output_registry%registered_outputs(m)%long_name
-        this%units      = output_registry%registered_outputs(m)%units
+        this%short_name   = output_registry%registered_outputs(m)%short_name
+        this%long_name    = output_registry%registered_outputs(m)%long_name
+        this%units        = output_registry%registered_outputs(m)%units
+        this%field_source = output_registry%registered_outputs(m)%field_source
+
         if (num_levels .eq. 0) then
           allocate(this%forcing_field_0d(num_elements))
           this%forcing_field_0d = c0
@@ -495,7 +500,7 @@ contains
           this%forcing_field_1d = c0
         end if
 
-        ! Set sfo_ind index for field_name
+        ! Set ofg_ind index for field_name (via pointer)
         output_registry%registered_outputs(m)%id = id
         exit
       end if
@@ -560,9 +565,10 @@ contains
 
     ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
     do n=1,old_size
-      new_output(n)%long_name  = this%outputs_for_GCM(n)%long_name
-      new_output(n)%short_name = this%outputs_for_GCM(n)%short_name
-      new_output(n)%units      = this%outputs_for_GCM(n)%units
+      new_output(n)%long_name    = this%outputs_for_GCM(n)%long_name
+      new_output(n)%short_name   = this%outputs_for_GCM(n)%short_name
+      new_output(n)%units        = this%outputs_for_GCM(n)%units
+      new_output(n)%field_source = this%outputs_for_GCM(n)%field_source
       if (allocated(this%outputs_for_GCM(n)%forcing_field_0d)) then
         dim1_loc = size(this%outputs_for_GCM(n)%forcing_field_0d)
         allocate(new_output(n)%forcing_field_0d(dim1_loc))
@@ -817,56 +823,84 @@ contains
 
   subroutine create_registry(this, base_bio_on, conc_flux_units)
 
+    use marbl_settings_mod, only : lflux_gas_o2
+    use marbl_settings_mod, only : lflux_gas_co2
+    use marbl_settings_mod, only : lcompute_nhx_surface_emis
+
     class(marbl_output_for_GCM_registry_type), intent(out) :: this
     logical,                                   intent(in)  :: base_bio_on
     character(len=*),                          intent(in)  :: conc_flux_units
 
-    integer :: m
+    integer, parameter :: ofg_cnt=5
+    integer :: ofg_ind_loc
 
     ! Defined outputs for the GCM are
     ! 1. O2 Flux
     ! 2. CO2 Flux
     ! 3. NHx Flux
     ! 4. Surface Chl
-    allocate(this%registered_outputs(4))
+    ! 5. Total Chl
+    allocate(this%registered_outputs(ofg_cnt))
+
+    ! Set error messages to empty strings
+    do ofg_ind_loc=1,ofg_cnt
+      this%registered_outputs(ofg_ind_loc)%err_message = ""
+    end do
+    ofg_ind_loc = 0
 
     ! Register names and units
-    this%registered_outputs(1)%short_name = "flux_o2"
-    this%registered_outputs(1)%long_name = "Oxygen Flux"
-    this%registered_outputs(1)%units = conc_flux_units
-    allocate(sfo_ind%flux_o2_id, source=0)
-    this%registered_outputs(1)%id => sfo_ind%flux_o2_id
+    ofg_ind_loc = ofg_ind_loc + 1
+    this%registered_outputs(ofg_ind_loc)%short_name = "flux_o2"
+    this%registered_outputs(ofg_ind_loc)%long_name = "Oxygen Flux"
+    this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
+    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
+    allocate(ofg_ind%flux_o2_id, source=0)
+    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_o2_id
+    if (.not. (base_bio_on .and. lflux_gas_o2)) &
+      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_co2 to outputs without", &
+                                                                "base biotic tracers and lflux_gas_o2"
 
-    this%registered_outputs(2)%short_name = "flux_co2"
-    this%registered_outputs(2)%long_name = "Carbon Dioxide Flux"
-    this%registered_outputs(2)%units = conc_flux_units
-    allocate(sfo_ind%flux_co2_id, source=0)
-    this%registered_outputs(2)%id => sfo_ind%flux_co2_id
+    ofg_ind_loc = ofg_ind_loc + 1
+    this%registered_outputs(ofg_ind_loc)%short_name = "flux_co2"
+    this%registered_outputs(ofg_ind_loc)%long_name = "Carbon Dioxide Flux"
+    this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
+    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
+    allocate(ofg_ind%flux_co2_id, source=0)
+    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_co2_id
+    if (.not. (base_bio_on .and. lflux_gas_co2)) &
+      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_co2 to outputs without", &
+                                                                "base biotic tracers and lflux_gas_co2"
 
-    this%registered_outputs(3)%short_name = "flux_nhx"
-    this%registered_outputs(3)%long_name = "NHx Surface Emissions"
-    this%registered_outputs(3)%units = conc_flux_units
-    allocate(sfo_ind%flux_nhx_id, source=0)
-    this%registered_outputs(3)%id => sfo_ind%flux_nhx_id
+    ofg_ind_loc = ofg_ind_loc + 1
+    this%registered_outputs(ofg_ind_loc)%short_name = "flux_nhx"
+    this%registered_outputs(ofg_ind_loc)%long_name = "NHx Surface Emissions"
+    this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
+    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
+    allocate(ofg_ind%flux_nhx_id, source=0)
+    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_nhx_id
+    if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) &
+      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_co2 to outputs without", &
+                                                                "base biotic tracers and lcompute_nhx_surface_emis"
 
-    this%registered_outputs(4)%short_name = "total_surfChl"
-    this%registered_outputs(4)%long_name = "Total Chlorophyll Concentration"
-    this%registered_outputs(4)%units = "mg/m^3"
-    allocate(sfo_ind%total_surfChl_id, source=0)
-    this%registered_outputs(4)%id => sfo_ind%total_surfChl_id
+    ofg_ind_loc = ofg_ind_loc + 1
+    this%registered_outputs(ofg_ind_loc)%short_name = "total_surfChl"
+    this%registered_outputs(ofg_ind_loc)%long_name = "Total Surface Chlorophyll Concentration"
+    this%registered_outputs(ofg_ind_loc)%units = "mg/m^3"
+    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
+    allocate(ofg_ind%total_surfChl_id, source=0)
+    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%total_surfChl_id
+    if (.not. base_bio_on) &
+      this%registered_outputs(ofg_ind_loc)%err_message = "Can not add total_surfChl to outputs without base biotic tracers"
 
-    ! Set error messages
-    this%registered_outputs(1)%err_message = ""
-    this%registered_outputs(2)%err_message = ""
-    this%registered_outputs(3)%err_message = ""
-    this%registered_outputs(4)%err_message = ""
-    if (.not. base_bio_on) then
-      ! All four outputs require the base biotic tracer module
-      do m=1,4
-        write(this%registered_outputs(m)%err_message, "(3A)") "Can not add ", trim(this%registered_outputs(m)%short_name), &
-                                                              " to outputs without base biotic tracers"
-      end do
-    end if
+    ofg_ind_loc = ofg_ind_loc + 1
+    this%registered_outputs(ofg_ind_loc)%short_name = "total_Chl"
+    this%registered_outputs(ofg_ind_loc)%long_name = "Total Chlorophyll Concentration"
+    this%registered_outputs(ofg_ind_loc)%units = "mg/m^3"
+    this%registered_outputs(ofg_ind_loc)%field_source = "interior_tendency"
+    allocate(ofg_ind%total_Chl_id, source=0)
+    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%total_Chl_id
+    if (.not. base_bio_on) &
+      this%registered_outputs(ofg_ind_loc)%err_message = "Can not add total_Chl to outputs without base biotic tracers"
 
   end subroutine create_registry
 

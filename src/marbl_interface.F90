@@ -98,25 +98,26 @@ module marbl_interface
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)     ! input
      type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind     ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)          ! output
-     type(marbl_output_for_GCM_registry_type)       , public               :: surface_flux_output_registry ! internal
-     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output          ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags           ! output
 
+     ! public data that the GCM needs to explicitly request
+     type(marbl_output_for_GCM_type), public :: output_for_gcm               ! output
+
      ! public data - global averages
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
+     real (r8), public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
+     real (r8), public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
+     real (r8), public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
+     real (r8), public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
 
      ! FIXME #77: for now, running means are being computed in the driver
      !            they will eventually be moved from the interface to inside MARBL
-     real (r8)                                 , public, allocatable  :: glo_scalar_interior_tendency(:)
-     real (r8)                                 , public, allocatable  :: glo_scalar_surface_flux(:)
+     real (r8), public, allocatable  :: glo_scalar_interior_tendency(:)
+     real (r8), public, allocatable  :: glo_scalar_surface_flux(:)
 
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior_tendency(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface_flux(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
      type(unit_system_type),                   private :: unit_system
@@ -140,6 +141,7 @@ module marbl_interface
      type(marbl_internal_timers_type),         private :: timers
      type(marbl_timer_indexing_type),          private :: timer_ids
      type(marbl_settings_type),                private :: settings
+     type(marbl_output_for_GCM_registry_type), private :: output_for_gcm_registry
 
    contains
 
@@ -166,7 +168,6 @@ module marbl_interface
                                           get_string
      procedure, public  :: get_settings_var_cnt
      procedure, public  :: add_output_for_GCM
-     procedure, public  :: get_output_for_GCM
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
@@ -304,7 +305,7 @@ contains
     !  Register variables for add_output()
     !-----------------------------------------------------------------------
 
-    call this%surface_flux_output_registry%create_registry(base_bio_on, this%unit_system%conc_flux_units)
+    call this%output_for_gcm_registry%create_registry(base_bio_on, this%unit_system%conc_flux_units)
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -787,14 +788,14 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:add_output_for_GCM'
 
-    call this%surface_flux_output%add_output(this%surface_flux_output_registry, &
-                                             num_elements, &
-                                             field_name, &
-                                             output_id, &
-                                             this%StatusLog, &
-                                             num_levels)
+    call this%output_for_gcm%add_output(this%output_for_gcm_registry, &
+                                        num_elements, &
+                                        field_name, &
+                                        output_id, &
+                                        this%StatusLog, &
+                                        num_levels)
     if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('surface_flux_output%add_output()', subname)
+      call this%StatusLog%log_error_trace('output_for_gcm%add_output()', subname)
       return
     end if
 
@@ -802,40 +803,7 @@ contains
 
   !***********************************************************************
 
-  subroutine get_output_for_GCM(this, field_ind, array_out)
-
-    use marbl_constants_mod, only : c0
-    use marbl_settings_mod,  only : output_for_GCM_iopt_total_Chl_3d
-
-    class (marbl_interface_class),        intent(inout) :: this
-    integer,                              intent(in)    :: field_ind
-    real (r8), dimension(this%domain%km), intent(out)   :: array_out
-
-    character(len=*), parameter :: subname = 'marbl_interface:get_output_for_GCM'
-    character(len=char_len)     :: log_message
-    integer                     :: auto_ind, tr_ind
-
-    select case(field_ind)
-      case (output_for_GCM_iopt_total_Chl_3d)
-        if (.not. base_bio_on) then
-          log_message = "Can not provide 3D Chl without the base biotic tracers"
-          call this%StatusLog%log_error(log_message, subname)
-        end if
-        array_out(:) = c0
-        do auto_ind=1,size(this%tracer_indices%auto_inds)
-          tr_ind = this%tracer_indices%auto_inds(auto_ind)%Chl_ind
-          array_out(:) = array_out(:) + max(c0, this%tracers(tr_ind,:))
-        end do
-      case DEFAULT
-        write(log_message, "(I0,A)") field_ind, " is not a recognized value for field_ind"
-        call this%StatusLog%log_error(log_message, subname)
-    end select
-
-  end subroutine get_output_for_GCM
-
-  !***********************************************************************
-
-    subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
+  subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),              intent(in)    :: varname
@@ -990,6 +958,7 @@ contains
          zooplankton_local                 = this%zooplankton_local,                &
          zooplankton_share                 = this%zooplankton_share,                &
          saved_state                       = this%interior_tendency_saved_state,    &
+         output_for_gcm                    = this%output_for_gcm,                   &
          marbl_timers                      = this%timers,                           &
          interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
@@ -1039,7 +1008,7 @@ contains
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &
-         surface_flux_output      = this%surface_flux_output,                 &
+         output_for_gcm           = this%output_for_gcm,                      &
          surface_flux_internal    = this%surface_flux_internal,               &
          surface_flux_share       = this%surface_flux_share,                  &
          surface_flux_diags       = this%surface_flux_diags,                  &

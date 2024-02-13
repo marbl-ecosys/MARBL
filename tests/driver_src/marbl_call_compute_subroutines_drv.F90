@@ -19,8 +19,6 @@ Contains
 
   subroutine test(marbl_instances, hist_file, unit_system_opt, driver_status_log)
 
-    use marbl_settings_mod, only : output_for_GCM_iopt_total_Chl_3d
-
     use marbl_io_mod, only : marbl_io_open_files
     use marbl_io_mod, only : marbl_io_construct_diag_buffers
     use marbl_io_mod, only : marbl_io_define_history
@@ -42,7 +40,7 @@ Contains
     real(r8),                  allocatable, dimension(:,:)   :: surface_fluxes              ! num_cols x num_tracers
     real(r8),                  allocatable, dimension(:,:)   :: surface_flux_output         ! num_cols x num_vars
     real(r8),                  allocatable, dimension(:,:,:) :: interior_tendencies         ! num_tracers x num_levels x num_cols
-    real(r8),                  allocatable, dimension(:,:)   :: total_Chl                   ! num_levels x num_cols
+    real(r8),                  allocatable, dimension(:,:,:) :: interior_tendency_output    ! num_levels x num_cols x num_vars
     real(r8),                  allocatable, dimension(:,:)   :: bot_flux_to_tend            ! num_levels x num_cols
     real(r8),                  allocatable, dimension(:,:,:) :: tracer_initial_vals         ! num_tracers x num_levels x num_cols
     real(r8),                  allocatable, dimension(:)     :: lat                         ! num_cols
@@ -51,7 +49,7 @@ Contains
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
 
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
-    integer :: sfo_cnt, flux_co2_id, total_surfChl_id, output_id
+    integer :: ofg_2d_cnt, ofg_3d_cnt, ofg_ind, flux_co2_id, total_surfChl_id, total_Chl_id, output_id
     logical :: base_bio_on
     type(grid_data_type) :: grid_data
 
@@ -100,10 +98,11 @@ Contains
     ! 4. Set up memory for fields MARBL returns to GCM
     !    Also, request flux_co2, total_surf_Chl, and total_Chl
     !    (a) Fields returned from surface_flux_compute()
-    sfo_cnt = 0
+    ofg_2d_cnt = 0
+    ofg_3d_cnt = 0
 
     if (base_bio_on) then
-      sfo_cnt = sfo_cnt+1
+      ofg_2d_cnt = ofg_2d_cnt+1
       do n=1, size(marbl_instances)
         call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
                                                   field_name="flux_co2", &
@@ -116,7 +115,7 @@ Contains
     end if
 
     if (base_bio_on) then
-      sfo_cnt = sfo_cnt+1
+      ofg_2d_cnt = ofg_2d_cnt+1
       do n=1, size(marbl_instances)
         call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
                                                   field_name="total_surfChl", &
@@ -128,8 +127,23 @@ Contains
       end do
     end if
 
-    allocate(surface_flux_output(num_cols, sfo_cnt))
-    allocate(total_Chl(num_levels, num_cols))
+    if (base_bio_on) then
+      ofg_3d_cnt = ofg_3d_cnt+1
+      do n=1, size(marbl_instances)
+        call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
+                                                  field_name="total_Chl", &
+                                                  output_id=total_Chl_id, &
+                                                  num_levels=num_levels)
+        if (marbl_instances(n)%StatusLog%labort_marbl) then
+          call marbl_instances(n)%StatusLog%log_error_trace('marbl%add_output_for_GCM(total_Chl)', subname)
+          return
+        end if
+      end do
+    end if
+
+    ! We know one output (total_Chl) comes from interior_tendency, rest are from surface_flux
+    allocate(surface_flux_output(num_cols, ofg_2d_cnt))
+    allocate(interior_tendency_output(num_levels, num_cols, ofg_3d_cnt))
 
 
     ! 5. Initialize diagnostic buffers, define diagnostic fields in output netCDF file, and
@@ -171,7 +185,7 @@ Contains
     end do
 
     !    (d) netCDF calls to create history file (dimensions are defined but data is not written)
-    call marbl_io_define_history(marbl_instances, col_cnt, unit_system_opt, base_bio_on, driver_status_log)
+    call marbl_io_define_history(marbl_instances, col_cnt, unit_system_opt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_define_history', subname)
       return
@@ -240,14 +254,20 @@ Contains
         call marbl_instances(n)%StatusLog%log_error_trace('surface_flux_compute', subname)
         return
       end if
+      surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
 
       !    (f) write to diagnostic buffers
       !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
       call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
-      surface_fluxes((col_start(n)+1):(col_start(n)+col_cnt(n)),:) = marbl_instances(n)%surface_fluxes(:,:)
-      do output_id = 1, marbl_instances(n)%surface_flux_output%size()
-        surface_flux_output((col_start(n)+1):(col_start(n)+col_cnt(n)),output_id) = &
-                  marbl_instances(n)%surface_flux_output%outputs_for_GCM(output_id)%forcing_field_0d(:)
+
+      ofg_ind = 0
+      do output_id = 1, marbl_instances(n)%output_for_gcm%size()
+        if (trim(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%field_source) == 'surface_flux') then
+          ofg_ind = ofg_ind + 1
+          if (allocated(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_0d)) &
+            surface_flux_output((col_start(n)+1):(col_start(n)+col_cnt(n)),ofg_ind) = &
+                    marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_0d(:)
+        end if
       end do
 
       ! ------------------------------------------------------------------------
@@ -304,8 +324,17 @@ Contains
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
-        if (base_bio_on) &
-          call marbl_instances(n)%get_output_for_GCM(output_for_GCM_iopt_total_Chl_3d, total_Chl(:,col_id))
+        if (base_bio_on) then
+          ofg_ind = 0
+          do output_id = 1, marbl_instances(n)%output_for_gcm%size()
+            if (trim(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%field_source) == 'interior_tendency') then
+              ofg_ind = ofg_ind + 1
+              if (allocated(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_1d)) &
+                interior_tendency_output(:,col_id, ofg_ind) = &
+                         marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_1d(1,:)
+            end if
+          end do
+        end if
       end do ! column
     end do ! instance
 
@@ -313,8 +342,8 @@ Contains
 
     ! 8. Output netCDF
     call marbl_io_write_history(marbl_instances(1), surface_fluxes, interior_tendencies,  &
-                                surface_flux_output, total_Chl, tracer_initial_vals,      &
-                                active_level_cnt, base_bio_on, driver_status_log)
+                                surface_flux_output, interior_tendency_output, tracer_initial_vals, &
+                                active_level_cnt, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_io_write_history', subname)
       return
