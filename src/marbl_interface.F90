@@ -92,6 +92,7 @@ module marbl_interface
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
+     type(marbl_output_for_GCM_type)                    , public  :: interior_tendency_output      ! output
 
      ! public data related to computing surface fluxes
      real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)      ! input
@@ -99,9 +100,9 @@ module marbl_interface
      type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind     ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)          ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags           ! output
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output          ! output
 
      ! public data that the GCM needs to explicitly request
-     type(marbl_output_for_GCM_type), public :: output_for_gcm               ! output
 
      ! public data - global averages
      real (r8), public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
@@ -775,29 +776,67 @@ contains
 
   !***********************************************************************
 
-  subroutine add_output_for_GCM(this, num_elements, field_name, output_id, num_levels)
-    ! Currently, we only need this subroutine for surface fluxes.
-    ! If we introduce this%interior_tendency_output then this function will need
-    ! a field_source argument (either 'surface_flux' or 'interior_tendency')
+  subroutine add_output_for_GCM(this, num_elements, field_name, output_id, field_source, num_levels)
+    ! Check the registry to see if field_name is provided from surface_flux_compute()
+    ! or interior_tendency_compute(); add it to the proper output_for_GCM type, or
+    ! return a useful error message
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
     integer(int_kind),    intent(out)   :: output_id
+    character(len=*),     intent(out)   :: field_source
     integer(int_kind),    optional, intent(in) :: num_levels
 
     character(len=*), parameter :: subname = 'marbl_interface:add_output_for_GCM'
+    character(len=char_len) :: log_message
+    integer :: m
 
-    call this%output_for_gcm%add_output(this%output_for_gcm_registry, &
-                                        num_elements, &
-                                        field_name, &
-                                        output_id, &
-                                        this%StatusLog, &
-                                        num_levels)
-    if (this%StatusLog%labort_marbl) then
-      call this%StatusLog%log_error_trace('output_for_gcm%add_output()', subname)
+    output_id = 0
+    field_source = ""
+
+    do m=1,size(this%output_for_gcm_registry%registered_outputs)
+      if (trim(field_name) == trim(this%output_for_gcm_registry%registered_outputs(m)%short_name)) then
+        ! err_message will be populated if this field is unavailable in current configuration
+        if (len_trim(this%output_for_gcm_registry%registered_outputs(m)%err_message) > 0) then
+          call this%StatusLog%log_error(this%output_for_gcm_registry%registered_outputs(m)%err_message, subname)
+          return
+        end if
+        exit
+      end if
+    end do
+
+    ! Abort if field_name was not registered
+    if (m > size(this%output_for_gcm_registry%registered_outputs)) then
+      write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
+      call this%StatusLog%log_error(log_message, subname)
       return
     end if
+
+    write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
+    call this%StatusLog%log_noerror(log_message, subname)
+
+    ! Set field source, and then add output to appropriate output_for_GCM_type
+    field_source = trim(this%output_for_gcm_registry%registered_outputs(m)%field_source)
+    if ( trim(field_source) == "surface_flux") then
+      call this%surface_flux_output%add_output(this%output_for_gcm_registry%registered_outputs(m)%short_name, &
+                                               this%output_for_gcm_registry%registered_outputs(m)%long_name, &
+                                               this%output_for_gcm_registry%registered_outputs(m)%units, &
+                                               num_elements, &
+                                               output_id, &
+                                               num_levels)
+    end if
+    if (trim(field_source) == "interior_tendency") then
+      call this%interior_tendency_output%add_output(this%output_for_gcm_registry%registered_outputs(m)%short_name, &
+                                                    this%output_for_gcm_registry%registered_outputs(m)%long_name, &
+                                                    this%output_for_gcm_registry%registered_outputs(m)%units, &
+                                                    num_elements, &
+                                                    output_id, &
+                                                    num_levels)
+    end if
+
+    ! %id is a pointer to a member of either sfo_ind or ito_ind
+    this%output_for_gcm_registry%registered_outputs(m)%id = output_id
 
   end subroutine add_output_for_GCM
 
@@ -958,7 +997,7 @@ contains
          zooplankton_local                 = this%zooplankton_local,                &
          zooplankton_share                 = this%zooplankton_share,                &
          saved_state                       = this%interior_tendency_saved_state,    &
-         output_for_gcm                    = this%output_for_gcm,                   &
+         output_for_gcm                    = this%interior_tendency_output,         &
          marbl_timers                      = this%timers,                           &
          interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
@@ -1008,7 +1047,7 @@ contains
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &
-         output_for_gcm           = this%output_for_gcm,                      &
+         output_for_gcm           = this%surface_flux_output,                 &
          surface_flux_internal    = this%surface_flux_internal,               &
          surface_flux_share       = this%surface_flux_share,                  &
          surface_flux_diags       = this%surface_flux_diags,                  &

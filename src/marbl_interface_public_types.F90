@@ -150,7 +150,6 @@ module marbl_interface_public_types
      character(len=char_len)               :: long_name
      character(len=char_len)               :: short_name
      character(len=char_len)               :: units
-     character(len=char_len)               :: field_source
      real(r8), allocatable, dimension(:)   :: forcing_field_0d
      real(r8), allocatable, dimension(:,:) :: forcing_field_1d
    contains
@@ -462,62 +461,32 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_single_output_constructor(this, output_registry, num_elements, num_levels, field_name, id, marbl_status_log)
+  subroutine marbl_single_output_constructor(this, short_name, long_name, units, num_elements, num_levels)
 
     class(marbl_single_output_type),          intent(out)  :: this
-    type(marbl_output_for_GCM_registry_type), intent(in)    :: output_registry
+    character(len=*),                         intent(in)    :: short_name
+    character(len=*),                         intent(in)    :: long_name
+    character(len=*),                         intent(in)    :: units
     integer(int_kind),                        intent(in)    :: num_elements
     integer(int_kind),                        intent(in)    :: num_levels
-    character(len=*),                         intent(in)    :: field_name
-    integer(int_kind),                        intent(in)    :: id
-    type(marbl_log_type),                     intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_output_constructor'
-    character(len=char_len)     :: log_message
-    integer                     :: m
+    this%short_name   = short_name
+    this%long_name    = long_name
+    this%units        = units
 
-    do m=1,size(output_registry%registered_outputs)
-      if (trim(field_name) == trim(output_registry%registered_outputs(m)%short_name)) then
-        ! err_message will be populated if this field is unavailable in current configuration
-        if (len_trim(output_registry%registered_outputs(m)%err_message) > 0) then
-          call marbl_status_log%log_error(output_registry%registered_outputs(m)%err_message, subname)
-          return
-        end if
-
-        write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
-        call marbl_status_log%log_noerror(log_message, subname)
-
-        this%short_name   = output_registry%registered_outputs(m)%short_name
-        this%long_name    = output_registry%registered_outputs(m)%long_name
-        this%units        = output_registry%registered_outputs(m)%units
-        this%field_source = output_registry%registered_outputs(m)%field_source
-
-        if (num_levels .eq. 0) then
-          allocate(this%forcing_field_0d(num_elements))
-          this%forcing_field_0d = c0
-        else
-          allocate(this%forcing_field_1d(num_elements, num_levels))
-          this%forcing_field_1d = c0
-        end if
-
-        ! Set ofg_ind index for field_name (via pointer)
-        output_registry%registered_outputs(m)%id = id
-        exit
-      end if
-    end do
-
-    ! Abort if field_name was not registered
-    if (m > size(output_registry%registered_outputs)) then
-      write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
-      call marbl_status_log%log_error(log_message, subname)
-      return
+    if (num_levels .eq. 0) then
+      allocate(this%forcing_field_0d(num_elements))
+      this%forcing_field_0d = c0
+    else
+      allocate(this%forcing_field_1d(num_elements, num_levels))
+      this%forcing_field_1d = c0
     end if
 
   end subroutine marbl_single_output_constructor
 
   !*****************************************************************************
 
-  subroutine marbl_output_add(this, output_registry, num_elements, field_name, output_id, marbl_status_log, num_levels)
+  subroutine marbl_output_add(this, short_name, long_name, units, num_elements, output_id, num_levels)
 
   ! MARBL uses pointers to create an extensible allocatable array. The output
   ! fields (part of the intent(out) of this routine) are stored in
@@ -526,7 +495,7 @@ contains
   !
   ! 1) allocate new_output to be size N (one element larger than this%outputs_for_GCM)
   ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
-  ! 3) newest surface flux output (field_name) is Nth element of new_output
+  ! 3) newest surface flux output or interior tendency output (short_name) is Nth element of new_output
   ! 4) deallocate / nullify this%outputs_for_GCM
   ! 5) point this%outputs_for_GCM => new_output
   !
@@ -534,14 +503,12 @@ contains
   ! may need to be replaced with something that is not O(N^2).
 
     class(marbl_output_for_GCM_type),         intent(inout) :: this
-    type(marbl_output_for_GCM_registry_type), intent(in)    :: output_registry
+    character(len=*),                         intent(in)    :: short_name
+    character(len=*),                         intent(in)    :: long_name
+    character(len=*),                         intent(in)    :: units
     integer(int_kind),                        intent(in)    :: num_elements
-    character(len=*),                         intent(in)    :: field_name
     integer(int_kind),                        intent(out)   :: output_id
-    type(marbl_log_type),                     intent(inout) :: marbl_status_log
     integer(int_kind), optional,              intent(in)    :: num_levels
-
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_output_add'
 
     type(marbl_single_output_type), dimension(:), pointer :: new_output
     integer :: n, old_size, dim1_loc, dim2_loc, num_levels_loc
@@ -568,7 +535,6 @@ contains
       new_output(n)%long_name    = this%outputs_for_GCM(n)%long_name
       new_output(n)%short_name   = this%outputs_for_GCM(n)%short_name
       new_output(n)%units        = this%outputs_for_GCM(n)%units
-      new_output(n)%field_source = this%outputs_for_GCM(n)%field_source
       if (allocated(this%outputs_for_GCM(n)%forcing_field_0d)) then
         dim1_loc = size(this%outputs_for_GCM(n)%forcing_field_0d)
         allocate(new_output(n)%forcing_field_0d(dim1_loc))
@@ -585,11 +551,7 @@ contains
     end do
 
     ! 3) newest surface flux output (field_name) is Nth element of new_output
-    call new_output(output_id)%construct(output_registry, num_elements, num_levels_loc, field_name, output_id, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('new_output%construct()', subname)
-      return
-    end if
+    call new_output(output_id)%construct(short_name, long_name, units, num_elements, num_levels_loc)
 
     ! 4) deallocate / nullify this%outputs_for_GCM
     if (old_size .gt. 0) then
@@ -857,7 +819,7 @@ contains
     allocate(ofg_ind%flux_o2_id, source=0)
     this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_o2_id
     if (.not. (base_bio_on .and. lflux_gas_o2)) &
-      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_co2 to outputs without", &
+      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_o2 to outputs without", &
                                                                 "base biotic tracers and lflux_gas_o2"
 
     ofg_ind_loc = ofg_ind_loc + 1

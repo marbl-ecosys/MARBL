@@ -48,8 +48,9 @@ Contains
     type(forcing_fields_type), allocatable, dimension(:)     :: interior_tendency_forcings  ! num_forcings
     integer,                   allocatable, dimension(:)     :: active_level_cnt, col_start, col_cnt
 
+    character(len=char_len) :: field_source
     integer :: num_levels, num_cols, num_tracers, m, n, col_id_loc, col_id, num_PAR_subcols
-    integer :: ofg_2d_cnt, ofg_3d_cnt, ofg_ind, flux_co2_id, total_surfChl_id, total_Chl_id, output_id
+    integer :: sfo_cnt, ito_cnt, flux_co2_id, total_surfChl_id, total_Chl_id, output_id
     logical :: base_bio_on
     type(grid_data_type) :: grid_data
 
@@ -98,52 +99,81 @@ Contains
     ! 4. Set up memory for fields MARBL returns to GCM
     !    Also, request flux_co2, total_surf_Chl, and total_Chl
     !    (a) Fields returned from surface_flux_compute()
-    ofg_2d_cnt = 0
-    ofg_3d_cnt = 0
+    sfo_cnt = 0
+    ito_cnt = 0
 
     if (base_bio_on) then
-      ofg_2d_cnt = ofg_2d_cnt+1
       do n=1, size(marbl_instances)
         call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
                                                   field_name="flux_co2", &
-                                                  output_id=flux_co2_id)
+                                                  output_id=flux_co2_id, &
+                                                  field_source=field_source)
         if (marbl_instances(n)%StatusLog%labort_marbl) then
           call marbl_instances(n)%StatusLog%log_error_trace('marbl%add_output_for_GCM(flux_co2)', subname)
           return
         end if
       end do
+      if (trim(field_source) == "surface_flux") then
+        sfo_cnt = sfo_cnt+1
+      else if (trim(field_source) == "interior_tendency") then
+        ito_cnt = ito_cnt+1
+      else
+        write(log_message, "(3A)") "'", trim(field_source), "' is not a recognized field source (flux_co2)"
+        call driver_status_log%log_error(log_message, subname)
+        return
+      end if
     end if
 
     if (base_bio_on) then
-      ofg_2d_cnt = ofg_2d_cnt+1
       do n=1, size(marbl_instances)
         call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
                                                   field_name="total_surfChl", &
-                                                  output_id=total_surfChl_id)
+                                                  output_id=total_surfChl_id, &
+                                                  field_source=field_source)
         if (marbl_instances(n)%StatusLog%labort_marbl) then
           call marbl_instances(n)%StatusLog%log_error_trace('marbl%add_output_for_GCM(total_surfChl)', subname)
           return
         end if
       end do
+      if (trim(field_source) == "surface_flux") then
+        sfo_cnt = sfo_cnt+1
+      else if (trim(field_source) == "interior_tendency") then
+        ito_cnt = ito_cnt+1
+      else
+        write(log_message, "(3A)") "'", trim(field_source), "' is not a recognized field source (total_surfChl)"
+        call driver_status_log%log_error(log_message, subname)
+        return
+      end if
     end if
 
     if (base_bio_on) then
-      ofg_3d_cnt = ofg_3d_cnt+1
       do n=1, size(marbl_instances)
         call marbl_instances(n)%add_output_for_GCM(num_elements=col_cnt(n), &
                                                   field_name="total_Chl", &
                                                   output_id=total_Chl_id, &
-                                                  num_levels=num_levels)
+                                                  num_levels=num_levels, &
+                                                  field_source=field_source)
         if (marbl_instances(n)%StatusLog%labort_marbl) then
           call marbl_instances(n)%StatusLog%log_error_trace('marbl%add_output_for_GCM(total_Chl)', subname)
           return
         end if
       end do
+      if (trim(field_source) == "surface_flux") then
+        sfo_cnt = sfo_cnt+1
+      else if (trim(field_source) == "interior_tendency") then
+        ito_cnt = ito_cnt+1
+      else
+        write(log_message, "(3A)") "'", trim(field_source), "' is not a recognized field source (total_Chl)"
+        call driver_status_log%log_error(log_message, subname)
+        return
+      end if
     end if
 
-    ! We know one output (total_Chl) comes from interior_tendency, rest are from surface_flux
-    allocate(surface_flux_output(num_cols, ofg_2d_cnt))
-    allocate(interior_tendency_output(num_levels, num_cols, ofg_3d_cnt))
+    ! Currently all surface_flux_outputs are 2D, and all interior tendency outputs are 3d.
+    ! If that changes (e.g. we want surface tracers from interior_tendency_compute() rather
+    ! than surface_flux_compute), we will need to introduce derived types instead of flat arrays
+    allocate(surface_flux_output(num_cols, sfo_cnt))
+    allocate(interior_tendency_output(num_levels, num_cols, ito_cnt))
 
 
     ! 5. Initialize diagnostic buffers, define diagnostic fields in output netCDF file, and
@@ -260,14 +290,9 @@ Contains
       !        Note: passing col_start and col_cnt => surface flux diagnostic buffer
       call marbl_io_copy_into_diag_buffer(col_start(n), col_cnt(n), marbl_instances(n))
 
-      ofg_ind = 0
-      do output_id = 1, marbl_instances(n)%output_for_gcm%size()
-        if (trim(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%field_source) == 'surface_flux') then
-          ofg_ind = ofg_ind + 1
-          if (allocated(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_0d)) &
-            surface_flux_output((col_start(n)+1):(col_start(n)+col_cnt(n)),ofg_ind) = &
-                    marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_0d(:)
-        end if
+      do output_id = 1, marbl_instances(n)%surface_flux_output%size()
+        surface_flux_output((col_start(n)+1):(col_start(n)+col_cnt(n)),output_id) = &
+                marbl_instances(n)%surface_flux_output%outputs_for_GCM(output_id)%forcing_field_0d(:)
       end do
 
       ! ------------------------------------------------------------------------
@@ -325,14 +350,9 @@ Contains
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
         if (base_bio_on) then
-          ofg_ind = 0
-          do output_id = 1, marbl_instances(n)%output_for_gcm%size()
-            if (trim(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%field_source) == 'interior_tendency') then
-              ofg_ind = ofg_ind + 1
-              if (allocated(marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_1d)) &
-                interior_tendency_output(:,col_id, ofg_ind) = &
-                         marbl_instances(n)%output_for_gcm%outputs_for_GCM(output_id)%forcing_field_1d(1,:)
-            end if
+          do output_id = 1, marbl_instances(n)%interior_tendency_output%size()
+            interior_tendency_output(:,col_id, output_id) = &
+                      marbl_instances(n)%interior_tendency_output%outputs_for_GCM(output_id)%forcing_field_1d(1,:)
           end do
         end if
       end do ! column
