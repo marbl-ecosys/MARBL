@@ -19,7 +19,6 @@ module marbl_interface
 
   use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
-  use marbl_settings_mod, only : base_bio_on
   use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
@@ -306,7 +305,7 @@ contains
     !  Register variables for add_output()
     !-----------------------------------------------------------------------
 
-    call this%output_for_gcm_registry%create_registry(base_bio_on, this%unit_system%conc_flux_units)
+    call this%output_for_gcm_registry%create_registry(this%unit_system%conc_flux_units)
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -777,9 +776,8 @@ contains
   !***********************************************************************
 
   subroutine add_output_for_GCM(this, num_elements, field_name, output_id, field_source, num_levels)
-    ! Check the registry to see if field_name is provided from surface_flux_compute()
-    ! or interior_tendency_compute(); add it to the proper output_for_GCM type, or
-    ! return a useful error message
+    ! Check the registry to see if field_name is provided from surface_flux_compute() or interior_tendency_compute()
+    ! add it to the proper output_for_GCM type, or log a useful error message
 
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
@@ -799,7 +797,8 @@ contains
       if (trim(field_name) == trim(this%output_for_gcm_registry%registered_outputs(m)%short_name)) then
         ! err_message will be populated if this field is unavailable in current configuration
         if (len_trim(this%output_for_gcm_registry%registered_outputs(m)%err_message) > 0) then
-          call this%StatusLog%log_error(this%output_for_gcm_registry%registered_outputs(m)%err_message, subname)
+          write(log_message, "(A,1X,A)") trim(field_name), trim(this%output_for_gcm_registry%registered_outputs(m)%err_message)
+          call this%StatusLog%log_error(log_message, subname)
           return
         end if
         exit

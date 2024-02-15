@@ -349,12 +349,10 @@ Contains
         !        Note: passing just col_id => interior tendency diagnostic buffer
         call marbl_io_copy_into_diag_buffer(col_id, marbl_instances(n))
         interior_tendencies(:,:,col_id) = marbl_instances(n)%interior_tendencies(:,:)
-        if (base_bio_on) then
-          do output_id = 1, marbl_instances(n)%interior_tendency_output%size()
-            interior_tendency_output(:,col_id, output_id) = &
-                      marbl_instances(n)%interior_tendency_output%outputs_for_GCM(output_id)%forcing_field_1d(1,:)
-          end do
-        end if
+        do output_id = 1, marbl_instances(n)%interior_tendency_output%size()
+          interior_tendency_output(:,col_id, output_id) = &
+                    marbl_instances(n)%interior_tendency_output%outputs_for_GCM(output_id)%forcing_field_1d(1,:)
+        end do
       end do ! column
     end do ! instance
 

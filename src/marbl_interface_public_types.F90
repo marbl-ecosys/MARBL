@@ -17,13 +17,13 @@ module marbl_interface_public_types
   !     * There are no interior tendency outputs at this time, so the type
   !       and ito_ind will need to be created when the first is added
   type, public :: marbl_output_for_GCM_indexing_type
-    integer(int_kind), pointer :: flux_o2_id
-    integer(int_kind), pointer :: flux_co2_id
-    integer(int_kind), pointer :: flux_nhx_id
-    integer(int_kind), pointer :: total_surfChl_id
-    integer(int_kind), pointer :: total_Chl_id
+    integer(int_kind) :: flux_o2_id = 0
+    integer(int_kind) :: flux_co2_id = 0
+    integer(int_kind) :: flux_nhx_id = 0
+    integer(int_kind) :: total_surfChl_id = 0
+    integer(int_kind) :: total_Chl_id = 0
   end type marbl_output_for_GCM_indexing_type
-  type(marbl_output_for_GCM_indexing_type), public :: ofg_ind
+  type(marbl_output_for_GCM_indexing_type), target, public :: ofg_ind
 
   !*****************************************************************************
 
@@ -783,14 +783,14 @@ contains
 
   !*****************************************************************************
 
-  subroutine create_registry(this, base_bio_on, conc_flux_units)
+  subroutine create_registry(this, conc_flux_units)
 
+    use marbl_settings_mod, only : base_bio_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
     use marbl_settings_mod, only : lcompute_nhx_surface_emis
 
     class(marbl_output_for_GCM_registry_type), intent(out) :: this
-    logical,                                   intent(in)  :: base_bio_on
     character(len=*),                          intent(in)  :: conc_flux_units
 
     integer, parameter :: ofg_cnt=5
@@ -810,59 +810,57 @@ contains
     end do
     ofg_ind_loc = 0
 
-    ! Register names and units
+    ! Register names and units of all outputs that can be provided to GCM
+
+    ! Oxygen Flux
     ofg_ind_loc = ofg_ind_loc + 1
     this%registered_outputs(ofg_ind_loc)%short_name = "flux_o2"
     this%registered_outputs(ofg_ind_loc)%long_name = "Oxygen Flux"
     this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
     this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    allocate(ofg_ind%flux_o2_id, source=0)
     this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_o2_id
     if (.not. (base_bio_on .and. lflux_gas_o2)) &
-      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_o2 to outputs without", &
-                                                                "base biotic tracers and lflux_gas_o2"
+      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers and lflux_gas_o2"
 
+    ! Carbon Dioxide Flux
     ofg_ind_loc = ofg_ind_loc + 1
     this%registered_outputs(ofg_ind_loc)%short_name = "flux_co2"
     this%registered_outputs(ofg_ind_loc)%long_name = "Carbon Dioxide Flux"
     this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
     this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    allocate(ofg_ind%flux_co2_id, source=0)
     this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_co2_id
     if (.not. (base_bio_on .and. lflux_gas_co2)) &
-      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_co2 to outputs without", &
-                                                                "base biotic tracers and lflux_gas_co2"
+      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers and lflux_gas_co2"
 
+    ! NHx Surface Emissions
     ofg_ind_loc = ofg_ind_loc + 1
     this%registered_outputs(ofg_ind_loc)%short_name = "flux_nhx"
     this%registered_outputs(ofg_ind_loc)%long_name = "NHx Surface Emissions"
     this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
     this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    allocate(ofg_ind%flux_nhx_id, source=0)
     this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_nhx_id
     if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) &
-      write(this%registered_outputs(ofg_ind_loc)%err_message, "(A,1X,A)") "Can not add flux_co2 to outputs without", &
-                                                                "base biotic tracers and lcompute_nhx_surface_emis"
+      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers and lcompute_nhx_surface_emis"
 
+    ! Surface Chlorophyll
     ofg_ind_loc = ofg_ind_loc + 1
     this%registered_outputs(ofg_ind_loc)%short_name = "total_surfChl"
     this%registered_outputs(ofg_ind_loc)%long_name = "Total Surface Chlorophyll Concentration"
     this%registered_outputs(ofg_ind_loc)%units = "mg/m^3"
     this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    allocate(ofg_ind%total_surfChl_id, source=0)
     this%registered_outputs(ofg_ind_loc)%id => ofg_ind%total_surfChl_id
     if (.not. base_bio_on) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "Can not add total_surfChl to outputs without base biotic tracers"
+      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers"
 
+    ! Full Depth Chlorophyll
     ofg_ind_loc = ofg_ind_loc + 1
     this%registered_outputs(ofg_ind_loc)%short_name = "total_Chl"
     this%registered_outputs(ofg_ind_loc)%long_name = "Total Chlorophyll Concentration"
     this%registered_outputs(ofg_ind_loc)%units = "mg/m^3"
     this%registered_outputs(ofg_ind_loc)%field_source = "interior_tendency"
-    allocate(ofg_ind%total_Chl_id, source=0)
     this%registered_outputs(ofg_ind_loc)%id => ofg_ind%total_Chl_id
     if (.not. base_bio_on) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "Can not add total_Chl to outputs without base biotic tracers"
+      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers"
 
   end subroutine create_registry
 

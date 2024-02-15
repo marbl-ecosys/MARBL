@@ -2243,7 +2243,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     character(len=*),        intent(in)    :: unit_system
     type(marbl_log_type),    intent(inout) :: marbl_status_log
 
-    character(len=*), parameter :: subname = 'marbl_interface_private_types:set_unit_system'
+    character(len=*), parameter :: subname = 'marbl_settings_mod:set_unit_system'
     character(len=char_len) :: log_message
 
     ! If requested unit system is same as current unit system, just return
