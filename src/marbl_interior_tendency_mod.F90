@@ -115,7 +115,7 @@ contains
        zooplankton_local,                     &
        zooplankton_share,                     &
        saved_state,                           &
-       output_for_gcm,                        &
+       interior_tendency_output,              &
        marbl_timers,                          &
        interior_tendency_share,               &
        marbl_particulate_share,               &
@@ -163,7 +163,7 @@ contains
     type(zooplankton_local_type),                            intent(inout) :: zooplankton_local
     type(zooplankton_share_type),                            intent(inout) :: zooplankton_share
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
-    type(marbl_output_for_GCM_type),                         intent(inout) :: output_for_gcm
+    type(marbl_output_for_GCM_type),                         intent(inout) :: interior_tendency_output
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
@@ -277,10 +277,10 @@ contains
     !-----------------------------------------------------------------------
 
     if (ofg_ind%total_Chl_id.ne.0) then
-      output_for_gcm%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = c0
+      interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = c0
       do auto_ind = 1,autotroph_cnt
-        output_for_gcm%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = &
-            output_for_gcm%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) &
+        interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = &
+            interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) &
             + tracer_local(marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind,:)
       end do
     end if

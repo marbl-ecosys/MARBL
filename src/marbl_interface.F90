@@ -997,7 +997,7 @@ contains
          zooplankton_local                 = this%zooplankton_local,                &
          zooplankton_share                 = this%zooplankton_share,                &
          saved_state                       = this%interior_tendency_saved_state,    &
-         output_for_gcm                    = this%interior_tendency_output,         &
+         interior_tendency_output          = this%interior_tendency_output,         &
          marbl_timers                      = this%timers,                           &
          interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
@@ -1047,7 +1047,7 @@ contains
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &
-         output_for_gcm           = this%surface_flux_output,                 &
+         surface_flux_output      = this%surface_flux_output,                 &
          surface_flux_internal    = this%surface_flux_internal,               &
          surface_flux_share       = this%surface_flux_share,                  &
          surface_flux_diags       = this%surface_flux_diags,                  &

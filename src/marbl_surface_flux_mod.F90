@@ -65,7 +65,7 @@ contains
        marbl_tracer_indices,            &
        saved_state,                     &
        saved_state_ind,                 &
-       output_for_gcm,                  &
+       surface_flux_output,             &
        surface_flux_internal,           &
        surface_flux_share,              &
        surface_flux_diags,              &
@@ -106,7 +106,7 @@ contains
     type(marbl_saved_state_type)              , intent(inout) :: saved_state
     type(marbl_surface_flux_saved_state_indexing_type), intent(in) :: saved_state_ind
     type(marbl_surface_flux_internal_type)    , intent(inout) :: surface_flux_internal
-    type(marbl_output_for_GCM_type)           , intent(inout) :: output_for_gcm
+    type(marbl_output_for_GCM_type)           , intent(inout) :: surface_flux_output
     type(marbl_surface_flux_share_type)       , intent(inout) :: surface_flux_share
     type(marbl_diagnostics_type)              , intent(inout) :: surface_flux_diags
     type(co2calc_coeffs_type)                 , intent(inout) :: co2calc_coeffs
@@ -245,7 +245,7 @@ contains
         totalChl_loc = totalChl_loc +                                         &
           max(c0, tracers_at_surface(:,marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind))
       end do
-      output_for_gcm%outputs_for_GCM(ofg_ind%total_surfChl_id)%forcing_field_0d(:) = totalChl_loc
+      surface_flux_output%outputs_for_GCM(ofg_ind%total_surfChl_id)%forcing_field_0d(:) = totalChl_loc
     end if
 
     !-----------------------------------------------------------------------
@@ -262,7 +262,7 @@ contains
       flux_o2_loc(:) = pv_o2(:) * (o2sat(:) - tracers_at_surface(:, o2_ind))
       surface_fluxes(:, o2_ind) = surface_fluxes(:, o2_ind) + flux_o2_loc(:)
       if (ofg_ind%flux_o2_id.ne.0) then
-        output_for_gcm%outputs_for_GCM(ofg_ind%flux_o2_id)%forcing_field_0d(:) = flux_o2_loc
+        surface_flux_output%outputs_for_GCM(ofg_ind%flux_o2_id)%forcing_field_0d(:) = flux_o2_loc
       end if
     else
       schmidt_o2(:) = c0
@@ -325,7 +325,7 @@ contains
 
       flux_co2(:) = pv_co2(:) * dco2star(:)
       if (ofg_ind%flux_co2_id.ne.0) then
-        output_for_gcm%outputs_for_GCM(ofg_ind%flux_co2_id)%forcing_field_0d(:) = flux_co2
+        surface_flux_output%outputs_for_GCM(ofg_ind%flux_co2_id)%forcing_field_0d(:) = flux_co2
       end if
 
       !-------------------------------------------------------------------
@@ -409,7 +409,7 @@ contains
            nhx_surface_emis = nhx_surface_emis)
 
       if (ofg_ind%flux_nhx_id.ne.0) then
-         output_for_gcm%outputs_for_GCM(ofg_ind%flux_nhx_id)%forcing_field_0d(:) = nhx_surface_emis
+         surface_flux_output%outputs_for_GCM(ofg_ind%flux_nhx_id)%forcing_field_0d(:) = nhx_surface_emis
       end if
 
       surface_fluxes(:, nh4_ind) = surface_fluxes(:, nh4_ind) - nhx_surface_emis(:)
