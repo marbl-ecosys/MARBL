@@ -120,21 +120,23 @@ module marbl_interface_public_types
 
   !*****************************************************************************
 
-  type, public :: marbl_output_for_GCM_single_register_type
+  type, public :: marbl_output_for_GCM_linked_list_type
     character(len=char_len)    :: short_name
     character(len=char_len)    :: long_name
     character(len=char_len)    :: units
     character(len=char_len)    :: field_source
     character(len=char_len)    :: err_message
     integer(int_kind), pointer :: id
-  end type marbl_output_for_GCM_single_register_type
+    type(marbl_output_for_GCM_linked_list_type), pointer :: next => NULL()
+  end type marbl_output_for_GCM_linked_list_type
 
   !*****************************************************************************
 
   type, public :: marbl_output_for_GCM_registry_type
-    type(marbl_output_for_GCM_single_register_type), allocatable, dimension(:) :: registered_outputs
+    type(marbl_output_for_GCM_linked_list_type), pointer :: registered_outputs
   contains
     procedure, public :: create_registry
+    procedure, public :: add_registry_entry
   end type marbl_output_for_GCM_registry_type
 
   !*****************************************************************************
@@ -793,76 +795,115 @@ contains
     class(marbl_output_for_GCM_registry_type), intent(out) :: this
     character(len=*),                          intent(in)  :: conc_flux_units
 
-    integer, parameter :: ofg_cnt=5
-    integer :: ofg_ind_loc
+    character(len=char_len) :: err_message
 
-    ! Defined outputs for the GCM are
-    ! 1. O2 Flux
-    ! 2. CO2 Flux
-    ! 3. NHx Flux
-    ! 4. Surface Chl
-    ! 5. Total Chl
-    allocate(this%registered_outputs(ofg_cnt))
-
-    ! Set error messages to empty strings
-    do ofg_ind_loc=1,ofg_cnt
-      this%registered_outputs(ofg_ind_loc)%err_message = ""
-    end do
-    ofg_ind_loc = 0
-
-    ! Register names and units of all outputs that can be provided to GCM
 
     ! Oxygen Flux
-    ofg_ind_loc = ofg_ind_loc + 1
-    this%registered_outputs(ofg_ind_loc)%short_name = "flux_o2"
-    this%registered_outputs(ofg_ind_loc)%long_name = "Oxygen Flux"
-    this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
-    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_o2_id
-    if (.not. (base_bio_on .and. lflux_gas_o2)) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers and lflux_gas_o2"
+    if (.not. (base_bio_on .and. lflux_gas_o2)) then
+      err_message = "requires base biotic tracers and lflux_gas_o2"
+    else
+      err_message = ""
+    end if
+    call this%add_registry_entry(short_name = "flux_o2", &
+                                 long_name = "Oxygen Flux", &
+                                 units = conc_flux_units, &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%flux_o2_id, &
+                                 err_message = err_message)
 
     ! Carbon Dioxide Flux
-    ofg_ind_loc = ofg_ind_loc + 1
-    this%registered_outputs(ofg_ind_loc)%short_name = "flux_co2"
-    this%registered_outputs(ofg_ind_loc)%long_name = "Carbon Dioxide Flux"
-    this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
-    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_co2_id
-    if (.not. (base_bio_on .and. lflux_gas_co2)) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers and lflux_gas_co2"
+    if (.not. (base_bio_on .and. lflux_gas_co2)) then
+      err_message = "requires base biotic tracers and lflux_gas_co2"
+    else
+      err_message = ""
+    end if
+    call this%add_registry_entry(short_name = "flux_co2", &
+                                                    long_name = "Carbon Dioxide Flux", &
+                                                    units = conc_flux_units, &
+                                                    field_source = "surface_flux", &
+                                                    id = ofg_ind%flux_co2_id, &
+                                                    err_message = err_message)
 
     ! NHx Surface Emissions
-    ofg_ind_loc = ofg_ind_loc + 1
-    this%registered_outputs(ofg_ind_loc)%short_name = "flux_nhx"
-    this%registered_outputs(ofg_ind_loc)%long_name = "NHx Surface Emissions"
-    this%registered_outputs(ofg_ind_loc)%units = conc_flux_units
-    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%flux_nhx_id
-    if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers and lcompute_nhx_surface_emis"
+    if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) then
+      err_message = "requires base biotic tracers and lcompute_nhx_surface_emis"
+    else
+      err_message = ""
+    end if
+    call this%add_registry_entry(short_name = "flux_nhx", &
+                                                    long_name = "NHx Surface Emissions", &
+                                                    units = conc_flux_units, &
+                                                    field_source = "surface_flux", &
+                                                    id = ofg_ind%flux_nhx_id, &
+                                                    err_message = err_message)
 
     ! Surface Chlorophyll
-    ofg_ind_loc = ofg_ind_loc + 1
-    this%registered_outputs(ofg_ind_loc)%short_name = "total_surfChl"
-    this%registered_outputs(ofg_ind_loc)%long_name = "Total Surface Chlorophyll Concentration"
-    this%registered_outputs(ofg_ind_loc)%units = "mg/m^3"
-    this%registered_outputs(ofg_ind_loc)%field_source = "surface_flux"
-    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%total_surfChl_id
-    if (.not. base_bio_on) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers"
+    if (.not. base_bio_on) then
+      err_message = "requires base biotic tracers"
+    else
+      err_message = ""
+    end if
+    call this%add_registry_entry(short_name = "total_surfChl", &
+                                                    long_name = "Total Surface Chlorophyll Concentration", &
+                                                    units = "mg/m^3", &
+                                                    field_source = "surface_flux", &
+                                                    id = ofg_ind%total_surfChl_id, &
+                                                    err_message = err_message)
 
     ! Full Depth Chlorophyll
-    ofg_ind_loc = ofg_ind_loc + 1
-    this%registered_outputs(ofg_ind_loc)%short_name = "total_Chl"
-    this%registered_outputs(ofg_ind_loc)%long_name = "Total Chlorophyll Concentration"
-    this%registered_outputs(ofg_ind_loc)%units = "mg/m^3"
-    this%registered_outputs(ofg_ind_loc)%field_source = "interior_tendency"
-    this%registered_outputs(ofg_ind_loc)%id => ofg_ind%total_Chl_id
-    if (.not. base_bio_on) &
-      this%registered_outputs(ofg_ind_loc)%err_message = "requires base biotic tracers"
+    if (.not. base_bio_on) then
+      err_message = "requires base biotic tracers"
+    else
+      err_message = ""
+    end if
+    call this%add_registry_entry(short_name = "total_Chl", &
+                                                    long_name = "Total Chlorophyll Concentration", &
+                                                    units = "mg/m^3", &
+                                                    field_source = "interior_tendency", &
+                                                    id = ofg_ind%total_Chl_id, &
+                                                    err_message = err_message)
 
   end subroutine create_registry
+
+  !***********************************************************************
+
+  subroutine add_registry_entry(this, short_name, long_name, units, field_source, id, err_message)
+    class(marbl_output_for_GCM_registry_type), intent(inout) :: this
+    character(len=*),                          intent(in)    :: short_name
+    character(len=*),                          intent(in)    :: long_name
+    character(len=*),                          intent(in)    :: units
+    character(len=*),                          intent(in)    :: field_source
+    integer, target,                           intent(in)    :: id
+    character(len=*), optional,                intent(in)    :: err_message
+
+    type(marbl_output_for_GCM_linked_list_type), pointer :: new_entry
+
+    ! Find last linked list item
+    if (associated(this%registered_outputs)) then
+      new_entry => this%registered_outputs
+      do while (associated(new_entry%next))
+        new_entry => new_entry%next
+      end do
+      allocate(new_entry%next)
+      new_entry => new_entry%next
+    else
+      ! This is first entry in the registry
+      allocate(new_entry)
+      this%registered_outputs => new_entry
+    end if
+
+    new_entry%short_name = short_name
+    new_entry%long_name = long_name
+    new_entry%units = units
+    new_entry%field_source = field_source
+    new_entry%id => id
+    if (present(err_message)) then
+      new_entry%err_message = err_message
+    else
+      new_entry%err_message = ""
+    end if
+
+  end subroutine add_registry_entry
 
   !***********************************************************************
 

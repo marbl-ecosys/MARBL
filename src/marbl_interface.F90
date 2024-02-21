@@ -779,6 +779,8 @@ contains
     ! Check the registry to see if field_name is provided from surface_flux_compute() or interior_tendency_compute()
     ! add it to the proper output_for_GCM type, or log a useful error message
 
+    use marbl_interface_public_types, only : marbl_output_for_GCM_linked_list_type
+
     class (marbl_interface_class), intent(inout) :: this
     character(len=*),     intent(in)    :: field_name
     integer(int_kind),    intent(in)    :: num_elements
@@ -788,25 +790,32 @@ contains
 
     character(len=*), parameter :: subname = 'marbl_interface:add_output_for_GCM'
     character(len=char_len) :: log_message
-    integer :: m
+    type(marbl_output_for_GCM_linked_list_type), pointer :: registered_output
 
     output_id = 0
     field_source = ""
 
-    do m=1,size(this%output_for_gcm_registry%registered_outputs)
-      if (trim(field_name) == trim(this%output_for_gcm_registry%registered_outputs(m)%short_name)) then
+    if (.not. associated(this%output_for_gcm_registry%registered_outputs)) then
+      call this%StatusLog%log_error("No outputs for GCM have been registered!", subname)
+      return
+    end if
+
+    registered_output => this%output_for_gcm_registry%registered_outputs
+    do while (associated(registered_output))
+      if (trim(field_name) == trim(registered_output%short_name)) then
         ! err_message will be populated if this field is unavailable in current configuration
-        if (len_trim(this%output_for_gcm_registry%registered_outputs(m)%err_message) > 0) then
-          write(log_message, "(A,1X,A)") trim(field_name), trim(this%output_for_gcm_registry%registered_outputs(m)%err_message)
+        if (len_trim(registered_output%err_message) > 0) then
+          write(log_message, "(A,1X,A)") trim(field_name), trim(registered_output%err_message)
           call this%StatusLog%log_error(log_message, subname)
           return
         end if
         exit
       end if
+      registered_output => registered_output%next
     end do
 
     ! Abort if field_name was not registered
-    if (m > size(this%output_for_gcm_registry%registered_outputs)) then
+    if (.not. associated(this%output_for_gcm_registry%registered_outputs)) then
       write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
       call this%StatusLog%log_error(log_message, subname)
       return
@@ -816,26 +825,26 @@ contains
     call this%StatusLog%log_noerror(log_message, subname)
 
     ! Set field source, and then add output to appropriate output_for_GCM_type
-    field_source = trim(this%output_for_gcm_registry%registered_outputs(m)%field_source)
+    field_source = trim(registered_output%field_source)
     if ( trim(field_source) == "surface_flux") then
-      call this%surface_flux_output%add_output(this%output_for_gcm_registry%registered_outputs(m)%short_name, &
-                                               this%output_for_gcm_registry%registered_outputs(m)%long_name, &
-                                               this%output_for_gcm_registry%registered_outputs(m)%units, &
+      call this%surface_flux_output%add_output(registered_output%short_name, &
+                                               registered_output%long_name, &
+                                               registered_output%units, &
                                                num_elements, &
                                                output_id, &
                                                num_levels)
     end if
     if (trim(field_source) == "interior_tendency") then
-      call this%interior_tendency_output%add_output(this%output_for_gcm_registry%registered_outputs(m)%short_name, &
-                                                    this%output_for_gcm_registry%registered_outputs(m)%long_name, &
-                                                    this%output_for_gcm_registry%registered_outputs(m)%units, &
+      call this%interior_tendency_output%add_output(registered_output%short_name, &
+                                                    registered_output%long_name, &
+                                                    registered_output%units, &
                                                     num_elements, &
                                                     output_id, &
                                                     num_levels)
     end if
 
     ! %id is a pointer to a member of either sfo_ind or ito_ind
-    this%output_for_gcm_registry%registered_outputs(m)%id = output_id
+    registered_output%id = output_id
 
   end subroutine add_output_for_GCM
 
