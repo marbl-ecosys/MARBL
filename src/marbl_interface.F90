@@ -90,18 +90,16 @@ module marbl_interface
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
-     type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
      type(marbl_output_for_GCM_type)                    , public  :: interior_tendency_output      ! output
+     type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
-     real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)      ! input
-     type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)     ! input
-     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind     ! FIXME #311: should be private
-     real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)          ! output
-     type(marbl_diagnostics_type)                   , public               :: surface_flux_diags           ! output
-     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output          ! output
-
-     ! public data that the GCM needs to explicitly request
+     real (r8)                                      , public, allocatable  :: tracers_at_surface(:,:)     ! input
+     type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
+     type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
+     real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output         ! output
+     type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
      real (r8), public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
@@ -113,6 +111,10 @@ module marbl_interface
      !            they will eventually be moved from the interface to inside MARBL
      real (r8), public, allocatable  :: glo_scalar_interior_tendency(:)
      real (r8), public, allocatable  :: glo_scalar_surface_flux(:)
+
+     ! Registry of available output for the GCM
+     ! (Public so we can provide available_output test in the standalone driver)
+     type(marbl_output_for_GCM_registry_type), public :: output_for_gcm_registry
 
      type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_interior_tendency(:)
      type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_surface_flux(:)
@@ -141,7 +143,6 @@ module marbl_interface
      type(marbl_internal_timers_type),         private :: timers
      type(marbl_timer_indexing_type),          private :: timer_ids
      type(marbl_settings_type),                private :: settings
-     type(marbl_output_for_GCM_registry_type), private :: output_for_gcm_registry
 
    contains
 

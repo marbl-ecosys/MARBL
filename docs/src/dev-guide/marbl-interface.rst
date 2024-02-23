@@ -32,6 +32,7 @@ The class definition is shown below:
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
+     type(marbl_output_for_GCM_type)                    , public  :: interior_tendency_output      ! output
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
@@ -43,20 +44,20 @@ The class definition is shown below:
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
+     real (r8), public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
+     real (r8), public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
+     real (r8), public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
+     real (r8), public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
 
      ! FIXME #77: for now, running means are being computed in the driver
      !            they will eventually be moved from the interface to inside MARBL
-     real (r8)                                 , public, allocatable  :: glo_scalar_interior_tendency(:)
-     real (r8)                                 , public, allocatable  :: glo_scalar_surface_flux(:)
+     real (r8), public, allocatable  :: glo_scalar_interior_tendency(:)
+     real (r8), public, allocatable  :: glo_scalar_surface_flux(:)
 
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior_tendency(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface_flux(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
      type(unit_system_type),                   private :: unit_system
@@ -80,6 +81,7 @@ The class definition is shown below:
      type(marbl_internal_timers_type),         private :: timers
      type(marbl_timer_indexing_type),          private :: timer_ids
      type(marbl_settings_type),                private :: settings
+     type(marbl_output_for_GCM_registry_type), private :: output_for_gcm_registry
 
    contains
 
@@ -106,7 +108,6 @@ The class definition is shown below:
                                           get_string
      procedure, public  :: get_settings_var_cnt
      procedure, public  :: add_output_for_GCM
-     procedure, public  :: get_output_for_GCM
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real

@@ -42,6 +42,7 @@ Program marbl
 
   ! Use from libmarbl.a
   use marbl_interface, only : marbl_interface_class
+  use marbl_interface_public_types, only : marbl_output_for_GCM_linked_list_type
   use marbl_logging,   only : marbl_log_type
   use marbl_kinds_mod, only : char_len
 
@@ -74,9 +75,10 @@ Program marbl
   character(len=char_len) :: namelist_file, settings_file
   character(len=3)        :: unit_system_opt
   integer        :: argcnt
-  logical        :: labort_after_argparse, lshow_usage, lfound_file
+  logical        :: labort_after_argparse, lshow_usage, lfound_file, lunavailable_output
 
   type(marbl_interface_class), dimension(:), allocatable :: marbl_instances
+  type(marbl_output_for_GCM_linked_list_type), pointer   :: registered_output
   type(marbl_log_type)          :: driver_status_log
   integer                       :: n, cnt
   character(len=char_len)       :: settings_file_line, varname, log_message
@@ -437,6 +439,57 @@ Program marbl
         call marbl_instances(1)%shutdown()
       end if
 
+    ! -- available_output test -- !
+    case ('available_output')
+      call verify_single_instance(num_inst, trim(testname))
+      lprint_marbl_log = .false.
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown = .false.)
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log available output for GCM and note if any output is unavailable
+        call driver_status_log%log_header('Available output for GCM', subname)
+        lunavailable_output = .false.
+        cnt = 0
+        registered_output => marbl_instances(1)%output_for_gcm_registry%registered_outputs
+        do while (associated(registered_output))
+          if (len_trim(registered_output%err_message) == 0) then
+            cnt = cnt+1
+            write(log_message, "(I0, 2A)") cnt, '. ', trim(registered_output%long_name)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, "(2A)") '   short name: ', trim(registered_output%short_name)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, "(2A)") '   units: ', trim(registered_output%units)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, "(2A)") '   field_source: ', trim(registered_output%field_source)
+            call driver_status_log%log_noerror(log_message, subname)
+          else
+            lunavailable_output = .true.
+          end if
+          registered_output => registered_output%next
+        end do
+
+        if (cnt.eq.0) then
+          call driver_status_log%log_noerror('No available output for the GCM in this configuration!', subname)
+        end if
+
+        if (lunavailable_output) then
+          call driver_status_log%log_header('Unavailable output for GCM', subname)
+          cnt = 0
+          registered_output => marbl_instances(1)%output_for_gcm_registry%registered_outputs
+          do while (associated(registered_output))
+            if (len_trim(registered_output%err_message) > 0) then
+              cnt = cnt+1
+              write(log_message, "(I0, 2A)") cnt, '. ', trim(registered_output%long_name)
+              call driver_status_log%log_noerror(log_message, subname)
+              write(log_message, "(2A)") '   * ', trim(registered_output%err_message)
+              call driver_status_log%log_noerror(log_message, subname)
+            end if
+            registered_output => registered_output%next
+          end do
+        end if
+        call marbl_instances(1)%shutdown()
+      end if
+
+    ! -- call_compute_subroutines test -- !
     case ('call_compute_subroutines')
       lprint_marbl_log = .false.
       call marbl_call_compute_subroutines_test(marbl_instances, hist_file, unit_system_opt, driver_status_log)
