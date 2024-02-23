@@ -797,13 +797,16 @@ contains
 
     character(len=char_len) :: err_message
 
+    ! NOTE: we want to set err_message = "" prior to every conditional
+    !       so we don't inadvertently pass a non-empty string from a
+    !       previous output variable
+    !       E.g. if lflux_gas_o2 = F but lflux_gas_co2 = T, err_message
+    !       should be blank for CO2 flux (assuming base_bio_on = T)
 
     ! Oxygen Flux
-    if (.not. (base_bio_on .and. lflux_gas_o2)) then
+    err_message = ""
+    if (.not. (base_bio_on .and. lflux_gas_o2)) &
       err_message = "requires base biotic tracers and lflux_gas_o2"
-    else
-      err_message = ""
-    end if
     call this%add_registry_entry(short_name = "flux_o2", &
                                  long_name = "Oxygen Flux", &
                                  units = conc_flux_units, &
@@ -812,56 +815,48 @@ contains
                                  err_message = err_message)
 
     ! Carbon Dioxide Flux
-    if (.not. (base_bio_on .and. lflux_gas_co2)) then
+    err_message = ""
+    if (.not. (base_bio_on .and. lflux_gas_co2)) &
       err_message = "requires base biotic tracers and lflux_gas_co2"
-    else
-      err_message = ""
-    end if
     call this%add_registry_entry(short_name = "flux_co2", &
-                                                    long_name = "Carbon Dioxide Flux", &
-                                                    units = conc_flux_units, &
-                                                    field_source = "surface_flux", &
-                                                    id = ofg_ind%flux_co2_id, &
-                                                    err_message = err_message)
+                                 long_name = "Carbon Dioxide Flux", &
+                                 units = conc_flux_units, &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%flux_co2_id, &
+                                 err_message = err_message)
 
     ! NHx Surface Emissions
-    if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) then
+    err_message = ""
+    if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) &
       err_message = "requires base biotic tracers and lcompute_nhx_surface_emis"
-    else
-      err_message = ""
-    end if
     call this%add_registry_entry(short_name = "flux_nhx", &
-                                                    long_name = "NHx Surface Emissions", &
-                                                    units = conc_flux_units, &
-                                                    field_source = "surface_flux", &
-                                                    id = ofg_ind%flux_nhx_id, &
-                                                    err_message = err_message)
+                                 long_name = "NHx Surface Emissions", &
+                                 units = conc_flux_units, &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%flux_nhx_id, &
+                                 err_message = err_message)
 
     ! Surface Chlorophyll
-    if (.not. base_bio_on) then
+    err_message = ""
+    if (.not. base_bio_on) &
       err_message = "requires base biotic tracers"
-    else
-      err_message = ""
-    end if
     call this%add_registry_entry(short_name = "total_surfChl", &
-                                                    long_name = "Total Surface Chlorophyll Concentration", &
-                                                    units = "mg/m^3", &
-                                                    field_source = "surface_flux", &
-                                                    id = ofg_ind%total_surfChl_id, &
-                                                    err_message = err_message)
+                                 long_name = "Total Surface Chlorophyll Concentration", &
+                                 units = "mg/m^3", &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%total_surfChl_id, &
+                                 err_message = err_message)
 
     ! Full Depth Chlorophyll
-    if (.not. base_bio_on) then
+    err_message = ""
+    if (.not. base_bio_on) &
       err_message = "requires base biotic tracers"
-    else
-      err_message = ""
-    end if
     call this%add_registry_entry(short_name = "total_Chl", &
-                                                    long_name = "Total Chlorophyll Concentration", &
-                                                    units = "mg/m^3", &
-                                                    field_source = "interior_tendency", &
-                                                    id = ofg_ind%total_Chl_id, &
-                                                    err_message = err_message)
+                                 long_name = "Total Chlorophyll Concentration", &
+                                 units = "mg/m^3", &
+                                 field_source = "interior_tendency", &
+                                 id = ofg_ind%total_Chl_id, &
+                                 err_message = err_message)
 
   end subroutine create_registry
 
@@ -878,19 +873,10 @@ contains
 
     type(marbl_output_for_GCM_linked_list_type), pointer :: new_entry
 
-    ! Find last linked list item
-    if (associated(this%registered_outputs)) then
-      new_entry => this%registered_outputs
-      do while (associated(new_entry%next))
-        new_entry => new_entry%next
-      end do
-      allocate(new_entry%next)
-      new_entry => new_entry%next
-    else
-      ! This is first entry in the registry
-      allocate(new_entry)
-      this%registered_outputs => new_entry
-    end if
+    ! Insert new entry at beginning of linked list
+    allocate(new_entry)
+    new_entry%next => this%registered_outputs
+    this%registered_outputs => new_entry
 
     new_entry%short_name = short_name
     new_entry%long_name = long_name

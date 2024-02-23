@@ -815,7 +815,7 @@ contains
     end do
 
     ! Abort if field_name was not registered
-    if (.not. associated(this%output_for_gcm_registry%registered_outputs)) then
+    if (.not. associated(registered_output)) then
       write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
       call this%StatusLog%log_error(log_message, subname)
       return
