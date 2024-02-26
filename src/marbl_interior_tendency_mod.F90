@@ -37,6 +37,7 @@ module marbl_interior_tendency_mod
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
   use marbl_interface_public_types, only : marbl_running_mean_0d_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_type
 
   use marbl_logging, only : marbl_log_type
 
@@ -114,6 +115,7 @@ contains
        zooplankton_local,                     &
        zooplankton_share,                     &
        saved_state,                           &
+       interior_tendency_output,              &
        marbl_timers,                          &
        interior_tendency_share,               &
        marbl_particulate_share,               &
@@ -133,6 +135,7 @@ contains
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
+    use marbl_interface_public_types, only : ofg_ind
     use marbl_interface_public_types, only : marbl_diagnostics_type
     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_variables
     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_zooplankton
@@ -160,6 +163,7 @@ contains
     type(zooplankton_local_type),                            intent(inout) :: zooplankton_local
     type(zooplankton_share_type),                            intent(inout) :: zooplankton_share
     type(marbl_saved_state_type),                            intent(inout) :: saved_state
+    type(marbl_output_for_GCM_type),                         intent(inout) :: interior_tendency_output
     type(marbl_internal_timers_type),                        intent(inout) :: marbl_timers
     type(marbl_interior_tendency_share_type),                intent(inout) :: interior_tendency_share
     type(marbl_particulate_share_type),                      intent(inout) :: marbl_particulate_share
@@ -179,7 +183,7 @@ contains
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
 
-    integer (int_kind) :: k         ! vertical level index
+    integer (int_kind) :: auto_ind, k        ! indices for loops
 
     real (r8) :: surf_press(domain%km)       ! pressure in surface layer
     real (r8) :: temperature(domain%km)      ! in situ temperature
@@ -267,6 +271,19 @@ contains
 
     ! Return if not using base biotic tracers or not performing computations
     if (.not. base_bio_on) return
+
+    !-----------------------------------------------------------------------
+    !  Compute Chlorophyll (if requested by GCM)
+    !-----------------------------------------------------------------------
+
+    if (ofg_ind%total_Chl_id.ne.0) then
+      interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = c0
+      do auto_ind = 1,autotroph_cnt
+        interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = &
+            interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) &
+            + tracer_local(marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind,:)
+      end do
+    end if
 
     ! Verify forcing is consistent
     if (lcheck_forcing) &

@@ -12,4 +12,5 @@ Examples of common development tasks.
    add-diagnostic.rst
    add-settings-parameter.rst
    add-tracer.rst
+   add-ofg.rst
 

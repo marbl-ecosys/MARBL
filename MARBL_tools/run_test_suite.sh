@@ -356,6 +356,12 @@ if [ "${STATUS}" == "PASS" ]; then
   STATUS=$(check_return $?)
   print_status "requested_tracers.py" >> ${RESULTS_CACHE}
 
+  # Print all output_for_GCM variables
+  cd ${MARBL_ROOT}/tests/regression_tests/available_output
+  (set -x ; ./available_output.py)
+  STATUS=$(check_return $?)
+  print_status "available_output.py" >> ${RESULTS_CACHE}
+
   # Initialize MARBL (with MPI)
   cd ${MARBL_ROOT}/tests/regression_tests/init
   (set -x ; ./init.py --mpitasks 2)

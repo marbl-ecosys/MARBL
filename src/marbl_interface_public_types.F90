@@ -14,15 +14,14 @@ module marbl_interface_public_types
   ! NOTE: when adding a new surface flux or interior tendency output field
   !       (a field that the GCM may need to pass to flux coupler), remember
   !       to add a new index for it as well.
-  !     * There are no interior tendency outputs at this time, so the type
-  !       and ito_ind will need to be created when the first is added
-  type, public :: marbl_surface_flux_output_indexing_type
+  type, public :: marbl_output_for_GCM_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
     integer(int_kind) :: flux_nhx_id = 0
     integer(int_kind) :: total_surfChl_id = 0
-  end type marbl_surface_flux_output_indexing_type
-  type(marbl_surface_flux_output_indexing_type), public :: sfo_ind
+    integer(int_kind) :: total_Chl_id = 0
+  end type marbl_output_for_GCM_indexing_type
+  type(marbl_output_for_GCM_indexing_type), target, public :: ofg_ind
 
   !*****************************************************************************
 
@@ -119,6 +118,27 @@ module marbl_interface_public_types
 
   !*****************************************************************************
 
+  type, public :: marbl_output_for_GCM_linked_list_type
+    character(len=char_len)    :: short_name
+    character(len=char_len)    :: long_name
+    character(len=char_len)    :: units
+    character(len=char_len)    :: field_source
+    character(len=char_len)    :: err_message
+    integer(int_kind), pointer :: id
+    type(marbl_output_for_GCM_linked_list_type), pointer :: next => NULL()
+  end type marbl_output_for_GCM_linked_list_type
+
+  !*****************************************************************************
+
+  type, public :: marbl_output_for_GCM_registry_type
+    type(marbl_output_for_GCM_linked_list_type), pointer :: registered_outputs
+  contains
+    procedure, public  :: create_registry
+    procedure, private :: add_registry_entry
+  end type marbl_output_for_GCM_registry_type
+
+  !*****************************************************************************
+
   type, public :: marbl_single_output_type
      ! marbl_single_output :
      ! a private type, this contains both the metadata and
@@ -127,9 +147,9 @@ module marbl_interface_public_types
      ! that needs to be passed to the GCM / flux coupler.
      ! Data must be accessed via the marbl_output_for_GCM_type
      ! data structure.
-     character (len=char_len)              :: long_name
-     character (len=char_len)              :: short_name
-     character (len=char_len)              :: units
+     character(len=char_len)               :: long_name
+     character(len=char_len)               :: short_name
+     character(len=char_len)               :: units
      real(r8), allocatable, dimension(:)   :: forcing_field_0d
      real(r8), allocatable, dimension(:,:) :: forcing_field_1d
    contains
@@ -138,9 +158,9 @@ module marbl_interface_public_types
   !*****************************************************************************
 
   type, public :: marbl_output_for_GCM_type
-     integer :: output_cnt
      type(marbl_single_output_type), dimension(:), pointer :: outputs_for_GCM => NULL()
    contains
+     procedure, public :: size       => get_marbl_output_for_GCM_cnt
      procedure, public :: add_output => marbl_output_add
   end type marbl_output_for_GCM_type
 
@@ -441,48 +461,18 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_single_output_constructor(this, num_elements, num_levels, field_name, id, &
-                                             conc_flux_units, marbl_status_log)
+  subroutine marbl_single_output_constructor(this, short_name, long_name, units, num_elements, num_levels)
 
-    class(marbl_single_output_type), intent(out)   :: this
-    character(len=*),                intent(in)    :: field_name
-    integer(int_kind),               intent(in)    :: num_elements
-    integer(int_kind),               intent(in)    :: num_levels
-    integer(int_kind),               intent(in)    :: id
-    character(len=*),                intent(in)    :: conc_flux_units
-    type(marbl_log_type),            intent(inout) :: marbl_status_log
+    class(marbl_single_output_type),          intent(out)  :: this
+    character(len=*),                         intent(in)    :: short_name
+    character(len=*),                         intent(in)    :: long_name
+    character(len=*),                         intent(in)    :: units
+    integer(int_kind),                        intent(in)    :: num_elements
+    integer(int_kind),                        intent(in)    :: num_levels
 
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_single_output_constructor'
-    character(len=char_len)     :: log_message
-
-    select case (trim(field_name))
-      case("flux_o2")
-        this%long_name  = "Oxygen Flux"
-        this%short_name = "flux_o2"
-        this%units      = conc_flux_units
-        sfo_ind%flux_o2_id = id
-      case("flux_co2")
-        this%long_name  = "Carbon Dioxide Flux"
-        this%short_name = "flux_co2"
-        this%units      = conc_flux_units
-        sfo_ind%flux_co2_id = id
-      case("flux_nhx")
-        this%long_name  = "NHx Surface Emissions"
-        this%short_name = "flux_nhx"
-        this%units      = conc_flux_units
-        sfo_ind%flux_nhx_id = id
-      case("total_surfChl")
-        this%long_name  = "Total Chlorophyll Concentration"
-        this%short_name = "total_surfChl"
-        this%units      = "mg/m^3"
-        sfo_ind%total_surfChl_id = id
-      case DEFAULT
-        write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
-        call marbl_status_log%log_error(log_message, subname)
-        return
-    end select
-    write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
-    call marbl_status_log%log_noerror(log_message, subname)
+    this%short_name   = short_name
+    this%long_name    = long_name
+    this%units        = units
 
     if (num_levels .eq. 0) then
       allocate(this%forcing_field_0d(num_elements))
@@ -496,8 +486,7 @@ contains
 
   !*****************************************************************************
 
-  subroutine marbl_output_add(this, num_elements, field_name, conc_flux_units, output_id, &
-                              marbl_status_log, num_levels)
+  subroutine marbl_output_add(this, short_name, long_name, units, num_elements, output_id, num_levels)
 
   ! MARBL uses pointers to create an extensible allocatable array. The output
   ! fields (part of the intent(out) of this routine) are stored in
@@ -506,22 +495,20 @@ contains
   !
   ! 1) allocate new_output to be size N (one element larger than this%outputs_for_GCM)
   ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
-  ! 3) newest surface flux output (field_name) is Nth element of new_output
+  ! 3) newest surface flux output or interior tendency output (short_name) is Nth element of new_output
   ! 4) deallocate / nullify this%outputs_for_GCM
   ! 5) point this%outputs_for_GCM => new_output
   !
   ! If the number of possible surface flux output fields grows, this workflow
   ! may need to be replaced with something that is not O(N^2).
 
-    class(marbl_output_for_GCM_type), intent(inout) :: this
-    character(len=*),     intent(in)    :: field_name
-    integer(int_kind),    intent(in)    :: num_elements
-    character(len=*),     intent(in)    :: conc_flux_units
-    integer(int_kind),    intent(out)   :: output_id
-    type(marbl_log_type), intent(inout) :: marbl_status_log
-    integer(int_kind),    optional, intent(in) :: num_levels
-
-    character(len=*), parameter :: subname = 'marbl_interface_public_types:marbl_output_add'
+    class(marbl_output_for_GCM_type),         intent(inout) :: this
+    character(len=*),                         intent(in)    :: short_name
+    character(len=*),                         intent(in)    :: long_name
+    character(len=*),                         intent(in)    :: units
+    integer(int_kind),                        intent(in)    :: num_elements
+    integer(int_kind),                        intent(out)   :: output_id
+    integer(int_kind), optional,              intent(in)    :: num_levels
 
     type(marbl_single_output_type), dimension(:), pointer :: new_output
     integer :: n, old_size, dim1_loc, dim2_loc, num_levels_loc
@@ -545,9 +532,9 @@ contains
 
     ! 2) copy this%outputs_for_GCM into first N-1 elements of new_output
     do n=1,old_size
-      new_output(n)%long_name  = this%outputs_for_GCM(n)%long_name
-      new_output(n)%short_name = this%outputs_for_GCM(n)%short_name
-      new_output(n)%units      = this%outputs_for_GCM(n)%units
+      new_output(n)%long_name    = this%outputs_for_GCM(n)%long_name
+      new_output(n)%short_name   = this%outputs_for_GCM(n)%short_name
+      new_output(n)%units        = this%outputs_for_GCM(n)%units
       if (allocated(this%outputs_for_GCM(n)%forcing_field_0d)) then
         dim1_loc = size(this%outputs_for_GCM(n)%forcing_field_0d)
         allocate(new_output(n)%forcing_field_0d(dim1_loc))
@@ -564,12 +551,7 @@ contains
     end do
 
     ! 3) newest surface flux output (field_name) is Nth element of new_output
-    call new_output(output_id)%construct(num_elements, num_levels_loc, field_name,  &
-                                      output_id, conc_flux_units, marbl_status_log)
-    if (marbl_status_log%labort_marbl) then
-      call marbl_status_log%log_error_trace('new_output%construct()', subname)
-      return
-    end if
+    call new_output(output_id)%construct(short_name, long_name, units, num_elements, num_levels_loc)
 
     ! 4) deallocate / nullify this%outputs_for_GCM
     if (old_size .gt. 0) then
@@ -583,6 +565,21 @@ contains
   end subroutine marbl_output_add
 
   !*****************************************************************************
+
+  function get_marbl_output_for_GCM_cnt(this)
+
+    class (marbl_output_for_GCM_type), intent(in) :: this
+    integer :: get_marbl_output_for_GCM_cnt
+
+    if (associated(this%outputs_for_GCM)) then
+      get_marbl_output_for_GCM_cnt = size(this%outputs_for_GCM)
+    else
+      get_marbl_output_for_GCM_cnt = 0
+    end if
+
+  end function get_marbl_output_for_GCM_cnt
+
+  !***********************************************************************
 
   subroutine marbl_diagnostics_constructor(this, num_elements, num_levels)
 
@@ -785,5 +782,113 @@ contains
   end subroutine marbl_timers_deconstructor
 
   !*****************************************************************************
+
+  subroutine create_registry(this, conc_flux_units)
+
+    use marbl_settings_mod, only : base_bio_on
+    use marbl_settings_mod, only : lflux_gas_o2
+    use marbl_settings_mod, only : lflux_gas_co2
+    use marbl_settings_mod, only : lcompute_nhx_surface_emis
+
+    class(marbl_output_for_GCM_registry_type), intent(out) :: this
+    character(len=*),                          intent(in)  :: conc_flux_units
+
+    character(len=char_len) :: err_message
+
+    ! NOTE: we want to set err_message = "" prior to every conditional
+    !       so we don't inadvertently pass a non-empty string from a
+    !       previous output variable
+    !       E.g. if lflux_gas_o2 = F but lflux_gas_co2 = T, err_message
+    !       should be blank for CO2 flux (assuming base_bio_on = T)
+
+    ! Oxygen Flux
+    err_message = ""
+    if (.not. (base_bio_on .and. lflux_gas_o2)) &
+      err_message = "requires base biotic tracers and lflux_gas_o2"
+    call this%add_registry_entry(short_name = "flux_o2", &
+                                 long_name = "Oxygen Flux", &
+                                 units = conc_flux_units, &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%flux_o2_id, &
+                                 err_message = err_message)
+
+    ! Carbon Dioxide Flux
+    err_message = ""
+    if (.not. (base_bio_on .and. lflux_gas_co2)) &
+      err_message = "requires base biotic tracers and lflux_gas_co2"
+    call this%add_registry_entry(short_name = "flux_co2", &
+                                 long_name = "Carbon Dioxide Flux", &
+                                 units = conc_flux_units, &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%flux_co2_id, &
+                                 err_message = err_message)
+
+    ! NHx Surface Emissions
+    err_message = ""
+    if (.not. (base_bio_on .and. lcompute_nhx_surface_emis)) &
+      err_message = "requires base biotic tracers and lcompute_nhx_surface_emis"
+    call this%add_registry_entry(short_name = "flux_nhx", &
+                                 long_name = "NHx Surface Emissions", &
+                                 units = conc_flux_units, &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%flux_nhx_id, &
+                                 err_message = err_message)
+
+    ! Surface Chlorophyll
+    err_message = ""
+    if (.not. base_bio_on) &
+      err_message = "requires base biotic tracers"
+    call this%add_registry_entry(short_name = "total_surfChl", &
+                                 long_name = "Total Surface Chlorophyll Concentration", &
+                                 units = "mg/m^3", &
+                                 field_source = "surface_flux", &
+                                 id = ofg_ind%total_surfChl_id, &
+                                 err_message = err_message)
+
+    ! Full Depth Chlorophyll
+    err_message = ""
+    if (.not. base_bio_on) &
+      err_message = "requires base biotic tracers"
+    call this%add_registry_entry(short_name = "total_Chl", &
+                                 long_name = "Total Chlorophyll Concentration", &
+                                 units = "mg/m^3", &
+                                 field_source = "interior_tendency", &
+                                 id = ofg_ind%total_Chl_id, &
+                                 err_message = err_message)
+
+  end subroutine create_registry
+
+  !***********************************************************************
+
+  subroutine add_registry_entry(this, short_name, long_name, units, field_source, id, err_message)
+    class(marbl_output_for_GCM_registry_type), intent(inout) :: this
+    character(len=*),                          intent(in)    :: short_name
+    character(len=*),                          intent(in)    :: long_name
+    character(len=*),                          intent(in)    :: units
+    character(len=*),                          intent(in)    :: field_source
+    integer, target,                           intent(in)    :: id
+    character(len=*), optional,                intent(in)    :: err_message
+
+    type(marbl_output_for_GCM_linked_list_type), pointer :: new_entry
+
+    ! Insert new entry at beginning of linked list
+    allocate(new_entry)
+    new_entry%next => this%registered_outputs
+    this%registered_outputs => new_entry
+
+    new_entry%short_name = short_name
+    new_entry%long_name = long_name
+    new_entry%units = units
+    new_entry%field_source = field_source
+    new_entry%id => id
+    if (present(err_message)) then
+      new_entry%err_message = err_message
+    else
+      new_entry%err_message = ""
+    end if
+
+  end subroutine add_registry_entry
+
+  !***********************************************************************
 
 end module marbl_interface_public_types
