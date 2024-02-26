@@ -36,12 +36,14 @@ to 0 may have relative errors that are O(1).
 Other Examples
 --------------
 
-There are five subdirectories that provide information on how MARBL is configured, and three are documented elsewhere on
+There are six subdirectories that provide information on how MARBL is configured, and three are documented elsewhere on
 on this site:
 
 #. ``gen_settings_file/`` generates a :ref:`settings file <marbl_settings.gen>` for a later MARBL run.
 #. ``requested_forcings/`` lists the :ref:`forcing fields MARBL needs <forcing_fields>` in a given configuration.
 #. ``requested_tracers/`` lists the :ref:`tracer tendencies computed <tracer_state>` in a given configuration.
+#. ``available_output/`` lists all the :ref:`additional output fields <additional_output>` available,
+   and also shows what is unavailable due to configuration settings.
 
 The stand-alone driver can also report what tracers are being restored
 (without :ref:`looking at the rest of the forcing fields <restoring_as_forcing>`)

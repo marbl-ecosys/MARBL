@@ -14,8 +14,6 @@ module marbl_interface_public_types
   ! NOTE: when adding a new surface flux or interior tendency output field
   !       (a field that the GCM may need to pass to flux coupler), remember
   !       to add a new index for it as well.
-  !     * There are no interior tendency outputs at this time, so the type
-  !       and ito_ind will need to be created when the first is added
   type, public :: marbl_output_for_GCM_indexing_type
     integer(int_kind) :: flux_o2_id = 0
     integer(int_kind) :: flux_co2_id = 0
