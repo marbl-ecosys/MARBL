@@ -13,7 +13,9 @@ class MARBL_settings_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_settings_file, saved_state_vars_source="settings_file", grid=None, input_file=None, unit_system='cgs'):
+    def __init__(self, default_settings_file, saved_state_vars_source="settings_file",
+                 base_bio_on=True, abio_dic_on=False, grid=None, input_file=None,
+                 unit_system='cgs'):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, read the JSON file, and then populate
             self.settings_dict and self.tracers_dict.
@@ -23,6 +25,10 @@ class MARBL_settings_class(object):
 
         # 1. List of configuration keywords to match in JSON if default_default is a dictionary
         self._config_keyword = []
+        if not base_bio_on:
+            self._config_keyword.append('EXCLUDE_BASE_BIO')
+        if abio_dic_on:
+            self._config_keyword.append('INCLUDE_ABIO_DIC')
         if grid != None:
             self._config_keyword.append('GRID == "%s"' % grid)
         self._config_keyword.append('SAVED_STATE_VARS_SOURCE == "%s"' % saved_state_vars_source)
