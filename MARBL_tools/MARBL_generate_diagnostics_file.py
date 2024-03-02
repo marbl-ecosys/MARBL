@@ -158,7 +158,11 @@ if __name__ == "__main__":
 
     from MARBL_tools import MARBL_settings_class
     from MARBL_tools import MARBL_diagnostics_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in, args.unit_system)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file,
+                                           args.saved_state_vars_source,
+                                           grid=args.grid,
+                                           input_file=args.settings_file_in,
+                                           unit_system=args.unit_system)
     MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings, args.unit_system)
 
     # Write the diagnostic file
