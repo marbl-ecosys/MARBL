@@ -15,7 +15,7 @@ class MARBL_settings_class(object):
 
     def __init__(self, default_settings_file, saved_state_vars_source="settings_file",
                  base_bio_on=True, abio_dic_on=False, grid=None, input_file=None,
-                 unit_system='cgs'):
+                 unit_system='cgs', exclude_dict={}):
         """ Class constructor: set up a dictionary of config keywords for when multiple
             default values are provided, read the JSON file, and then populate
             self.settings_dict and self.tracers_dict.
@@ -46,7 +46,7 @@ class MARBL_settings_class(object):
             MARBL_tools.abort(1)
 
         # 4. Read settings input file
-        self._input_dict = _parse_input_file(input_file)
+        self._input_dict = _parse_input_file(input_file, exclude_dict)
 
         # 5. Use an ordered dictionary for keeping variable, value pairs
         #    Also, tracer information is in its own dictionary (initialized to None)
@@ -610,7 +610,7 @@ def _string_to_substring(str_in, separator):
 
 ################################################################################
 
-def _parse_input_file(input_file):
+def _parse_input_file(input_file, exclude_dict):
     """ 1. Read an input file; ignore blank lines and non-quoted Fortran comments.
         2. Turn lines of the form
               variable = value
@@ -633,6 +633,9 @@ def _parse_input_file(input_file):
             line_list = line_loc.strip().split('=')
             # keys in input_dict are all lowercase to allow case-insensitive match
             var_name = line_list[0].strip().lower()
+            if var_name in exclude_dict:
+                logger.error(exclude_dict[var_name])
+                MARBL_tools.abort(1)
             value = line_list[1].strip()
             val_array = _string_to_substring(value, ',')
             if len(val_array) > 1:
@@ -644,10 +647,7 @@ def _parse_input_file(input_file):
                 # Single value
                 input_dict[var_name] = value
         f.close()
-    except TypeError:
-        # If inputfile == None then the open will result in TypeError
-        pass
-    except:
+    except FileNotFoundError:
         logger.error("input_file '%s' was not found" % input_file)
         MARBL_tools.abort(1)
     return input_dict
