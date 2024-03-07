@@ -266,14 +266,18 @@ tracer_modules :
       subcategory : 1. tracer modules
       units : unitless
       datatype : logical
-      default_value : .true.
+      default_value :
+         default : .true.
+         BASE_BIO_ON == FALSE : .false.
       _append_to_config_keywords : true
    abio_dic_on :
       longname : Control whether abiotic carbon tracer module is active
       subcategory : 1. tracer modules
       units : unitless
       datatype : logical
-      default_value : .false.
+      default_value :
+         default : .false.
+         ABIO_DIC_ON == TRUE : .true.
       _append_to_config_keywords : true
    ciso_on :
       longname : Control whether CISO tracer module is active

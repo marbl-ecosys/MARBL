@@ -110,9 +110,9 @@ if __name__ == "__main__":
     ds = xr.open_dataset(args.netcdf_file)
     DefaultSettings = MARBL_settings_class(args.default_settings_file,
                                            "settings_file",
-                                           None,
-                                           args.settings_file_in,
-                                           args.unit_system
+                                           grid=None,
+                                           input_file=args.settings_file_in,
+                                           unit_system=args.unit_system
                                           )
     MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file,
                                                 DefaultSettings,
