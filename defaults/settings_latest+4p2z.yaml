@@ -268,7 +268,7 @@ tracer_modules :
       datatype : logical
       default_value :
          default : .true.
-         EXCLUDE_BASE_BIO : .false.
+         BASE_BIO_ON == FALSE : .false.
       _append_to_config_keywords : true
    abio_dic_on :
       longname : Control whether abiotic carbon tracer module is active
@@ -277,7 +277,7 @@ tracer_modules :
       datatype : logical
       default_value :
          default : .false.
-         INCLUDE_ABIO_DIC : .true.
+         ABIO_DIC_ON == TRUE : .true.
       _append_to_config_keywords : true
    ciso_on :
       longname : Control whether CISO tracer module is active

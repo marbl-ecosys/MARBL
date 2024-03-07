@@ -1523,7 +1523,7 @@
          "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": {
-            "INCLUDE_ABIO_DIC": ".true.",
+            "ABIO_DIC_ON == TRUE": ".true.",
             "default": ".false."
          },
          "longname": "Control whether abiotic carbon tracer module is active",
@@ -1534,7 +1534,7 @@
          "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": {
-            "EXCLUDE_BASE_BIO": ".false.",
+            "BASE_BIO_ON == FALSE": ".false.",
             "default": ".true."
          },
          "longname": "Control whether the base ecosystem tracer module is active",

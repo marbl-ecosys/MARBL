@@ -23,12 +23,14 @@ class MARBL_settings_class(object):
 
         logger = logging.getLogger(__name__)
 
+        # Check argument types
+        if not (type(base_bio_on) == bool and type(abio_dic_on == bool)):
+          raise ValueError("base_bio_on and abio_dic_on must be type bool")
+
         # 1. List of configuration keywords to match in JSON if default_default is a dictionary
         self._config_keyword = []
-        if not base_bio_on:
-            self._config_keyword.append('EXCLUDE_BASE_BIO')
-        if abio_dic_on:
-            self._config_keyword.append('INCLUDE_ABIO_DIC')
+        self._config_keyword.append(f'BASE_BIO_ON == {str(base_bio_on).upper()}')
+        self._config_keyword.append(f'ABIO_DIC_ON == {str(abio_dic_on).upper()}')
         if grid != None:
             self._config_keyword.append('GRID == "%s"' % grid)
         self._config_keyword.append('SAVED_STATE_VARS_SOURCE == "%s"' % saved_state_vars_source)
