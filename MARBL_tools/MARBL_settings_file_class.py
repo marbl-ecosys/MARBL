@@ -647,6 +647,9 @@ def _parse_input_file(input_file, exclude_dict):
                 # Single value
                 input_dict[var_name] = value
         f.close()
+    except TypeError:
+        # If inputfile == None then the open will result in TypeError
+        pass
     except FileNotFoundError:
         logger.error("input_file '%s' was not found" % input_file)
         MARBL_tools.abort(1)
