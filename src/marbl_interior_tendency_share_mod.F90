@@ -9,7 +9,7 @@ module marbl_interior_tendency_share_mod
   private
 
   public :: marbl_interior_tendency_share_update_particle_flux_from_above
-  public :: marbl_interior_tendency_share_set_used_particle_terms_to_zero
+  public :: marbl_interior_tendency_share_subfloor_particle_terms_to_zero
   public :: marbl_interior_tendency_share_export_variables
   public :: marbl_interior_tendency_share_export_zooplankton
   public :: marbl_interior_tendency_share_export_particulate
@@ -33,18 +33,23 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, sinking_particle)
+  subroutine marbl_interior_tendency_share_subfloor_particle_terms_to_zero(kmt, sinking_particle)
 
     use marbl_interface_private_types, only : column_sinking_particle_type
 
-    integer (int_kind), intent(in) :: k
+    integer (int_kind), intent(in) :: kmt
     type(column_sinking_particle_type), intent(inout) :: sinking_particle
 
-    sinking_particle%sflux_out(k) = c0
-    sinking_particle%hflux_out(k) = c0
-    sinking_particle%remin(k) = c0
+    !! 20231102
+    sinking_particle%hflux_in(kmt+1:) = c0
+    sinking_particle%sflux_in(kmt+1:) = c0
+    !! /20231102
+    sinking_particle%sflux_out(kmt+1:) = c0
+    sinking_particle%hflux_out(kmt+1:) = c0
+    sinking_particle%remin(kmt+1:) = c0
+    sinking_particle%sed_loss(kmt+1:) = c0 !! 20230926
 
-  end subroutine marbl_interior_tendency_share_set_used_particle_terms_to_zero
+  end subroutine marbl_interior_tendency_share_subfloor_particle_terms_to_zero
 
   !***********************************************************************
 

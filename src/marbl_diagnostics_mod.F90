@@ -3909,7 +3909,7 @@ contains
     diags(ind%calcToFloor)%field_2d(1)       = P_CaCO3%to_floor
     diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
     diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
-    diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss)
+    diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss(1:kmt)) !!20230926
     diags(ind%pocToFloor)%field_2d(1)        = POC%to_floor
     diags(ind%pocToSed)%field_2d(1)          = sum(POC%sed_loss)
     diags(ind%SedDenitrif)%field_2d(1)       = sum(sed_denitrif * delta_z)
@@ -3924,7 +3924,7 @@ contains
   end subroutine store_diagnostics_particulates
 
    !***********************************************************************
-
+   ! changed loop limit from km to kmt
   subroutine store_diagnostics_oxygen(marbl_domain, &
        interior_tendency_forcing_ind, interior_tendency_forcings, potemp, salinity, &
        column_o2, o2_production, o2_consumption, marbl_interior_diags)
@@ -3979,7 +3979,7 @@ contains
   end subroutine store_diagnostics_oxygen
 
    !***********************************************************************
-
+   ! changed loop limit from km to kmt
   subroutine store_diagnostics_PAR( marbl_domain, PAR_col_frac, PAR_avg, marbl_interior_diags)
 
     type(marbl_domain_type)      , intent(in)    :: marbl_domain
@@ -3994,12 +3994,12 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                     &
-         km    => marbl_domain%km,                 &
+         kmt    => marbl_domain%kmt,                 &
          diags => marbl_interior_diags%diags,      &
          ind   => marbl_interior_tendency_diag_ind &
          )
 
-    do k=1,km
+    do k=1,kmt
        diags(ind%PAR_avg)%field_3d(k, 1) = sum(PAR_col_frac(:)*PAR_avg(k,:))
     end do
 

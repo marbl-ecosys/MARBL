@@ -1158,7 +1158,7 @@ contains
               full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
     end do
 
-    do k = 1,km
+    do k = 1,kmt !!
        do n = 1, autotroph_cnt
           diags(ind%CISO_d13C(n))%field_3d(k, 1)                = autotroph_d13C(n,k)
           diags(ind%CISO_d14C(n))%field_3d(k, 1)                = autotroph_d14C(n,k)
@@ -1182,7 +1182,7 @@ contains
        end do  ! end loop over autotroph_cnt
     end do  ! end loop over km
 
-    do k = 1,km
+    do k = 1,kmt !!
        diags(ind%CISO_DIC_d13C)%field_3d(k, 1)        = DIC_d13C(k)
        diags(ind%CISO_DIC_d14C)%field_3d(k, 1)        = DIC_d14C(k)
 

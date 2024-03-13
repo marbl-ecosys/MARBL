@@ -173,8 +173,8 @@ contains
     if (.not. ciso_on) return
 
     associate(                                   &
-         column_km          => marbl_domain%km,  &
-         column_kmt         => marbl_domain%kmt, &
+         km          => marbl_domain%km,  &
+         kmt         => marbl_domain%kmt, &
 
          CO3                => interior_tendency_share%CO3_fields,           & ! INPUT carbonate ion
          HCO3               => interior_tendency_share%HCO3_fields,          & ! INPUT bicarbonate ion
@@ -230,10 +230,10 @@ contains
     !-----------------------------------------------------------------------
     ! Allocate memory for column_sinking_particle data types
     !-----------------------------------------------------------------------
-    call PO13C%construct(num_levels=column_km)
-    call PO14C%construct(num_levels=column_km)
-    call P_Ca13CO3%construct(num_levels=column_km)
-    call P_Ca14CO3%construct(num_levels=column_km)
+    call PO13C%construct(num_levels=km)
+    call PO14C%construct(num_levels=km)
+    call P_Ca13CO3%construct(num_levels=km)
+    call P_Ca14CO3%construct(num_levels=km)
 
     !----------------------------------------------------------------------------------------
     ! Set cell attributes
@@ -259,7 +259,7 @@ contains
     !  Set ratios
     !-----------------------------------------------------------------------
 
-    do k = 1, column_km
+    do k = 1, kmt
 
        !-----------------------------------------------------------------------
        !  set local 13C/12C ratios, assuming ecosystem carries 12C (C=C12+C13+C14)
@@ -658,7 +658,7 @@ contains
        ! Update particulate terms from prior level for next level
        !-----------------------------------------------------------------------
 
-       if  (k < column_km) then
+       if  (k < km) then !!20230926 - DS - redundant conditional now loop is to kmt?
           call update_particulate_terms_from_prior_level(k+1, PO13C, P_Ca13CO3)
 
           call update_particulate_terms_from_prior_level(k+1, PO14C, P_Ca14CO3)
@@ -724,33 +724,33 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce(auto_ind, column_kmt, zero_mask, &
+  subroutine marbl_ciso_interior_tendency_autotroph_zero_consistency_enforce(auto_ind, kmt, zero_mask, &
              autotroph_tracer_indices, autotroph_local)
 
     use marbl_interface_private_types, only : marbl_living_tracer_index_type
 
     integer,                              intent(in)    :: auto_ind
-    integer,                              intent(in)    :: column_kmt
-    logical,                              intent(in)    :: zero_mask(column_kmt)
+    integer,                              intent(in)    :: kmt
+    logical,                              intent(in)    :: zero_mask(kmt)
     type(marbl_living_tracer_index_type), intent(in)    :: autotroph_tracer_indices
     type(autotroph_local_type),           intent(inout) :: autotroph_local
 
     if (.not. ciso_on) return
 
     where (zero_mask)
-      autotroph_local%C13(auto_ind,1:column_kmt) = c0
-      autotroph_local%C14(auto_ind,1:column_kmt) = c0
+      autotroph_local%C13(auto_ind,1:kmt) = c0
+      autotroph_local%C14(auto_ind,1:kmt) = c0
     end where
 
     if (autotroph_tracer_indices%Ca13CO3_ind > 0) then
       where (zero_mask)
-        autotroph_local%Ca13CO3(auto_ind,1:column_kmt) = c0
+        autotroph_local%Ca13CO3(auto_ind,1:kmt) = c0
       end where
     end if
 
     if (autotroph_tracer_indices%Ca14CO3_ind > 0) then
       where (zero_mask)
-        autotroph_local%Ca14CO3(auto_ind,1:column_kmt) = c0
+        autotroph_local%Ca14CO3(auto_ind,1:kmt) = c0
       end where
     end if
 
@@ -1070,7 +1070,7 @@ contains
     use marbl_settings_mod , only : caco3_bury_thres_iopt_fixed_depth
     use marbl_settings_mod , only : caco3_bury_thres_depth
     use marbl_settings_mod , only : caco3_bury_thres_omega_calc
-    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_set_used_particle_terms_to_zero
+    use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_subfloor_particle_terms_to_zero
 
     integer (int_kind),                       intent(in)    :: k                 ! vertical model level
     type(marbl_domain_type),                  intent(in)    :: domain
@@ -1099,8 +1099,8 @@ contains
     !-----------------------------------------------------------------------
 
     associate(                                                                &
-         column_km         => domain%km                                     , & ! IN
-         column_kmt        => domain%kmt                                    , & ! IN
+         km         => domain%km                                     , & ! IN
+         kmt        => domain%kmt                                    , & ! IN
          column_delta_z    => domain%delta_z(k)                             , & ! IN
          column_zw         => domain%zw(k)                                  , & ! IN
          O2_loc            => tracer_local(marbl_tracer_indices%O2_ind,k)   , & ! IN
@@ -1142,7 +1142,7 @@ contains
 
     dz_loc = column_delta_z
 
-    if (k <= column_kmt) then
+    if (k <= kmt) then
 
        dzr_loc = c1 / dz_loc
 
@@ -1209,9 +1209,9 @@ contains
             ((POC_ciso%sflux_in(k) - POC_ciso%sflux_out(k)) + &
              (POC_ciso%hflux_in(k) - POC_ciso%hflux_out(k))) * dzr_loc
 
-    else ! k > column_kmt
-      call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, POC_ciso)
-      call marbl_interior_tendency_share_set_used_particle_terms_to_zero(k, P_CaCO3_ciso)
+    else ! k > kmt
+      call marbl_interior_tendency_share_subfloor_particle_terms_to_zero(k, POC_ciso)
+      call marbl_interior_tendency_share_subfloor_particle_terms_to_zero(k, P_CaCO3_ciso)
       dzr_loc = c0
     endif
 
@@ -1234,7 +1234,7 @@ contains
     !       Here a constant depth is used for lysocline.
     !-----------------------------------------------------------------------
 
-    if (k == column_kmt) then
+    if (k == kmt) then
 
        POC_ciso%to_floor = POC_ciso%sflux_out(k) + POC_ciso%hflux_out(k)
 
@@ -1287,7 +1287,7 @@ contains
           POC_ciso%remin(1:k) = POC_ciso%remin(1:k) &
                + ((POC_ciso%to_floor - POC_ciso%sed_loss(k)) * bot_flux_to_tend(1:k))
        endif
-    endif  ! k == column_kmt
+    endif  ! k == kmt
 
     end associate
 
