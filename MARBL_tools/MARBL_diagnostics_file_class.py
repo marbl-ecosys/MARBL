@@ -53,10 +53,11 @@ class MARBL_diagnostics_class(object):
                 diags_to_delete.append(diag_name)
                 continue
 
-            #    iii. frequency and operator should always be lists
+            #    iii. frequency, operator, and diag_mode should always be lists
             if not isinstance(self.diagnostics_dict[diag_name]['frequency'], list):
                 self.diagnostics_dict[diag_name]['frequency'] = [self.diagnostics_dict[diag_name]['frequency']]
                 self.diagnostics_dict[diag_name]['operator'] = [self.diagnostics_dict[diag_name]['operator']]
+                self.diagnostics_dict[diag_name]['diag_mode'] = [self.diagnostics_dict[diag_name]['diag_mode']]
 
             #    iv. update units
             fix_units = {}
