@@ -4,6 +4,7 @@ from .MARBL_generate_diagnostics_file import generate_diagnostics_file
 from .MARBL_diagnostics_file_class import MARBL_diagnostics_class
 from .MARBL_utils import settings_dictionary_is_consistent
 from .MARBL_utils import diagnostics_dictionary_is_consistent
+from .MARBL_utils import valid_diag_modes
 from .MARBL_share import abort
 from .MARBL_share import LogFormatter
 from .MARBL_share import sort

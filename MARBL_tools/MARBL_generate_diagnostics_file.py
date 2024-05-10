@@ -45,13 +45,13 @@ optional arguments:
   -a, --append          Append to existing diagnostics file (default: False)
 """
 
-import MARBL_utils
 #######################################
 
 def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, diag_mode="full", append=False):
     """ Produce a list of MARBL diagnostic frequencies and operators from a JSON parameter file
     """
 
+    from MARBL_tools import valid_diag_modes
     import logging
     logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, diag_mode
     # is also a dictionary containing frequency and operator information. Note that
     # string values of frequency and operator are converted to lists of len 1 when the
     # JSON file that generates this list is processed
-    diag_mode_opts = MARBL_utils.diag_mode_opts()
+    diag_mode_opts = valid_diag_modes()
     diag_mode_in = diag_mode_opts.index(diag_mode)
     for diag_name in sorted(MARBL_diagnostics.diagnostics_dict.keys()):
         frequencies = MARBL_diagnostics.diagnostics_dict[diag_name]['frequency']
@@ -107,6 +107,7 @@ def _parse_args(marbl_root):
     """
 
     import argparse
+    from MARBL_tools import valid_diag_modes
 
     parser = argparse.ArgumentParser(description="Generate a MARBL settings file from a JSON file",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -144,7 +145,7 @@ def _parse_args(marbl_root):
 
     # Diagnostic mode (level of output to include)
     parser.add_argument('-m', '--diag-mode', action='store', dest='diag_mode', default='full',
-                        choices=MARBL_utils.diag_mode_opts(),
+                        choices=valid_diag_modes(),
                         help='Level of output to include')
 
     # Append to existing diagnostics file?

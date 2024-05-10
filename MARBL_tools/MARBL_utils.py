@@ -8,7 +8,7 @@
 #                            PUBLIC MODULE METHODS                             #
 ################################################################################
 
-def diag_mode_opts():
+def valid_diag_modes():
     """ Return ordered list of the valid values for diag_mode.
         (Ordered list => selecting diag mode includes variables)
     """
@@ -98,7 +98,7 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
            ii.  If they are all lists, must be same length
         5. Allowable frequencies are never, low, medium, and high
         6. Allowable operators are instantaneous, average, minimum, and maximum
-        7. Allowable diag_modes are defined in diag_mode_opts()
+        7. Allowable diag_modes are defined in valid_diag_modes()
     """
 
     import logging
@@ -157,11 +157,11 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
 
         # 5. Allowable frequencies are never, low, medium, and high
         # 6. Allowable operators are instantaneous, average, minimum, and maximum
-        # 7. Allowable diag_modes are defined in diag_mode_opts()
+        # 7. Allowable diag_modes are defined in valid_diag_modes()
         #    * "none" should not appear in the dictionary
         ok_freqs = ['never', 'low', 'medium', 'high']
         ok_ops = ['instantaneous', 'average', 'minimum', 'maximum']
-        ok_dms = diag_mode_opts()[1:] # do not include 'none' in ok_dms
+        ok_dms = valid_diag_modes()[1:] # do not include 'none' in ok_dms
         invalid_freq_op_dm = False
         if not isinstance(diag_dict['frequency'], dict):
             if isinstance(diag_dict['frequency'], list):
