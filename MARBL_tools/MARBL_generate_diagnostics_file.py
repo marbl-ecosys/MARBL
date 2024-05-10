@@ -95,7 +95,7 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, diag_mode
         for freq, op, dm in zip(frequencies, operators, diag_modes):
             if diag_mode_in >= diag_mode_opts.index(dm):
                 freq_op.append(freq + '_' + op)
-            else:
+            elif not freq_op: # Only append "never_{op}" if freq_op is empty list
                 freq_op.append('never_' + op)
         fout.write("%s : %s\n" % (diag_name, ", ".join(freq_op)))
     fout.close()
