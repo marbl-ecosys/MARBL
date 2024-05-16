@@ -45,14 +45,25 @@ optional arguments:
   -a, --append          Append to existing diagnostics file (default: False)
 """
 
+if __name__ == "__main__":
+    # We need marbl_root in python path so we can import MARBL_tools from generate_settings_file()
+    import argparse
+    import os
+    import sys
+    marbl_root = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
+    sys.path.append(marbl_root)
+    from MARBL_tools import MARBL_settings_class
+    from MARBL_tools import MARBL_diagnostics_class
+
+import logging
+from MARBL_tools.MARBL_utils import valid_diag_modes
+
 #######################################
 
 def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, diag_mode="full", append=False):
     """ Produce a list of MARBL diagnostic frequencies and operators from a JSON parameter file
     """
 
-    from MARBL_tools import valid_diag_modes
-    import logging
     logger = logging.getLogger(__name__)
 
     if not append:
@@ -106,9 +117,6 @@ def _parse_args(marbl_root):
     """ Parse command line arguments
     """
 
-    import argparse
-    from MARBL_tools import valid_diag_modes
-
     parser = argparse.ArgumentParser(description="Generate a MARBL settings file from a JSON file",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
@@ -157,8 +165,6 @@ def _parse_args(marbl_root):
 #######################################
 
 if __name__ == "__main__":
-    # We need marbl_root in python path so we can import MARBL_tools from generate_settings_file()
-    import sys, os
     marbl_root = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
     sys.path.append(marbl_root)
 
@@ -166,11 +172,8 @@ if __name__ == "__main__":
     args = _parse_args(marbl_root)
 
     # Set up logging
-    import logging
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
-    from MARBL_tools import MARBL_settings_class
-    from MARBL_tools import MARBL_diagnostics_class
     DefaultSettings = MARBL_settings_class(args.default_settings_file,
                                            args.saved_state_vars_source,
                                            grid=args.grid,

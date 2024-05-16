@@ -9,8 +9,10 @@
 ################################################################################
 
 def valid_diag_modes():
-    """ Return ordered list of the valid values for diag_mode.
-        (Ordered list => selecting diag mode includes variables)
+    """ Return list of the valid values for diag_mode.
+        Order of list => selecting specific diag mode includes all
+        diagnostics with lower index as well (e.g. "diag_mode = full"
+        will also provide diagnostics defined with minimal diag mode)
     """
     return ['none', 'minimal', 'full']
 
