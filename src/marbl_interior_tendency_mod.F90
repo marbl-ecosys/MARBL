@@ -378,8 +378,8 @@ contains
 
        call compute_scavenging(k, km, marbl_tracer_indices, tracer_local(:,:), &
             POC, P_CaCO3, P_SiO2, dust, Fefree(:), Fe_scavenge_rate(:), &
-            Fe_scavenge(:), Lig_scavenge(:), marbl_status_log, autotroph_local, &
-            fesedflux(:), feRedsedflux(:), feventflux(:))
+            Fe_scavenge(:), Lig_scavenge(:), marbl_status_log, &
+            fesedflux(:), feventflux(:))
 
        if (marbl_status_log%labort_marbl) then
           call marbl_status_log%log_error_trace('compute_scavenging()', subname)
@@ -388,7 +388,7 @@ contains
 
        call compute_large_detritus_prod(k, domain, marbl_tracer_indices, zooplankton_derived_terms, &
             autotroph_derived_terms, Fe_scavenge(:),                    &
-            POC, POP, PON, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron,   &
+            POC, POP, PON, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, P_iron,    &
             dissolved_organic_matter%DOP_loss_P_bal(k),                 &
             dissolved_organic_matter%DON_loss_N_bal(k), marbl_status_log)
 
@@ -1154,8 +1154,6 @@ contains
     use marbl_settings_mod,  only : gQsi_0
     use marbl_settings_mod,  only : gQsi_max
     use marbl_settings_mod,  only : gQsi_min
-    use marbl_settings_mod,  only : gQ_Fe_kFe_thres
-    use marbl_settings_mod,  only : gQ_Si_kSi_thres
     use marbl_settings_mod,  only : QCaCO3_max
 
     integer,                            intent(in)    :: km
@@ -1687,8 +1685,6 @@ contains
     !-----------------------------------------------------------------------
     !  Get nutrient uptakes by small phyto based on calculated C fixation
     !-----------------------------------------------------------------------
-
-    use marbl_settings_mod, only : Q
 
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
     type(autotroph_derived_terms_type), intent(inout) :: autotroph_derived_terms
@@ -2262,7 +2258,6 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
              zooplankton_derived_terms, autotroph_derived_terms, &
              dz1, tracer_local, dissolved_organic_matter)
 
-    use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : DOC_reminR_light
     use marbl_settings_mod, only : DON_reminR_light
     use marbl_settings_mod, only : DOP_reminR_light
@@ -2399,7 +2394,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
   subroutine compute_scavenging(k, km, marbl_tracer_indices, &
        tracer_local, POC, P_CaCO3, P_SiO2, dust, &
        Fefree, Fe_scavenge_rate, Fe_scavenge, Lig_scavenge, &
-       marbl_status_log, autotroph_local, fesedflux, feRedsedflux, feventflux)
+       marbl_status_log, fesedflux, feventflux)
 
     use marbl_constants_mod, only : c3, c4
     use marbl_settings_mod , only : Lig_cnt
@@ -2417,14 +2412,12 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
     type(column_sinking_particle_type), intent(in)    :: P_CaCO3
     type(column_sinking_particle_type), intent(in)    :: P_SiO2
     type(column_sinking_particle_type), intent(inout) :: dust
-    type(autotroph_local_type),         intent(in)    :: autotroph_local
     real(r8),                           intent(out)   :: Fefree(km)
     real(r8),                           intent(out)   :: Fe_scavenge_rate(km)
     real(r8),                           intent(out)   :: Fe_scavenge(km)
     real(r8),                           intent(out)   :: Lig_scavenge(km)
     type(marbl_log_type),               intent(inout) :: marbl_status_log
      real(r8),            intent(in)    :: fesedflux(km)           ! sedimentary Fe input
-     real(r8),            intent(in)    :: feRedsedflux(km)        ! sedimentary Red Fe input
      real(r8),            intent(in)    :: feventflux(km)          ! vent Fe input
 
 
@@ -2630,7 +2623,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
 
    subroutine compute_large_detritus_prod(k, domain, marbl_tracer_indices, &
         zooplankton_derived_terms, autotroph_derived_terms, &
-        Fe_scavenge, POC, POP, PON, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, dust, P_iron, &
+        Fe_scavenge, POC, POP, PON, P_CaCO3, P_CaCO3_ALT_CO2, P_SiO2, P_iron, &
         DOP_loss_P_bal, DON_loss_N_bal, marbl_status_log)
 
      use marbl_settings_mod, only : Jint_Ptot_thres
@@ -2656,7 +2649,6 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
      type(column_sinking_particle_type),   intent(inout) :: P_CaCO3
      type(column_sinking_particle_type),   intent(inout) :: P_CaCO3_ALT_CO2
      type(column_sinking_particle_type),   intent(inout) :: P_SiO2
-     type(column_sinking_particle_type),   intent(inout) :: dust
      type(column_sinking_particle_type),   intent(inout) :: P_iron
      real(r8),                             intent(out)   :: DOP_loss_P_bal
      real(r8),                             intent(out)   :: DON_loss_N_bal
@@ -2773,13 +2765,6 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
                 + autotroph_settings(auto_ind)%loss_poc * auto_loss(auto_ind))
         endif
      end do
-
-     !-----------------------------------------------------------------------
-     ! Dust prod now set in compute_scavenging
-     !-----------------------------------------------------------------------
-
- !    dust%prod(k) = c0
-
 
      end associate
    end subroutine compute_large_detritus_prod

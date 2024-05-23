@@ -4543,15 +4543,13 @@ contains
       integrated_terms = P_iron%sed_loss - fesedflux - feRedsedflux - feventflux - (dust%remin * dust_to_Fe))
 
 
-  !  if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
-  !     write(log_message,"(A,E11.3e3,A,E11.3e3)") &
-  !          'abs(Jint_Fetot)=', abs(diags(ind%Jint_Fetot)%field_2d(1)), &
-  !           ' exceeds Jint_Fetot_thres=', Jint_Fetot_thres
-  !     call marbl_status_log%log_error(log_message, subname, ElemInd=1)
-
-
-  !    return
-  !  end if
+   if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
+      write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+           'abs(Jint_Fetot)=', abs(diags(ind%Jint_Fetot)%field_2d(1)), &
+            ' exceeds Jint_Fetot_thres=', Jint_Fetot_thres
+      call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+     return
+   end if
 
     end associate
 
