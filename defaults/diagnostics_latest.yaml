@@ -794,7 +794,7 @@ POP_FLUX_((particulate_flux_ref_depth_str)) :
    vertical_grid : none
    frequency : medium
    operator : average
-PON_FLUX_((particulate_flux_ref_depth_str)) : 
+PON_FLUX_((particulate_flux_ref_depth_str)) :
    longname : PON Flux at ((particulate_flux_ref_depth_str))
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -948,13 +948,13 @@ POP_REMIN_PO4 :
    vertical_grid : layer_avg
    frequency : low
    operator : average
-PON_FLUX_IN : 
+PON_FLUX_IN :
    longname : PON Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-PON_PROD : 
+PON_PROD :
    longname : PON Production
    units : mmol/m^3/s
    vertical_grid : layer_avg

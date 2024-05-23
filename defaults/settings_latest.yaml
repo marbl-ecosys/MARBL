@@ -152,7 +152,7 @@ _tracer_list :
       dependencies :
          lvariable_NtoC : .true.
       long_name : ((autotroph_lname)) Nitrogen
-      units : mmol/m^3   
+      units : mmol/m^3
    # Per-autotroph (ciso only)
    ((autotroph_sname))13C :
       dependencies :
@@ -272,7 +272,7 @@ general_parms :
       subcategory : 2. config flags
       units : unitless
       datatype : logical
-      default_value : .true.  
+      default_value : .true.
    ladjust_bury_coeff :
       longname : Control if bury coefficients are adjusted (rather than constant)
       subcategory : 2. config flags
@@ -904,12 +904,12 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 7.5e-3
                ((autotroph_sname)) == "diat" : 8.3e-3
                ((autotroph_sname)) == "diaz" : 3.7e-3
-         POpt : 
+         POpt :
             longname : PO4 threshold in uptake ratio computations
             subcategory : 10. autotrophs
             units : unitless
             datatype : real
-            default_value : 
+            default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.8
                ((autotroph_sname)) == "diat" : 0.8
@@ -934,12 +934,12 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 1.1e-1
                ((autotroph_sname)) == "diat" : 1.1e-1
                ((autotroph_sname)) == "diaz" : 1.4e-1
-         NOpt : 
+         NOpt :
             longname : N threshold in uptake ratio computations
             subcategory : 10. autotrophs
             units : unitless
             datatype : real
-            default_value : 
+            default_value :
                default : 1e34
                ((autotroph_sname)) == "sp" : 0.4
                ((autotroph_sname)) == "diat" : 0.4
