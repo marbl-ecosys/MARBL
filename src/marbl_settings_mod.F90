@@ -96,19 +96,20 @@ module marbl_settings_mod
   real(r8), parameter :: &
        Q_10      =   1.7_r8,                                 & ! factor for temperature dependence (non-dim)
        xkw_coeff =   6.97e-9_r8,                             & ! in s/cm, from a = 0.251 cm/hr s^2/m^2 in Wannikhof 2014
-       parm_Red_D_C_P  = 117.0_r8,                           & ! carbon:phosphorus
-       parm_Red_D_N_P  =  16.0_r8,                           & ! nitrogen:phosphorus
-       parm_Red_D_O2_P = 170.0_r8,                           & ! oxygen:phosphorus
-       parm_Remin_D_O2_P = 138.0_r8,                         & ! oxygen:phosphorus
-       parm_Red_P_C_P  = parm_Red_D_C_P,                     & ! carbon:phosphorus
-       parm_Red_D_C_N  = parm_Red_D_C_P/parm_Red_D_N_P,      & ! carbon:nitrogen
-       parm_Red_P_C_N  = parm_Red_D_C_N,                     & ! carbon:nitrogen
-       parm_Red_D_C_O2 = parm_Red_D_C_P/parm_Red_D_O2_P,     & ! carbon:oxygen
-       parm_Remin_D_C_O2 = parm_Red_D_C_P/parm_Remin_D_O2_P, & ! carbon:oxygen
-       parm_Red_P_C_O2 = parm_Red_D_C_O2,                    & ! carbon:oxygen
+
+       parm_Red_D_C_P  = 112.0_r8,                       & ! carbon:phosphorus
+       parm_Red_D_N_P  =  16.0_r8,                       & ! nitrogen:phosphorus
+       parm_Remin_D_O2_P = 112.0_r8,                     & ! oxygen:phosphorus
+       parm_Red_D_O2_P = (parm_Remin_D_O2_P + 32.0_r8),  & ! oxygen:phosphorus
+       parm_Red_P_C_P  = parm_Red_D_C_P,                 & ! carbon:phosphorus
+       parm_Red_D_C_N  = parm_Red_D_C_P/parm_Red_D_N_P,  & ! carbon:nitrogen
+       parm_Red_P_C_N  = parm_Red_D_C_N,                 & ! carbon:nitrogen
+       parm_Red_D_C_O2 = parm_Red_D_C_P/parm_Red_D_O2_P, & ! carbon:oxygen **
+       parm_Remin_D_C_O2 = parm_Red_D_C_P/parm_Remin_D_O2_P, & ! carbon:oxygen **
+       parm_Red_P_C_O2 = parm_Red_D_C_O2,                & ! carbon:oxygen **
        parm_Red_Fe_C   = 3.0e-6_r8,                          & ! iron:carbon
-       parm_Red_D_C_O2_diaz = parm_Red_D_C_P/150.0_r8          ! carbon:oxygen
-                                                               ! for diazotrophs
+       parm_Red_D_C_O2_diaz = parm_Red_D_C_P/(parm_Remin_D_O2_P + 2.0_r8)! carbon:oxygen **
+                                                           ! for diazotrophs
 
   ! Misc. Rate constants
   real(r8), parameter :: &
@@ -130,11 +131,12 @@ module marbl_settings_mod
       caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
                                           !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
-      spc_poc_fac           = 0.13_r8,  & ! small phyto grazing factor (1/mmolC)
-      f_graze_sp_poc_lim    = 0.36_r8,  &
+      spc_poc_fac           = 0.04_r8,  & ! small phyto grazing factor (1/mmolC)
+      f_graze_sp_poc_lim    = 0.33_r8,  &
       f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
+
                                           !    production and CaCO3 production
-      f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
+      f_graze_si_remin      = 0.22_r8,  & ! fraction of diatom Si grazing which is remin
       f_toDON               = 0.05_r8,  & ! fraction of reamining_N to DON
       f_toDOP               = 0.15_r8     ! fraction of remaining_P to DOP
 
@@ -143,8 +145,9 @@ module marbl_settings_mod
 
   ! SET parmaeters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
-      Q             = 16.0_r8 / 117.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
-      Qfe_zoo       = 3.0e-6_r8           ! zooplankton Fe/C ratio
+      Q             = 16.0_r8 / 112.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
+      Qfe_zoo       = 6.0e-6_r8           ! zooplankton Fe/C ratio
+
       ! parameters in GalbraithMartiny Pquota Model^M
       !POpt            = 0.6_r8,        &
       !gQp_max           = 0.01111111_r8,  & ! maximum NP = 16
@@ -154,10 +157,12 @@ module marbl_settings_mod
 
   ! loss term threshold parameters, chl:c ratios
   real(r8), parameter :: &
-      thres_z1_auto     =  80.0e2_r8, & ! autotroph threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_auto     = 120.0e2_r8, & ! autotroph threshold = 0 for z deeper than this (cm)
-      thres_z1_zoo      = 110.0e2_r8, & ! zooplankton threshold = C_loss_thres for z shallower than this (cm)
-      thres_z2_zoo      = 150.0e2_r8, & ! zooplankton threshold = 0 for z deeper than this (cm)
+
+      thres_z1_auto     = 50.0e2_r8, & ! autotroph threshold = C_loss_thres for z shallower than this (cm)
+      thres_z2_auto     = 100.0e2_r8, & ! autotroph threshold = 0 for z deeper than this (cm)
+      thres_z1_zoo      = 40.0e2_r8, & ! zooplankton threshold = C_loss_thres for z shallower than this (cm)
+      thres_z2_zoo      = 80.0e2_r8, & ! zooplankton threshold = 0 for z deeper than this (cm)
+
       CaCO3_temp_thres1 = 4.0_r8,     & ! upper temp threshold for CaCO3 prod
       CaCO3_temp_thres2 = -2.0_r8,    & ! lower temp threshold
       CaCO3_sp_thres    = 2.5_r8        ! bloom condition thres (mmolC/m3)
@@ -3035,3 +3040,4 @@ contains
   !*****************************************************************************
 
 end module marbl_settings_mod
+

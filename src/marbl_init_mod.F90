@@ -857,7 +857,9 @@ contains
       interior_tendency_forcings(:)%metadata%varname = ''
 
       ! Surface fluxes that influence interior forcing
+
       do id=1,size(interior_tendency_forcings)
+
         found = .false.
         ! Dust Flux
         if (id .eq. ind%dustflux_id) then
@@ -911,6 +913,22 @@ contains
         if (id .eq. ind%fesedflux_id) then
           found = .true.
           interior_tendency_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
+        end if
+
+        ! Iron Red Sediment Flux
+        if (id .eq. ind%feRedsedflux_id) then
+          found = .true.
+          interior_tendency_forcings(id)%metadata%varname     = 'Iron Red Sediment Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
+        end if
+
+        ! Iron Vent Flux
+        if (id .eq. ind%feventflux_id) then
+          found = .true.
+          interior_tendency_forcings(id)%metadata%varname     = 'Iron Vent Flux'
           interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
           call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if

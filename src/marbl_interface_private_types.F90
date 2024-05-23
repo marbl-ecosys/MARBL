@@ -84,6 +84,8 @@ module marbl_interface_private_types
     real(r8), allocatable :: remaining_N_don(:,:) ! remaining_N from grazing routed to DON pool
     real(r8), allocatable :: remaining_N_pon(:,:) ! remaining_N from grazing routed to PON pool
     real(r8), allocatable :: remaining_N_din(:,:) ! remaining_N from grazing routed to remin
+    real(r8), allocatable :: remaining_Fe_dfe(:,:) ! remaining_Fe from grazing routed to remin
+    real(r8), allocatable :: remaining_Fe_pfe(:,:) ! remaining_Fe from grazing routed to sinking particulate
 
 
   contains
@@ -420,6 +422,8 @@ module marbl_interface_private_types
      integer(int_kind) :: salinity_id    = 0
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
+     integer(int_kind) :: feRedsedflux_id   = 0
+     integer(int_kind) :: feventflux_id   = 0
      integer(int_kind) :: o2_consumption_scalef_id = 0
      integer(int_kind) :: p_remin_scalef_id = 0
 
@@ -634,6 +638,8 @@ module marbl_interface_private_types
     integer(int_kind) :: Lig_photochem
     integer(int_kind) :: Lig_deg
     integer(int_kind) :: fesedflux
+    integer(int_kind) :: feRedsedflux
+    integer(int_kind) :: feventflux
 
     ! Particulate 2D diags
     integer(int_kind) :: POC_FLUX_at_ref_depth
@@ -687,6 +693,7 @@ module marbl_interface_private_types
     ! Autotroph 3D diags
     integer(int_kind), allocatable :: Qp(:)
     integer(int_kind), allocatable :: Qn(:)
+    integer(int_kind), allocatable :: Qfe(:)
     integer(int_kind), allocatable :: photoC(:)
     integer(int_kind), allocatable :: photoC_NO3(:)
     integer(int_kind), allocatable :: photoFe(:)
@@ -1112,6 +1119,8 @@ contains
     allocate(self%remaining_N_don(autotroph_cnt, km))
     allocate(self%remaining_N_pon(autotroph_cnt, km))
     allocate(self%remaining_N_din(autotroph_cnt, km))
+    allocate(self%remaining_Fe_dfe(autotroph_cnt, km))
+    allocate(self%remaining_Fe_pfe(autotroph_cnt, km))
 
   end subroutine autotroph_derived_terms_constructor
 
@@ -1172,6 +1181,8 @@ contains
     deallocate(self%remaining_N_don)
     deallocate(self%remaining_N_pon)
     deallocate(self%remaining_N_din)
+    deallocate(self%remaining_Fe_dfe)
+    deallocate(self%remaining_Fe_pfe)
 
   end subroutine autotroph_derived_terms_destructor
 
@@ -1842,6 +1853,14 @@ contains
       ! Iron Sediment Flux
       forcing_cnt = forcing_cnt + 1
       this%fesedflux_id = forcing_cnt
+
+      ! Iron Red Sediment Flux
+      forcing_cnt = forcing_cnt + 1
+      this%feRedsedflux_id = forcing_cnt
+
+      ! Iron Vent Sediment Flux
+      forcing_cnt = forcing_cnt + 1
+      this%feventflux_id = forcing_cnt
 
       ! O2 Consumption Scale Factor
       if (lo2_consumption_scalef) then

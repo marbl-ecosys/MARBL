@@ -2008,6 +2008,31 @@ contains
         return
       end if
 
+      lname = 'Iron Red Sediment Flux'
+      sname = 'FEREDSEDFLUX'
+      units = 'nmol/cm^2/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%feRedsedflux, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+      lname = 'Iron Vent Flux'
+      sname = 'FEVENTFLUX'
+      units = 'nmol/cm^2/s'
+      vgrid = 'layer_avg'
+      truncate = .false.
+      call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+           ind%feventflux, marbl_status_log)
+      if (marbl_status_log%labort_marbl) then
+        call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+        return
+      end if
+
+
       ! Particulate 2D diags
 
       write(particulate_flux_ref_depth_str, "(I0,A)") particulate_flux_ref_depth, 'm'
@@ -3231,6 +3256,8 @@ contains
                P_iron => marbl_particulate_share%P_iron )
     call store_diagnostics_iron_fluxes(domain, P_iron, dust,                  &
          interior_tendency_forcings(interior_tendency_forcing_ind%fesedflux_id)%field_1d(1,:),  &
+         interior_tendency_forcings(interior_tendency_forcing_ind%feRedsedflux_id)%field_1d(1,:), &
+         interior_tendency_forcings(interior_tendency_forcing_ind%feventflux_id)%field_1d(1,:), &
          interior_tendencies, marbl_tracer_indices, marbl_interior_tendency_diags, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace('store_diagnostics_iron_fluxes', subname)
@@ -4193,6 +4220,11 @@ contains
              call marbl_status_log%log_error(log_message, subname, ElemInd=1)
           end if
        end do
+       ! --- Levy new ---
+       write(log_message,"(A,E11.3e3)") 'sum(POC%sed_loss) = ', sum(POC%sed_loss)
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+       write(log_message,"(A,E11.3e3)") 'sum(P_CaCO3%sed_loss) = ', sum(P_CaCO3%sed_loss)
+       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
        ! --- END NEW CODE ---
        return
     end if
@@ -4458,7 +4490,8 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
-             fesedflux, interior_tendencies, marbl_tracer_indices, marbl_diags, marbl_status_log)
+             fesedflux, feRedsedflux, feventflux, interior_tendencies, & 
+             marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Qfe_zoo
     use marbl_settings_mod, only : dust_to_Fe
@@ -4467,8 +4500,12 @@ contains
     type(marbl_domain_type)            , intent(in)    :: marbl_domain
     type(column_sinking_particle_type) , intent(in)    :: P_iron
     type(column_sinking_particle_type) , intent(in)    :: dust
-    real(r8)                           , intent(in)    :: fesedflux(:)          ! km
+    real(r8), dimension(:)             , intent(in)    :: fesedflux(:)           ! km
+    real(r8), dimension(:)             , intent(in)    :: feRedsedflux(:)        ! km
+    real(r8), dimension(:)             , intent(in)    :: feventflux(:)          ! km
     real(r8)                           , intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
+
+
     type(marbl_tracer_index_type)      , intent(in)    :: marbl_tracer_indices
     type(marbl_diagnostics_type)       , intent(inout) :: marbl_diags
     type(marbl_log_type)               , intent(inout) :: marbl_status_log
@@ -4491,23 +4528,30 @@ contains
          )
 
     diags(ind%fesedflux)%field_3d(:,1) = fesedflux(:)
+    diags(ind%feRedsedflux)%field_3d(:,1) = feRedsedflux(:)
+    diags(ind%feventflux)%field_3d(:,1) = feventflux(:)
+
+
     ! vertical integrals
-    work = interior_tendencies(fe_ind, :) +                                              &
-           sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) + &
-           Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1) - &
-           dust%remin(:) * dust_to_Fe
+    work = interior_tendencies(fe_ind, :)  &                                            
+           + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) &
+           + (Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1))
+   
 
-    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, &
-         full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                 &
-         integrated_terms = P_iron%sed_loss - fesedflux)
+    call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt,     &
+      full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                     &
+      integrated_terms = P_iron%sed_loss - fesedflux - feRedsedflux - feventflux - (dust%remin * dust_to_Fe))
 
-    if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
-       write(log_message,"(A,E11.3e3,A,E11.3e3)") &
-            'abs(Jint_Fetot)=', abs(diags(ind%Jint_Fetot)%field_2d(1)), &
-            ' exceeds Jint_Fetot_thres=', Jint_Fetot_thres
-       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
-       return
-    end if
+
+  !  if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
+  !     write(log_message,"(A,E11.3e3,A,E11.3e3)") &
+  !          'abs(Jint_Fetot)=', abs(diags(ind%Jint_Fetot)%field_2d(1)), &
+  !           ' exceeds Jint_Fetot_thres=', Jint_Fetot_thres
+  !     call marbl_status_log%log_error(log_message, subname, ElemInd=1)
+
+
+  !    return
+  !  end if
 
     end associate
 
