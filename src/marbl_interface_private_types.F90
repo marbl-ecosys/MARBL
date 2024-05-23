@@ -36,7 +36,7 @@ module marbl_interface_private_types
     real(r8), allocatable :: thetaC(:,:)          ! current Chl/C ratio (mg Chl/mmol C)
     real(r8), allocatable :: QCaCO3(:,:)          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
     real(r8), allocatable :: Qp(:,:)              ! current P/C ratio (mmol P/mmol C)
-    real(r8), allocatable :: gQp(:,:)             ! P/C for growth 
+    real(r8), allocatable :: gQp(:,:)             ! P/C for growth
     real(r8), allocatable :: Qn(:,:)              ! Current N/C ratio (mmol N/mmol C)
     real(r8), allocatable :: gQn(:,:)             ! N/C for growth
     real(r8), allocatable :: Qfe(:,:)             ! current Fe/C ratio (mmol Fe/mmol C)

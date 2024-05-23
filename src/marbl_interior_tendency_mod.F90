@@ -1211,7 +1211,7 @@ contains
        !  Modify these initial ratios under low ambient iron conditions
        !  Modify the inital Si/C ratio under low ambient Si conditions
        !-----------------------------------------------------------------------
-        
+
         Qfe(auto_ind,:) = auto_Fe(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
         gQfe(auto_ind,:) = autotroph_settings(auto_ind)%gQfe_max
         where (Fe_loc(:) < autotroph_settings(auto_ind)%FeOpt)
@@ -1265,14 +1265,14 @@ contains
         !------------------------------------------------------------------------
         if (lvariable_PtoC) then
           Qp(auto_ind,:) = auto_P(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
-          
+
           !!-----------------------------------------------------------------------
           !!-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
           !! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
           !! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33 (commented out)
           !!-----------------------------------------------------------------------
           !gQp(auto_ind,:) = min((((PquotaSlope * PO4_loc(:)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
-          
+
           gQp(auto_ind,:) = autotroph_settings(auto_ind)%gQp_max
 
           where ((PO4_loc(:) + DOP_loc(:)) < autotroph_settings(auto_ind)%POpt)
@@ -2741,7 +2741,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
      ! Iron
      !-----------------------------------------------------------------------
 
-     P_iron%prod(k) = (sum(zoo_loss_poc(:)) + sum(zoo_graze_poc(:))) * Qfe_zoo & 
+     P_iron%prod(k) = (sum(zoo_loss_poc(:)) + sum(zoo_graze_poc(:))) * Qfe_zoo &
                   + Fe_scavenge(k) + sum(remaining_Fe_pfe(:))
 
 
@@ -2753,7 +2753,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
      P_CaCO3%prod(k) = c0
      do auto_ind = 1, autotroph_cnt
         if (marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind > 0) then
-           P_CaCO3%prod(k) = P_CaCO3%prod(k) & 
+           P_CaCO3%prod(k) = P_CaCO3%prod(k) &
                 + ((c1 - f_graze_CaCO3_remin) * auto_graze(auto_ind) &
                 + auto_loss(auto_ind) + auto_agg(auto_ind)) * QCaCO3(auto_ind)
         endif
@@ -2775,7 +2775,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
      end do
 
      !-----------------------------------------------------------------------
-     ! Dust prod now set in compute_scavenging  
+     ! Dust prod now set in compute_scavenging
      !-----------------------------------------------------------------------
 
  !    dust%prod(k) = c0
@@ -2874,7 +2874,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
      type(carbonate_type)              , intent(in)    :: carbonate
      real (r8)                         , intent(in)    :: fesedflux(domain%km)           ! sedimentary Fe input
      real (r8)                         , intent(in)    :: feRedsedflux(domain%km)        ! sedimentary Red Fe input
-     real (r8)         		       , intent(in)    :: feventflux(domain%km)          ! vent Fe input
+     real (r8)                         , intent(in)    :: feventflux(domain%km)          ! vent Fe input
      real (r8), dimension(:)           , intent(inout) :: Lig_prod            ! vent ligand inputs
      type(column_sinking_particle_type), intent(inout) :: POC                 ! base units = nmol C
      type(column_sinking_particle_type), intent(inout) :: POP                 ! base units = nmol P
@@ -2980,7 +2980,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
      if (k <= column_kmt) then
 
         dzr_loc    = c1 / dz_loc
-        dzr_mod = ((dz_loc * 0.01)**(-0.343))
+        dzr_mod = ((dz_loc * 0.01_r8)**(-0.343_r8))
 
         poc_diss   = POC%diss
         sio2_diss  = P_SiO2%diss
@@ -2988,7 +2988,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
         dust_diss  = dust%diss
 
         !-----------------------------------------------------------------------
-        !  increase POC diss length scale where O2 concentrations are low 
+        !  increase POC diss length scale where O2 concentrations are low
         !-----------------------------------------------------------------------
 
         if (O2_loc < o2_sf_o2_range_hi) then
@@ -3049,7 +3049,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
 
         dust%sflux_out(k) = dust%sflux_in(k) * decay_dust
 
-	dust%hflux_in(k) = dust%hflux_in(k) + dust%prod(k)
+        dust%hflux_in(k) = dust%hflux_in(k) + dust%prod(k)
 
         dust%hflux_out(k) = dust%hflux_in(k) * DECAY_HardDust
 
@@ -3125,7 +3125,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
              POC_PROD_avail * ((c1 - decay_POC_E) * poc_diss)
 
         !-----------------------------------------------------------------------
-        !  Compute remineralization terms   
+        !  Compute remineralization terms
         !-----------------------------------------------------------------------
 
         P_CaCO3%remin(k) = P_CaCO3%prod(k) + &
@@ -3188,7 +3188,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
         P_iron%remin(k) = P_iron%remin(k)   &
              + (dust%remin(k) * dust_to_Fe) &
              + (fesedflux(k) * dzr_loc)        &
-	     + (feRedsedflux(k) * dzr_loc)     &
+             + (feRedsedflux(k) * dzr_loc)     &
              + (feventflux(k) * dzr_loc)
 
 
@@ -3199,7 +3199,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
         !  add ligand source from vents, proportional to Fe input
         !-----------------------------------------------------------------------
 
-        Lig_prod(k) = feventflux(k) * dzr_loc * 0.22
+        Lig_prod(k) = feventflux(k) * dzr_loc * 0.22_r8
 
         !------------------------------------------------------------------------
         !  compute POP and PON remin and flux out, following code for iron
@@ -3519,7 +3519,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
 
         dust%to_floor = dust%sflux_out(k) + dust%hflux_out(k)
         dust%sed_loss(k) = dust%to_floor
-      
+
      endif
 
      if (poc_error) then
@@ -3763,7 +3763,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
          thetaC          => autotroph_derived_terms%thetaC(:,:),          & ! current Chl/C ratio (mg Chl/mmol C)
          QCaCO3          => autotroph_derived_terms%QCaCO3(:,:),          & ! current CaCO3/C ratio (mmol CaCO3/mmol C)
          Qp              => autotroph_derived_terms%Qp(:,:),              & ! current P/C ratio (mmol P/mmol C)
-         Qn              => autotroph_derived_terms%Qn(:,:),              & ! current N/C ratio (mmol N/mmol C)         
+         Qn              => autotroph_derived_terms%Qn(:,:),              & ! current N/C ratio (mmol N/mmol C)
          Qfe             => autotroph_derived_terms%Qfe(:,:),             & ! current Fe/C ratio (mmol Fe/mmol C)
          Qsi             => autotroph_derived_terms%Qsi(:,:),             & ! current Si/C ratio (mmol Si/mmol C)
          NO3_V           => autotroph_derived_terms%NO3_V(:,:),           & ! nitrate uptake (mmol NO3/m^3/sec)
@@ -3838,7 +3838,7 @@ subroutine compute_grazing(km, Tfunc_zoo, zooplankton_local, zooplankton_derived
 
         interior_tendencies(no3_ind,k) = nitrif(k) - denitrif(k) - sed_denitrif(k) - sum(NO3_V(:,k))
 
-        
+
         interior_tendencies(nh4_ind,k) = DON_remin(k) + DONr_remin(k) - sum(NH4_V(:,k)) - nitrif(k) &
                                        + ((c1 - PONremin_refract) * PON_remin(k)) + sum(remaining_N_din(:,k)) &
                                        + Qn_zoo * (sum(zoo_loss_dic(:,k)) + sum(zoo_graze_dic(:,k)))

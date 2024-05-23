@@ -4066,7 +4066,7 @@ contains
     diags(ind%DON_prod)%field_3d(:, 1)         = dissolved_organic_matter%DON_prod(:)
     diags(ind%DON_remin)%field_3d(:, 1)        = dissolved_organic_matter%DON_remin(:)
     diags(ind%DONr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DONr_remin(:)
-    diags(ind%DON_loss_N_bal)%field_3d(:, 1)   = dissolved_organic_matter%DON_loss_N_bal(:)   
+    diags(ind%DON_loss_N_bal)%field_3d(:, 1)   = dissolved_organic_matter%DON_loss_N_bal(:)
     diags(ind%DOP_prod)%field_3d(:, 1)         = dissolved_organic_matter%DOP_prod(:)
     diags(ind%DOP_remin)%field_3d(:, 1)        = dissolved_organic_matter%DOP_remin(:)
     diags(ind%DOPr_remin)%field_3d(:, 1)       = dissolved_organic_matter%DOPr_remin(:)
@@ -4246,7 +4246,7 @@ contains
     type(marbl_domain_type),            intent(in)    :: marbl_domain
     type(column_sinking_particle_type), intent(in)    :: PON
     real(r8),                           intent(in)    :: denitrif(:)     ! km
-    real(r8),                           intent(in)    :: sed_denitrif(:) ! km   
+    real(r8),                           intent(in)    :: sed_denitrif(:) ! km
     type(autotroph_derived_terms_type), intent(in)    :: autotroph_derived_terms
     real(r8),                           intent(in)    :: interior_tendencies(:,:)         ! tracer_cnt, km
     type(marbl_tracer_index_type),      intent(in)    :: marbl_tracer_indices
@@ -4490,7 +4490,7 @@ contains
   !***********************************************************************
 
   subroutine store_diagnostics_iron_fluxes(marbl_domain, P_iron, dust, &
-             fesedflux, feRedsedflux, feventflux, interior_tendencies, & 
+             fesedflux, feRedsedflux, feventflux, interior_tendencies, &
              marbl_tracer_indices, marbl_diags, marbl_status_log)
 
     use marbl_settings_mod, only : Qfe_zoo
@@ -4533,10 +4533,10 @@ contains
 
 
     ! vertical integrals
-    work = interior_tendencies(fe_ind, :)  &                                            
+    work = interior_tendencies(fe_ind, :)  &
            + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) &
            + (Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1))
-   
+
 
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt,     &
       full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                     &

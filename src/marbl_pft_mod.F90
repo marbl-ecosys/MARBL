@@ -98,8 +98,8 @@ module marbl_pft_mod
   !****************************************************************************
 
   ! Public parameters
-  real(r8), public, parameter :: Qp_zoo = c1 / 117.0_r8 ! P/C ratio (mmol/mmol) zoo
-  real(r8), public, parameter :: Qn_zoo = 16.0 / 117.0_r8 ! N/C ratio (mmol/mmol) zoo
+  real(r8), public, parameter :: Qp_zoo = c1 / 117.0_r8      ! P/C ratio (mmol/mmol) zoo
+  real(r8), public, parameter :: Qn_zoo = 16.0_r8 / 117.0_r8 ! N/C ratio (mmol/mmol) zoo
 
   ! grazing functions
   integer(int_kind), public, parameter :: grz_fnc_michaelis_menten = 1
@@ -267,7 +267,7 @@ contains
         self%POpt            = UnsetValue
         self%gQn_max         = UnsetValue
         self%gQn_min         = UnsetValue
-        self%NOpt            = UnsetValue        
+        self%NOpt            = UnsetValue
         self%alphaPI_per_day = UnsetValue
         self%PCref_per_day   = UnsetValue
         self%thetaN_max      = UnsetValue

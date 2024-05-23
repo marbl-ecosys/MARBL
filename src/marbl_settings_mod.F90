@@ -765,7 +765,7 @@ contains
     rptr      => gQsi_min
     call this%add_var(sname, lname, units, datatype, category,       &
                         marbl_status_log, rptr=rptr)
-    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc) 
+    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'gQ_Si_kSi_thres'
     lname     = 'Si:kSi ratio threshold in uptake ratio computations'
@@ -864,7 +864,7 @@ contains
 !    rptr      => parm_init_PON_bury_coeff
 !    call this%add_var(sname, lname, units, datatype, category,       &
 !                        marbl_status_log, rptr=rptr)
-!    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)   
+!    call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
     sname     = 'parm_init_bSi_bury_coeff'
     lname     = 'initial scale factor for burial of bSi'
@@ -1473,7 +1473,7 @@ contains
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-      
+
       write(sname, "(2A)") trim(prefix), 'FeOpt'
       lname    = 'Fe threshold in uptake ratio computations'
       units    = 'nM'

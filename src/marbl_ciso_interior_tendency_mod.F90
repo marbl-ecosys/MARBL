@@ -55,7 +55,7 @@ contains
        autotroph_derived_terms,                    &
        temperature,                                &
        marbl_tracer_indices,                       &
-       denitrif_C_N,                               &       
+       denitrif_C_N,                               &
        interior_tendencies,                        &
        marbl_interior_diags,                       &
        marbl_status_log)
@@ -82,7 +82,7 @@ contains
     type(autotroph_derived_terms_type),       intent(in)    :: autotroph_derived_terms
     real (r8),                                intent(in)    :: temperature(:)
     type(marbl_tracer_index_type),            intent(in)    :: marbl_tracer_indices
-    real (r8),                                intent(in)    :: denitrif_C_N(:)    
+    real (r8),                                intent(in)    :: denitrif_C_N(:)
     real (r8),                                intent(inout) :: interior_tendencies(:,:)  ! computed source/sink terms (inout because we don't touch non-ciso tracers)
     type(marbl_diagnostics_type),             intent(inout) :: marbl_interior_diags
     type(marbl_log_type),                     intent(inout) :: marbl_status_log
