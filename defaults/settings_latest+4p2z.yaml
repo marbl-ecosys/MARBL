@@ -1033,6 +1033,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 16.0/117
                ((autotroph_sname)) == "diat" : 16.0/117
                ((autotroph_sname)) == "diaz" : 0.32*(16.0/117)
+               ((autotroph_sname)) == "cocco" : 16.0/117
          SiOpt :
             longname : Si threshold in uptake ratio computations
             subcategory : 10. autotrophs
@@ -1043,6 +1044,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 0.0
                ((autotroph_sname)) == "diat" : 10.0
                ((autotroph_sname)) == "diaz" : 0.0
+               ((autotroph_sname)) == "cocco" : 0.0
          gQfe_max :
             longname : Initial Fe/C ratio for growth
             subcategory : 10. autotrophs

@@ -119,6 +119,7 @@
             "Qn_fixed": {
                "datatype": "real",
                "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": "16.0/117",
                   "((autotroph_sname)) == \"diat\"": "16.0/117",
                   "((autotroph_sname)) == \"diaz\"": "0.32*(16.0/117)",
                   "((autotroph_sname)) == \"sp\"": "16.0/117",
@@ -144,6 +145,7 @@
             "SiOpt": {
                "datatype": "real",
                "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.0,
                   "((autotroph_sname)) == \"diat\"": 10.0,
                   "((autotroph_sname)) == \"diaz\"": 0.0,
                   "((autotroph_sname)) == \"sp\"": 0.0,
