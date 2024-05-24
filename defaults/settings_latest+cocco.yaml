@@ -205,6 +205,7 @@ _tracer_list :
       units : mmol/m^3
    ((autotroph_sname))N :
       dependencies :
+         base_bio_on : .true.
          lvariable_NtoC : .true.
       long_name : ((autotroph_lname)) Nitrogen
       units : mmol/m^3
@@ -363,8 +364,9 @@ general_parms :
       datatype : logical
       default_value : .true.
    lvariable_NtoC :
+      dependencies : base_bio_on
       longname : Control if NtoC ratios in autotrophs vary
-      subcategory : 2. config flags
+      subcategory : 3. config flags
       units : unitless
       datatype : logical
       default_value : .true.

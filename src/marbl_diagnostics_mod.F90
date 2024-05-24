@@ -1924,7 +1924,7 @@ contains
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
-  
+
         lname = 'DOP Production'
         sname = 'DOP_prod'
         units = unit_system%conc_tend_units
@@ -2092,7 +2092,7 @@ contains
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
-  
+
         lname = 'Iron Vent Flux'
         sname = 'FEVENTFLUX'
         units = unit_system%conc_flux_units
@@ -2104,7 +2104,7 @@ contains
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
-        
+
         ! Particulate 2D diags
 
         write(particulate_flux_ref_depth_str, "(I0,A)") int(particulate_flux_ref_depth*unit_system%len2m), 'm'
@@ -2144,7 +2144,7 @@ contains
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
-  
+
         lname = 'CaCO3 Flux at ' // trim(particulate_flux_ref_depth_str)
         sname = 'CaCO3_FLUX_' // trim(particulate_flux_ref_depth_str)
         units = unit_system%conc_flux_units
@@ -2447,7 +2447,7 @@ contains
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
-  
+
         lname = 'PON Production'
         sname = 'PON_PROD'
         units = unit_system%conc_tend_units
@@ -2459,7 +2459,7 @@ contains
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
         end if
-        
+
         lname = 'PON Remineralization routed to DONr'
         sname = 'PON_REMIN_DONr'
         units = unit_system%conc_tend_units
@@ -2708,7 +2708,7 @@ contains
           else
             ind%Qn(n) = -1
           end if
-          
+
           lname = trim(autotroph_settings(n)%lname) // ' C Fixation'
           sname = 'photoC_' // trim(autotroph_settings(n)%sname)
           units = unit_system%conc_tend_units

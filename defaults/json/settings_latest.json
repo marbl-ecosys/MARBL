@@ -826,6 +826,7 @@
       },
       "((autotroph_sname))N": {
          "dependencies": {
+            "base_bio_on": ".true.",
             "lvariable_NtoC": ".true."
          },
          "long_name": "((autotroph_lname)) Nitrogen",
@@ -1301,8 +1302,9 @@
       "lvariable_NtoC": {
          "datatype": "logical",
          "default_value": ".true.",
+         "dependencies": "base_bio_on",
          "longname": "Control if NtoC ratios in autotrophs vary",
-         "subcategory": "2. config flags",
+         "subcategory": "3. config flags",
          "units": "unitless"
       },
       "lvariable_PtoC": {
