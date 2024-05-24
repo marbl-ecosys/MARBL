@@ -111,16 +111,8 @@ contains
          di13c_ind          => marbl_tracer_indices%di13c_ind                  , &
          do13ctot_ind       => marbl_tracer_indices%do13ctot_ind               , &
          di14c_ind          => marbl_tracer_indices%di14c_ind                  , &
-         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind               , &
-         ciso_ind_beg       => marbl_tracer_indices%ciso%ind_beg               , &
-         ciso_ind_end       => marbl_tracer_indices%ciso%ind_end                 &
+         do14ctot_ind       => marbl_tracer_indices%do14ctot_ind                 &
          )
-
-    !-----------------------------------------------------------------------
-    !  ciso fluxes initially set to 0
-    !-----------------------------------------------------------------------
-
-    surface_fluxes(:,ciso_ind_beg:ciso_ind_end) = c0
 
     !-----------------------------------------------------------------------
     !     initialize R13C_atm  and R14C_atm

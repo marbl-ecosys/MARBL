@@ -7,12 +7,12 @@ module marbl_init_mod
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
 
-  use marbl_interface_private_types, only : marbl_tracer_index_type
-
   use marbl_logging, only : marbl_log_type
 
-  use marbl_settings_mod, only : autotroph_cnt
-  use marbl_settings_mod, only : zooplankton_cnt
+  use marbl_settings_mod, only : base_bio_on
+  use marbl_settings_mod, only : abio_dic_on
+  use marbl_settings_mod, only : ciso_on
+  use marbl_settings_mod, only : unit_system_type
 
   implicit none
   private
@@ -53,27 +53,47 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_parameters_pre_tracers(marbl_settings, marbl_status_log)
+  subroutine marbl_init_parameters_pre_tracers(marbl_settings, unit_system, marbl_status_log)
 
     use marbl_settings_mod, only : marbl_settings_type
+    use marbl_settings_mod, only : marbl_settings_set_defaults_tracer_modules
+    use marbl_settings_mod, only : marbl_settings_define_tracer_modules
     use marbl_settings_mod, only : marbl_settings_set_defaults_general_parms
     use marbl_settings_mod, only : marbl_settings_define_general_parms
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_counts
     use marbl_settings_mod, only : marbl_settings_define_PFT_counts
+    use marbl_settings_mod, only : marbl_settings_allocate_PFT_types
     use marbl_settings_mod, only : marbl_settings_set_defaults_PFT_derived_types
     use marbl_settings_mod, only : marbl_settings_define_PFT_derived_types
 
     type(marbl_settings_type),  intent(inout) :: marbl_settings
+    type(unit_system_type),     intent(in)    :: unit_system
     type(marbl_log_type),       intent(inout) :: marbl_status_log
 
     ! local variables
     character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_parameters_pre_tracers'
 
     !---------------------------------------------------------------------------
+    ! set default values for logicals controlling active tracer modules
+    !---------------------------------------------------------------------------
+
+    call marbl_settings_set_defaults_tracer_modules()
+
+    !---------------------------------------------------------------------------
+    ! Add tracer module settings to list of allowable put / get vars
+    !---------------------------------------------------------------------------
+
+    call marbl_settings_define_tracer_modules(marbl_settings, marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_define_tracer_modules()", subname)
+      return
+    end if
+
+    !---------------------------------------------------------------------------
     ! set default values for basic settings
     !---------------------------------------------------------------------------
 
-    call marbl_settings_set_defaults_general_parms()
+    call marbl_settings_set_defaults_general_parms(unit_system)
 
     !---------------------------------------------------------------------------
     ! Add general settings to list of allowable put / get vars
@@ -101,6 +121,12 @@ contains
       return
     end if
 
+    call marbl_settings_allocate_PFT_types(marbl_status_log)
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace("marbl_settings_allocate_PFT_types()", subname)
+      return
+    end if
+
     !---------------------------------------------------------------------------
     ! Add components of PFT derived types to list of allowable put / get vars
     !---------------------------------------------------------------------------
@@ -125,6 +151,7 @@ contains
   !            (And add a dimension to tracers to count elements)
   subroutine marbl_init_tracers(num_levels, &
                                 num_elements_surface_flux, &
+                                unit_system, &
                                 tracer_indices, &
                                 tracers_at_surface, &
                                 surface_fluxes, &
@@ -134,16 +161,19 @@ contains
                                 tracer_metadata, &
                                 marbl_status_log)
 
-    use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lvariable_PtoC
     use marbl_settings_mod, only : lvariable_NtoC
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
-    use marbl_ciso_init_mod, only : marbl_ciso_init_tracer_metadata
+
+    use marbl_interface_private_types, only : marbl_tracer_index_type
+
+    use marbl_init_tracer_metadata_mod, only : marbl_init_tracer_metadata
 
     integer(int_kind),                             intent(in)    :: num_levels
     integer(int_kind),                             intent(in)    :: num_elements_surface_flux
+    type(unit_system_type),                        intent(in)    :: unit_system
     type(marbl_tracer_index_type),    pointer,     intent(out)   :: tracer_indices
     real(r8),                         allocatable, intent(out)   :: tracers_at_surface(:,:)
     real(r8),                         allocatable, intent(out)   :: surface_fluxes(:,:)
@@ -160,8 +190,8 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(ciso_on, lvariable_PtoC, lvariable_NtoC, autotroph_settings, zooplankton_settings, &
-                                  marbl_status_log)
+    call tracer_indices%construct(base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, lvariable_NtoC, &
+                                  autotroph_settings, zooplankton_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
       return
@@ -178,8 +208,7 @@ contains
       allocate(tracer_restore_vars(tracer_indices%total_cnt))
 
     ! Set up tracer metadata
-    call marbl_init_tracer_metadata(tracer_metadata, tracer_indices)
-    call marbl_ciso_init_tracer_metadata(tracer_metadata, tracer_indices)
+    call marbl_init_tracer_metadata(unit_system, tracer_indices, tracer_metadata)
 
     ! Log what tracers are being used
     call marbl_status_log%log_header('MARBL Tracer indices', subname)
@@ -189,11 +218,18 @@ contains
     end do
 
 100 format(A, ' tracer module contains ', I0, ' tracers; indices are ', I0, ' to ', I0)
-    if (tracer_indices%ecosys_base%cnt.gt.0) then
-      write(log_message, 100) 'ecosys_base', &
-                              tracer_indices%ecosys_base%cnt, &
-                              tracer_indices%ecosys_base%ind_beg, &
-                              tracer_indices%ecosys_base%ind_end
+    if (tracer_indices%base_bio%cnt.gt.0) then
+      write(log_message, 100) 'base biotic tracers', &
+                              tracer_indices%base_bio%cnt, &
+                              tracer_indices%base_bio%ind_beg, &
+                              tracer_indices%base_bio%ind_end
+      call marbl_status_log%log_noerror(log_message, subname)
+    end if
+    if (tracer_indices%abio_dic%cnt.gt.0) then
+      write(log_message, 100) 'abio', &
+                              tracer_indices%abio_dic%cnt, &
+                              tracer_indices%abio_dic%ind_beg, &
+                              tracer_indices%abio_dic%ind_end
       call marbl_status_log%log_noerror(log_message, subname)
     end if
     if (tracer_indices%ciso%cnt.gt.0) then
@@ -205,84 +241,6 @@ contains
     end if
 
   end subroutine marbl_init_tracers
-
-  !***********************************************************************
-
-  subroutine marbl_init_tracer_metadata(marbl_tracer_metadata, marbl_tracer_indices)
-
-    !  Set tracer and forcing metadata
-
-    use marbl_settings_mod, only : lecovars_full_depth_tavg
-
-    type (marbl_tracer_metadata_type), intent(out)   :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-
-    integer (int_kind) :: n        ! index for looping over tracers
-    integer (int_kind) :: zoo_ind  ! zooplankton functional group index
-    integer (int_kind) :: auto_ind ! autotroph functional group index
-
-    !-----------------------------------------------------------------------
-    ! initialize tracer metatdata
-    !-----------------------------------------------------------------------
-
-    marbl_tracer_metadata(:)%lfull_depth_tavg   = .true.
-    marbl_tracer_metadata(:)%tracer_module_name = 'ecosys'
-
-    call marbl_init_non_autotroph_tracers_metadata(marbl_tracer_metadata,     &
-         marbl_tracer_indices)
-
-    call marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata,        &
-         marbl_tracer_indices)
-
-    call marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata,          &
-         marbl_tracer_indices)
-
-    !-----------------------------------------------------------------------
-    !  set lfull_depth_tavg flag for short-lived ecosystem tracers
-    !-----------------------------------------------------------------------
-
-    ! Should be done in marbl_diagnostics, and without the _tavg name
-    do zoo_ind = 1, zooplankton_cnt
-       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-    end do
-
-    do auto_ind = 1, autotroph_cnt
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%N_ind
-       if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
-       if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-       marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
-       if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
-       if (n > 0) then
-          marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-       endif
-    end do
-
-  end subroutine marbl_init_tracer_metadata
 
   !***********************************************************************
 
@@ -358,6 +316,7 @@ contains
 
   subroutine marbl_init_forcing_fields(domain, &
                                        tracer_metadata, &
+                                       unit_system, &
                                        surface_flux_forcing_ind, &
                                        surface_flux_forcings, &
                                        interior_tendency_forcing_ind, &
@@ -367,7 +326,6 @@ contains
     use marbl_interface_public_types, only : marbl_domain_type
     use marbl_interface_private_types, only : marbl_surface_flux_forcing_indexing_type
     use marbl_interface_private_types, only : marbl_interior_tendency_forcing_indexing_type
-    use marbl_settings_mod, only : ciso_on
     use marbl_settings_mod, only : lflux_gas_o2
     use marbl_settings_mod, only : lflux_gas_co2
     use marbl_settings_mod, only : ladjust_bury_coeff
@@ -375,6 +333,7 @@ contains
 
     type(marbl_domain_type),                             intent(in)    :: domain
     type(marbl_tracer_metadata_type),                    intent(in)    :: tracer_metadata(:)
+    type(unit_system_type),                              intent(in)    :: unit_system
     type(marbl_surface_flux_forcing_indexing_type),      intent(out)   :: surface_flux_forcing_ind
     type(marbl_forcing_fields_type), allocatable,        intent(out)   :: surface_flux_forcings(:)
     type(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: interior_tendency_forcing_ind
@@ -395,12 +354,15 @@ contains
          )
 
       ! Construct indices for surface and interior forcing
-      call surface_flux_forcing_ind%construct(ciso_on,                        &
+      call surface_flux_forcing_ind%construct(base_bio_on,                    &
+                                              abio_dic_on,                    &
+                                              ciso_on,                        &
                                               lflux_gas_o2,                   &
                                               lflux_gas_co2,                  &
                                               ladjust_bury_coeff,             &
                                               num_surface_flux_forcing_fields)
-      call interior_tendency_forcing_ind%construct(tracer_metadata%short_name,           &
+      call interior_tendency_forcing_ind%construct(base_bio_on,                          &
+                                                   tracer_metadata%short_name,           &
                                                    tracer_restore_vars,                  &
                                                    domain%num_PAR_subcols,               &
                                                    num_interior_tendency_forcing_fields, &
@@ -412,28 +374,30 @@ contains
 
       ! Initialize surface forcing fields
       allocate(surface_flux_forcings(num_surface_flux_forcing_fields))
-      call marbl_init_surface_flux_forcing_fields(                   &
+      call init_surface_flux_forcing_fields(                         &
            num_elements                 = num_elements_surface_flux, &
            surface_flux_forcing_indices = surface_flux_forcing_ind,  &
+           unit_system                  = unit_system,               &
            surface_flux_forcings        = surface_flux_forcings,     &
            marbl_status_log             = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("marbl_init_surface_flux_forcing_fields()", subname)
+        call marbl_status_log%log_error_trace("init_surface_flux_forcing_fields()", subname)
         return
       end if
 
       ! Initialize interior forcing fields
       allocate(interior_tendency_forcings(num_interior_tendency_forcing_fields))
-      call marbl_init_interior_tendency_forcing_fields(                               &
+      call init_interior_tendency_forcing_fields(                                     &
            num_elements                      = domain%num_elements_interior_tendency, &
            interior_tendency_forcing_indices = interior_tendency_forcing_ind,         &
            tracer_metadata                   = tracer_metadata,                       &
            num_PAR_subcols                   = num_PAR_subcols,                       &
            num_levels                        = num_levels,                            &
+           unit_system                       = unit_system,                           &
            interior_tendency_forcings        = interior_tendency_forcings,            &
            marbl_status_log                  = marbl_status_log)
       if (marbl_status_log%labort_marbl) then
-        call marbl_status_log%log_error_trace("marbl_init_interior_tendency_forcing_fields()", subname)
+        call marbl_status_log%log_error_trace("init_interior_tendency_forcing_fields()", subname)
         return
       end if
 
@@ -461,200 +425,8 @@ contains
 
   !***********************************************************************
 
-  subroutine marbl_init_non_autotroph_tracer_metadata(short_name, long_name, &
-                                                      marbl_tracer_metadata)
-
-    !-----------------------------------------------------------------------
-    !  initialize non-autotroph tracer_d values and accumulate
-    !  non_living_biomass_ecosys_tracer_cnt
-    !-----------------------------------------------------------------------
-
-    character(len=*),                 intent(in)    :: short_name
-    character(len=*),                 intent(in)    :: long_name
-    type(marbl_tracer_metadata_type), intent(inout) :: marbl_tracer_metadata
-
-    marbl_tracer_metadata%short_name = short_name
-    marbl_tracer_metadata%long_name  = long_name
-    if ((trim(short_name) == "ALK") .or. &
-        (trim(short_name) == "ALK_ALT_CO2")) then
-       marbl_tracer_metadata%units      = 'meq/m^3'
-       marbl_tracer_metadata%tend_units = 'meq/m^3/s'
-       marbl_tracer_metadata%flux_units = 'meq/m^3 cm/s'
-    else
-       marbl_tracer_metadata%units      = 'mmol/m^3'
-       marbl_tracer_metadata%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata%flux_units = 'mmol/m^3 cm/s'
-    endif
-
-  end subroutine marbl_init_non_autotroph_tracer_metadata
-
-  !***********************************************************************
-
-  subroutine marbl_init_non_autotroph_tracers_metadata(marbl_tracer_metadata, &
-             marbl_tracer_indices)
-
-    !-----------------------------------------------------------------------
-    !  initialize non-autotroph tracer_d values and accumulate
-    !  non_living_biomass_ecosys_tracer_cnt
-    !-----------------------------------------------------------------------
-
-    type(marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
-    type(marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-
-    call marbl_init_non_autotroph_tracer_metadata('PO4', 'Dissolved Inorganic Phosphate', &
-               marbl_tracer_metadata(marbl_tracer_indices%po4_ind))
-    call marbl_init_non_autotroph_tracer_metadata('NO3', 'Dissolved Inorganic Nitrate',   &
-               marbl_tracer_metadata(marbl_tracer_indices%no3_ind))
-    call marbl_init_non_autotroph_tracer_metadata('SiO3', 'Dissolved Inorganic Silicate', &
-               marbl_tracer_metadata(marbl_tracer_indices%sio3_ind))
-    call marbl_init_non_autotroph_tracer_metadata('NH4', 'Dissolved Ammonia',             &
-               marbl_tracer_metadata(marbl_tracer_indices%nh4_ind))
-    call marbl_init_non_autotroph_tracer_metadata('Fe', 'Dissolved Inorganic Iron',       &
-               marbl_tracer_metadata(marbl_tracer_indices%fe_ind))
-    call marbl_init_non_autotroph_tracer_metadata('Lig', 'Iron Binding Ligand',           &
-               marbl_tracer_metadata(marbl_tracer_indices%lig_ind))
-    call marbl_init_non_autotroph_tracer_metadata('O2', 'Dissolved Oxygen',               &
-               marbl_tracer_metadata(marbl_tracer_indices%o2_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DIC', 'Dissolved Inorganic Carbon',    &
-               marbl_tracer_metadata(marbl_tracer_indices%dic_ind))
-    call marbl_init_non_autotroph_tracer_metadata('ALK', 'Alkalinity',                    &
-               marbl_tracer_metadata(marbl_tracer_indices%alk_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DOC', 'Dissolved Organic Carbon',      &
-               marbl_tracer_metadata(marbl_tracer_indices%doc_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DON', 'Dissolved Organic Nitrogen',    &
-               marbl_tracer_metadata(marbl_tracer_indices%don_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DOP', 'Dissolved Organic Phosphorus',  &
-               marbl_tracer_metadata(marbl_tracer_indices%dop_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DOPr', 'Refractory DOP',               &
-               marbl_tracer_metadata(marbl_tracer_indices%dopr_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DONr', 'Refractory DON',               &
-               marbl_tracer_metadata(marbl_tracer_indices%donr_ind))
-    call marbl_init_non_autotroph_tracer_metadata('DOCr', 'Refractory DOC',               &
-               marbl_tracer_metadata(marbl_tracer_indices%docr_ind))
-
-    call marbl_init_non_autotroph_tracer_metadata('DIC_ALT_CO2', 'Dissolved Inorganic Carbon, Alternative CO2', &
-               marbl_tracer_metadata(marbl_tracer_indices%dic_alt_co2_ind))
-    call marbl_init_non_autotroph_tracer_metadata('ALK_ALT_CO2', 'Alkalinity, Alternative CO2', &
-               marbl_tracer_metadata(marbl_tracer_indices%alk_alt_co2_ind))
-
-  end subroutine marbl_init_non_autotroph_tracers_metadata
-
-  !***********************************************************************
-
-  subroutine marbl_init_zooplankton_tracer_metadata(marbl_tracer_metadata, &
-             marbl_tracer_indices)
-
-    !-----------------------------------------------------------------------
-    !  initialize zooplankton tracer_d values and tracer indices
-    !-----------------------------------------------------------------------
-
-    use marbl_settings_mod, only : zooplankton_settings
-
-    type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)             ! descriptors for each tracer
-    type (marbl_tracer_index_type)    , intent(in)    :: marbl_tracer_indices
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: n, zoo_ind            ! zooplankton functional group index
-    !-----------------------------------------------------------------------
-
-    do zoo_ind = 1, zooplankton_cnt
-       n = marbl_tracer_indices%zoo_inds(zoo_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(zooplankton_settings(zoo_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(zooplankton_settings(zoo_ind)%lname) // ' Carbon'
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-    end do
-
-  end subroutine marbl_init_zooplankton_tracer_metadata
-
-  !***********************************************************************
-
-  subroutine marbl_init_autotroph_tracer_metadata(marbl_tracer_metadata,      &
-             marbl_tracer_indices)
-
-    !-----------------------------------------------------------------------
-    !  initialize autotroph tracer_d values and tracer indices
-    !-----------------------------------------------------------------------
-
-    use marbl_settings_mod, only : autotroph_settings
-
-    type (marbl_tracer_metadata_type) , intent(inout) :: marbl_tracer_metadata(:)   ! descriptors for each tracer
-    type    (marbl_tracer_index_type) , intent(in)    :: marbl_tracer_indices
-
-    !-----------------------------------------------------------------------
-    !  local variables
-    !-----------------------------------------------------------------------
-    integer (int_kind) :: n, auto_ind
-    !-----------------------------------------------------------------------
-
-    do auto_ind = 1, autotroph_cnt
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Chl'
-       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Chlorophyll'
-       marbl_tracer_metadata(n)%units      = 'mg/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mg/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mg/m^3 cm/s'
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%C_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'C'
-       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Carbon'
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
-       if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'P'
-          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Phosphorus'
-          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%N_ind
-       if (n.gt.0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'N'
-          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Nitrogen'
-          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Fe'
-       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Iron'
-       marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-       marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-       marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%Si_ind
-       if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'Si'
-          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Silicon'
-          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       endif
-
-       n = marbl_tracer_indices%auto_inds(auto_ind)%CaCO3_ind
-       if (n .gt. 0) then
-          marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'CaCO3'
-          marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' CaCO3'
-          marbl_tracer_metadata(n)%units      = 'mmol/m^3'
-          marbl_tracer_metadata(n)%tend_units = 'mmol/m^3/s'
-          marbl_tracer_metadata(n)%flux_units = 'mmol/m^3 cm/s'
-       endif
-    end do
-
-  end subroutine marbl_init_autotroph_tracer_metadata
-
-  !***********************************************************************
-
-  subroutine marbl_init_surface_flux_forcing_fields(num_elements, surface_flux_forcing_indices, &
-                                        surface_flux_forcings, marbl_status_log)
+  subroutine init_surface_flux_forcing_fields(num_elements, surface_flux_forcing_indices, unit_system, &
+                                              surface_flux_forcings, marbl_status_log)
 
     !  Initialize the surface forcing_fields datatype with information from the
     !  namelist read
@@ -664,13 +436,14 @@ contains
 
     integer,                                        intent(in)    :: num_elements
     type(marbl_surface_flux_forcing_indexing_type), intent(in)    :: surface_flux_forcing_indices
+    type(unit_system_type),                         intent(in)    :: unit_system
     type(marbl_forcing_fields_type),                intent(out)   :: surface_flux_forcings(:)
     type(marbl_log_type),                           intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_surface_flux_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:init_surface_flux_forcing_fields'
     character(len=char_len)     :: log_message
 
     integer :: id
@@ -687,7 +460,7 @@ contains
         if (id .eq. ind%u10_sqr_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'u10_sqr'
-          surface_flux_forcings(id)%metadata%field_units   = 'cm^2/s^2'
+          write(surface_flux_forcings(id)%metadata%field_units, '(2A)') trim(unit_system%L), '^2/s^2'
         end if
 
         ! Sea-surface salinity
@@ -715,49 +488,49 @@ contains
         if (id .eq. ind%dust_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'Dust Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'g/cm^2/s'
+          write(surface_flux_forcings(id)%metadata%field_units, '(4A)') trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
         end if
 
         ! Iron Flux
         if (id .eq. ind%iron_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'Iron Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! NOx Flux
         if (id .eq. ind%nox_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'NOx Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! NHy Flux
         if (id .eq. ind%nhy_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'NHy Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! external C Flux
         if (id .eq. ind%ext_C_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'external C Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! external P Flux
         if (id .eq. ind%ext_P_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'external P Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! external Si Flux
         if (id .eq. ind%ext_Si_flux_id) then
           found = .true.
           surface_flux_forcings(id)%metadata%varname       = 'external Si Flux'
-          surface_flux_forcings(id)%metadata%field_units   = 'nmol/cm^2/s'
+          surface_flux_forcings(id)%metadata%field_units   = trim(unit_system%conc_flux_units)
         end if
 
         ! atm pressure
@@ -813,16 +586,17 @@ contains
     ! FIXME #26: do we have any forcing fields that are required to be set?
     !            If so, check to make sure those indices are not zero here.
 
-  end subroutine marbl_init_surface_flux_forcing_fields
+  end subroutine init_surface_flux_forcing_fields
 
   !*****************************************************************************
 
-  subroutine marbl_init_interior_tendency_forcing_fields(&
+  subroutine init_interior_tendency_forcing_fields(&
        num_elements, &
        interior_tendency_forcing_indices, &
        tracer_metadata, &
        num_PAR_subcols, &
        num_levels, &
+       unit_system, &
        interior_tendency_forcings, &
        marbl_status_log)
 
@@ -836,13 +610,14 @@ contains
     type(marbl_tracer_metadata_type),           intent(in)    :: tracer_metadata(:)
     integer,                                    intent(in)    :: num_PAR_subcols
     integer,                                    intent(in)    :: num_levels
+    type(unit_system_type),                     intent(in)    :: unit_system
     type(marbl_forcing_fields_type),            intent(out)   :: interior_tendency_forcings(:)
     type(marbl_log_type),                       intent(inout) :: marbl_status_log
 
     !-----------------------------------------------------------------------
     !  local variables
     !-----------------------------------------------------------------------
-    character(len=*), parameter :: subname = 'marbl_init_mod:marbl_init_interior_tendency_forcing_fields'
+    character(len=*), parameter :: subname = 'marbl_init_mod:init_interior_tendency_forcing_fields'
     character(len=char_len)     :: log_message
 
     ! NAG didn't like associating to tracer_metadata(:)%*
@@ -865,7 +640,7 @@ contains
         if (id .eq. ind%dustflux_id) then
           found = .true.
           interior_tendency_forcings(id)%metadata%varname     = 'Dust Flux'
-          interior_tendency_forcings(id)%metadata%field_units = 'g/cm^2/s'
+          write(interior_tendency_forcings(id)%metadata%field_units, '(4A)') trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
           call interior_tendency_forcings(id)%set_rank(num_elements, 0, marbl_status_log)
         end if
 
@@ -913,7 +688,7 @@ contains
         if (id .eq. ind%fesedflux_id) then
           found = .true.
           interior_tendency_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
-          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          interior_tendency_forcings(id)%metadata%field_units = trim(unit_system%conc_flux_units)
           call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 
@@ -994,7 +769,7 @@ contains
     ! FIXME #26: do we have any forcing fields that are required to be set?
     !            If so, check to make sure those indices are not zero here.
 
-  end subroutine marbl_init_interior_tendency_forcing_fields
+  end subroutine init_interior_tendency_forcing_fields
 
   !*****************************************************************************
 

@@ -8,6 +8,16 @@
 #                            PUBLIC MODULE METHODS                             #
 ################################################################################
 
+def valid_diag_modes():
+    """ Return list of the valid values for diag_mode.
+        Order of list => selecting specific diag mode includes all
+        diagnostics with lower index as well (e.g. "diag_mode = full"
+        will also provide diagnostics defined with minimal diag mode)
+    """
+    return ['none', 'minimal', 'full']
+
+################################################################################
+
 def settings_dictionary_is_consistent(SettingsDict):
     """ Make sure dictionary generated from JSON settings file conforms to MARBL
         parameter file standards:
@@ -82,13 +92,15 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
            iii. vertical_grid (2D vars should explicitly list "none")
            iv.  frequency
            v.   operator
+           vi.  diag_mode
         3. Diagnostic variable dictionaries may contain 'dependencies' key as well,
            but it must be a dictionary itself.
-        4. Consistency between frequency and operator
-           i.   frequency and operator are both lists, or neither are
-           ii.  If they are both lists, must be same size
+        4. Consistency among frequency, operator, and diag_mode
+           i.   frequency, operator, and diag_mode are all lists, or none are
+           ii.  If they are all lists, must be same length
         5. Allowable frequencies are never, low, medium, and high
         6. Allowable operators are instantaneous, average, minimum, and maximum
+        7. Allowable diag_modes are defined in valid_diag_modes()
     """
 
     import logging
@@ -109,8 +121,8 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
             continue
 
         # 2. diag_dict must have the following keys:
-        valid_keys = ["longname", "units", "vertical_grid", "frequency", "operator"]
-        for key_check in valid_keys:
+        required_keys = ["longname", "units", "vertical_grid", "frequency", "operator", "diag_mode"]
+        for key_check in required_keys:
             if key_check not in diag_dict.keys():
                 message = "Diagnostic %s is not well-defined in YAML" % diag_name
                 message = message + "\n     * Expecting %s as a key" % key_check
@@ -124,11 +136,13 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
                 logger.error(message)
                 invalid_file = True
 
-        # 4. Consistency between frequency and operator
+        # 4. Consistency among frequency, operator, diag_mode
         err_prefix = "Inconsistency in DiagsDict['%s']:" % diag_name
         #    i.   frequency and operator are both lists, or neither are
-        if isinstance(diag_dict['frequency'], list) != isinstance(diag_dict['operator'], list):
-            logger.error("%s either both frequency and operator must be lists or neither can be" % err_prefix)
+        if (isinstance(diag_dict['frequency'], list) != isinstance(diag_dict['operator'], list)) or \
+           (isinstance(diag_dict['frequency'], list) != isinstance(diag_dict['diag_mode'], list)):
+            err_message = "either all of frequency, operator, and diag_mode must be lists or neither can be"
+            logger.error(f"{err_prefix} {err_message}")
             invalid_file = True
             continue
 
@@ -136,36 +150,53 @@ def diagnostics_dictionary_is_consistent(DiagsDict):
         if isinstance(diag_dict['frequency'], list):
             freq_len = len(diag_dict['frequency'])
             op_len = len(diag_dict['operator'])
-            if freq_len != op_len:
-                logger.error("%s frequency is length %d but operator is length %d" %
-                             (err_prefix, diag_name, freq_len, op_len))
+            dm_len = len(diag_dict['diag_mode'])
+            if (freq_len != op_len) or (freq_len != op_len):
+                err_message = f"frequency, operator, diag_mode lengths are {freq_len}, {op_len}, {diag_mode}"
+                logger.error(f"{err_prefix} {err_message}")
                 invalid_file = True
                 continue
 
         # 5. Allowable frequencies are never, low, medium, and high
         # 6. Allowable operators are instantaneous, average, minimum, and maximum
+        # 7. Allowable diag_modes are defined in valid_diag_modes()
+        #    * "none" should not appear in the dictionary
         ok_freqs = ['never', 'low', 'medium', 'high']
         ok_ops = ['instantaneous', 'average', 'minimum', 'maximum']
-        invalid_freq_op = False
+        ok_dms = valid_diag_modes()[1:] # do not include 'none' in ok_dms
+        invalid_freq_op_dm = False
         if not isinstance(diag_dict['frequency'], dict):
             if isinstance(diag_dict['frequency'], list):
-                for freq, op in zip(diag_dict['frequency'], diag_dict['operator']):
+                for freq, op, dm in zip(diag_dict['frequency'], diag_dict['operator'], diag_dict['diag_mode']):
                     if freq not in ok_freqs:
-                        logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
-                        invalid_freq_op = True
+                        err_message = f"'{freq}' is not a valid frequency"
+                        logger.error(f'{err_prefix} {err_message}')
+                        invalid_freq_op_dm = True
                     if op not in ok_ops:
-                        logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
-                        invalid_freq_op = True
+                        err_message = f"'{op}' is not a valid operator"
+                        logger.error(f'{err_prefix} {err_message}')
+                        invalid_freq_op_dm = True
+                    if dm not in ok_dms:
+                        err_message = f"'{dm}' is not a valid diag_mode"
+                        logger.error(f'{err_prefix} {err_message}')
+                        invalid_freq_op_dm = True
             else:
                 freq = diag_dict['frequency']
                 op = diag_dict['operator']
+                dm = diag_dict['diag_mode']
                 if freq not in ok_freqs:
-                    logger.error("%s '%s' is not a valid frequency" % (err_prefix, freq))
-                    invalid_freq_op = True
+                    err_message = f"'{freq}' is not a valid frequency"
+                    logger.error(f'{err_prefix} {err_message}')
+                    invalid_freq_op_dm = True
                 if op not in ok_ops:
-                    logger.error("%s '%s' is not a valid operator" % (err_prefix, op))
-                    invalid_freq_op = True
-        if invalid_freq_op:
+                    err_message = f"'{op}' is not a valid operator"
+                    logger.error(f'{err_prefix} {err_message}')
+                    invalid_freq_op_dm = True
+                if dm not in ok_dms:
+                    err_message = f"'{dm}' is not a valid diag_mode"
+                    logger.error(f'{err_prefix} {err_message}')
+                    invalid_freq_op_dm = True
+        if invalid_freq_op_dm:
             invalid_file = True
 
     return (not invalid_file)

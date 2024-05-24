@@ -104,7 +104,7 @@ endif
 .PHONY: all
 all : gnu
 
-# Shorthand for specific compilers (gnu, intel, pgi, nag, cray)
+# Shorthand for specific compilers (gnu, intel, nvhpc, pgi, nag, cray)
 
 .PHONY: gnu
 gnu:
@@ -113,6 +113,10 @@ gnu:
 .PHONY: intel
 intel:
 	$(MAKE) -f $(MAKE_DIR)/Makefile $(LIB_DIR)/libmarbl-intel$(MPISUF).a USE_DEPS=TRUE FC=ifort FCFLAGS="-O2 -free -module $(OBJ_DIR)/intel$(MPISUF) -cpp -nogen-interface -fp-model source" OBJ_DIR=$(OBJ_DIR)/intel$(MPISUF) INC_DIR=$(INC_DIR)/intel$(MPISUF)
+
+.PHONY: nvhpc
+nvhpc:
+	$(MAKE) -f $(MAKE_DIR)/Makefile $(LIB_DIR)/libmarbl-nvhpc$(MPISUF).a USE_DEPS=TRUE FC=nvfortran FCFLAGS="-O2 -Mfree -module $(OBJ_DIR)/nvhpc$(MPISUF)" OBJ_DIR=$(OBJ_DIR)/nvhpc$(MPISUF) INC_DIR=$(INC_DIR)/nvhpc$(MPISUF)
 
 .PHONY: pgi
 pgi:
@@ -155,3 +159,4 @@ clean:
 	rm -f $(OBJ_DIR)/*/$(DEP_FILENAME) $(LIB_DIR)/libmarbl*.a
 	find $(OBJ_DIR) -maxdepth 2 -name marbl_*.o | xargs rm -f
 	find $(OBJ_DIR) -maxdepth 2 -name marbl_*.mod | xargs rm -f
+	find $(INC_DIR) -maxdepth 2 -name marbl_*.mod | xargs rm -f

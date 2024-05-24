@@ -15,7 +15,7 @@ class MARBL_diagnostics_class(object):
     # CONSTRUCTOR #
     ###############
 
-    def __init__(self, default_diagnostics_file, MARBL_settings):
+    def __init__(self, default_diagnostics_file, MARBL_settings, unit_system):
         """ Class constructor: read the JSON file and then construct self.diagnostics_dict
         """
 
@@ -44,7 +44,7 @@ class MARBL_diagnostics_class(object):
                 self.diagnostics_dict[diag_name] = dict(self._diagnostics[diag_name])
             else:
                 # (Also determine correct frequency if 'frequency' is a dict)
-                self.diagnostics_dict.update(MARBL_tools.expand_template_value(diag_name, MARBL_settings, self._diagnostics[diag_name], check_freq=True))
+                self.diagnostics_dict.update(MARBL_tools.expand_template_value(diag_name, MARBL_settings, unit_system, self._diagnostics[diag_name], check_freq=True))
 
         #    ii. Delete diagnostics where dependencies are not met
         #        (Some diagnostics have already been removed via expand_template_value())
@@ -53,10 +53,26 @@ class MARBL_diagnostics_class(object):
                 diags_to_delete.append(diag_name)
                 continue
 
-            #    iii. frequency and operator should always be lists
+            #    iii. frequency, operator, and diag_mode should always be lists
             if not isinstance(self.diagnostics_dict[diag_name]['frequency'], list):
                 self.diagnostics_dict[diag_name]['frequency'] = [self.diagnostics_dict[diag_name]['frequency']]
                 self.diagnostics_dict[diag_name]['operator'] = [self.diagnostics_dict[diag_name]['operator']]
+                self.diagnostics_dict[diag_name]['diag_mode'] = [self.diagnostics_dict[diag_name]['diag_mode']]
+
+            #    iv. update units
+            fix_units = {}
+            if unit_system == 'cgs':
+                fix_units["mmol/m^3 cm"] = "nmol/cm^2"
+                fix_units["mmol/m^3"] = "nmol/cm^3"
+                fix_units["meq/m^3"] = "neq/cm^3"
+            else:
+                fix_units["mmol/m^3 cm"] = "mmol/m^2"
+                fix_units["nmol/cm^2"] = "mmol/m^2"
+                fix_units["g/cm"] = "kg/m"
+                fix_units["cm"] = "m"
+
+            for key, value in fix_units.items():
+                self.diagnostics_dict[diag_name]["units"] = str(self.diagnostics_dict[diag_name]["units"]).replace(key, value)
 
         for diag_name in diags_to_delete:
             del self.diagnostics_dict[diag_name]

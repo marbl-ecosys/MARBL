@@ -12,4 +12,5 @@ How to Use MARBL in a GCM
    GCM_requirements/index.rst
    surface_flux.rst
    interior_tend.rst
+   additional_output.rst
    shutdown.rst

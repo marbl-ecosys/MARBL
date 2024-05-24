@@ -40,16 +40,30 @@ optional arguments:
                         (default: None)
   -o DIAGNOSTICS_FILE_OUT, --diagnostics_file_out DIAGNOSTICS_FILE_OUT
                         Name of file to be written (default: marbl.diags)
-
+  -u {cgs,mks}, --unit_system {cgs,mks}
+                        Unit system for parameter values (default: cgs)
+  -a, --append          Append to existing diagnostics file (default: False)
 """
+
+if __name__ == "__main__":
+    # We need marbl_root in python path so we can import MARBL_tools from generate_settings_file()
+    import argparse
+    import os
+    import sys
+    marbl_root = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
+    sys.path.append(marbl_root)
+    from MARBL_tools import MARBL_settings_class
+    from MARBL_tools import MARBL_diagnostics_class
+
+import logging
+from MARBL_tools.MARBL_utils import valid_diag_modes
 
 #######################################
 
-def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=False):
+def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, diag_mode="full", append=False):
     """ Produce a list of MARBL diagnostic frequencies and operators from a JSON parameter file
     """
 
-    import logging
     logger = logging.getLogger(__name__)
 
     if not append:
@@ -82,12 +96,18 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=Fa
     # is also a dictionary containing frequency and operator information. Note that
     # string values of frequency and operator are converted to lists of len 1 when the
     # JSON file that generates this list is processed
+    diag_mode_opts = valid_diag_modes()
+    diag_mode_in = diag_mode_opts.index(diag_mode)
     for diag_name in sorted(MARBL_diagnostics.diagnostics_dict.keys()):
         frequencies = MARBL_diagnostics.diagnostics_dict[diag_name]['frequency']
         operators = MARBL_diagnostics.diagnostics_dict[diag_name]['operator']
+        diag_modes = MARBL_diagnostics.diagnostics_dict[diag_name]['diag_mode']
         freq_op = []
-        for freq, op in zip(frequencies, operators):
-            freq_op.append(freq + '_' + op)
+        for freq, op, dm in zip(frequencies, operators, diag_modes):
+            if diag_mode_in >= diag_mode_opts.index(dm):
+                freq_op.append(freq + '_' + op)
+            elif not freq_op: # Only append "never_{op}" if freq_op is empty list
+                freq_op.append('never_' + op)
         fout.write("%s : %s\n" % (diag_name, ", ".join(freq_op)))
     fout.close()
 
@@ -96,8 +116,6 @@ def generate_diagnostics_file(MARBL_diagnostics, diagnostics_file_out, append=Fa
 def _parse_args(marbl_root):
     """ Parse command line arguments
     """
-
-    import argparse
 
     parser = argparse.ArgumentParser(description="Generate a MARBL settings file from a JSON file",
                                      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -114,7 +132,7 @@ def _parse_args(marbl_root):
 
     # Is the GCM providing initial bury coefficients via saved state?
     parser.add_argument('-v', '--saved_state_vars_source', action='store', dest='saved_state_vars_source',
-                        default='settings_file', choices = set(('settings_file', 'GCM')),
+                        default='settings_file', choices=['settings_file', 'GCM'],
                         help="Source of initial value for saved state vars that can come from GCM or settings file")
 
     # Command line argument to specify resolution (default is None)
@@ -129,16 +147,24 @@ def _parse_args(marbl_root):
     parser.add_argument('-o', '--diagnostics_file_out', action='store', dest='diagnostics_file_out', default='marbl.diags',
                         help='Name of file to be written')
 
+    # Command line argument to where to write the settings file being generated
+    parser.add_argument('-u', '--unit_system', action='store', dest='unit_system', default='cgs',
+                        choices=['cgs', 'mks'], help='Unit system for parameter values')
+
+    # Diagnostic mode (level of output to include)
+    parser.add_argument('-m', '--diag-mode', action='store', dest='diag_mode', default='full',
+                        choices=valid_diag_modes(),
+                        help='Level of output to include')
+
     # Append to existing diagnostics file?
     parser.add_argument('-a', '--append', action='store_true', dest='append',
                         help='Append to existing diagnostics file')
+
     return parser.parse_args()
 
 #######################################
 
 if __name__ == "__main__":
-    # We need marbl_root in python path so we can import MARBL_tools from generate_settings_file()
-    import sys, os
     marbl_root = os.path.abspath(os.path.join(os.path.dirname(sys.argv[0]), '..'))
     sys.path.append(marbl_root)
 
@@ -146,13 +172,15 @@ if __name__ == "__main__":
     args = _parse_args(marbl_root)
 
     # Set up logging
-    import logging
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
-    from MARBL_tools import MARBL_settings_class
-    from MARBL_tools import MARBL_diagnostics_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
-    MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file,
+                                           args.saved_state_vars_source,
+                                           grid=args.grid,
+                                           input_file=args.settings_file_in,
+                                           unit_system=args.unit_system)
+    MARBL_diagnostics = MARBL_diagnostics_class(args.default_diagnostics_file, DefaultSettings,
+                                                args.unit_system)
 
     # Write the diagnostic file
-    generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out, args.append)
+    generate_diagnostics_file(MARBL_diagnostics, args.diagnostics_file_out, args.diag_mode, args.append)

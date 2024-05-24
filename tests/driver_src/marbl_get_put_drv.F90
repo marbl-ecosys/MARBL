@@ -46,7 +46,8 @@ Contains
       zt(k) = p5*(zw(k-1)+zw(k))
     end do
 
-    ! Set ciso_on = .true. for local instance
+    ! Set abio_dic_on and ciso_on = .true. for local instance
+    call marbl_instance_loc%put_setting('abio_dic_on', .true.)
     call marbl_instance_loc%put_setting('ciso_on', .true.)
     if (marbl_instance_loc%StatusLog%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_loc%put_setting', subname)

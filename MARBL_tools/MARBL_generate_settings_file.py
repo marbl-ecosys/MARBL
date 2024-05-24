@@ -33,7 +33,8 @@ optional arguments:
                         A file that overrides values in JSON (default: None)
   -o SETTINGS_FILE_OUT, --settings_file_out SETTINGS_FILE_OUT
                         Name of file to be written (default: marbl.settings)
-
+  -u {cgs,mks}, --unit_system {cgs,mks}
+                        Unit system for parameter values (default: cgs)
 """
 
 #######################################
@@ -44,12 +45,19 @@ def generate_settings_file(MARBL_settings, settings_file_out):
 
     fout = open(settings_file_out,"w")
     # Sort variables by subcategory
+    written_any = False
     for subcat_name in MARBL_settings.get_subcategory_names():
-        fout.write("! %s\n" % subcat_name.split('. ')[1])
+        header = "! %s\n" % subcat_name.split('. ')[1]
+        var_values = []
         for varname in MARBL_settings.get_settings_dict_variable_names(subcat_name):
-            fout.write("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]['value']))
-        if subcat_name != MARBL_settings.get_subcategory_names()[-1]:
-            fout.write("\n")
+            var_values.append("%s = %s\n" % (varname, MARBL_settings.settings_dict[varname]['value']))
+        if len(var_values) > 0:
+            if written_any:
+                fout.write("\n")
+            written_any = True
+            fout.write(header)
+            for line in var_values:
+                fout.write(line)
     fout.close()
 
 #######################################
@@ -73,6 +81,14 @@ def _parse_args(marbl_root):
                         default='settings_file', choices = set(('settings_file', 'GCM')),
                         help="Source of initial value for saved state vars that can come from GCM or settings file")
 
+    # Command line flag to turn off the base biotic tracers
+    parser.add_argument('--disable-base-bio', action='store_false', dest='base_bio_on',
+                        help='Turn off base biotic tracer module (default is on)')
+
+    # Command line flag to turn on the abiotic DIC tracers
+    parser.add_argument('--enable-abio-dic', action='store_true', dest='abio_dic_on',
+                        help='Turn on abiotic DIC tracer module (default is off)')
+
     # Command line argument to specify resolution (default is None)
     parser.add_argument('-g', '--grid', action='store', dest='grid',
                         help='Some default values are grid-dependent')
@@ -84,6 +100,10 @@ def _parse_args(marbl_root):
     # Command line argument to where to write the settings file being generated
     parser.add_argument('-o', '--settings_file_out', action='store', dest='settings_file_out', default='marbl.settings',
                         help='Name of file to be written')
+
+    # Command line argument to where to write the settings file being generated
+    parser.add_argument('-u', '--unit_system', action='store', dest='unit_system', default='cgs',
+                        choices=['cgs', 'mks'], help='Unit system for parameter values')
 
     return parser.parse_args()
 
@@ -103,7 +123,13 @@ if __name__ == "__main__":
     logging.basicConfig(format='%(levelname)s (%(funcName)s): %(message)s', level=logging.DEBUG)
 
     from MARBL_tools import MARBL_settings_class
-    DefaultSettings = MARBL_settings_class(args.default_settings_file, args.saved_state_vars_source, args.grid, args.settings_file_in)
+    DefaultSettings = MARBL_settings_class(args.default_settings_file,
+                                           args.saved_state_vars_source,
+                                           args.base_bio_on,
+                                           args.abio_dic_on,
+                                           args.grid,
+                                           args.settings_file_in,
+                                           args.unit_system)
 
     # Write the settings file
     generate_settings_file(DefaultSettings, args.settings_file_out)

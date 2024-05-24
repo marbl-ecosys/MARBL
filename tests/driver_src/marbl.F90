@@ -42,6 +42,7 @@ Program marbl
 
   ! Use from libmarbl.a
   use marbl_interface, only : marbl_interface_class
+  use marbl_interface_public_types, only : marbl_output_for_GCM_linked_list_type
   use marbl_logging,   only : marbl_log_type
   use marbl_kinds_mod, only : char_len
 
@@ -72,10 +73,12 @@ Program marbl
   ! Variables for processing commandline arguments
   character(len=char_len) :: progname, argstr
   character(len=char_len) :: namelist_file, settings_file
+  character(len=3)        :: unit_system_opt
   integer        :: argcnt
-  logical        :: labort_after_argparse, lshow_usage, lfound_file
+  logical        :: labort_after_argparse, lshow_usage, lfound_file, lunavailable_output
 
   type(marbl_interface_class), dimension(:), allocatable :: marbl_instances
+  type(marbl_output_for_GCM_linked_list_type), pointer   :: registered_output
   type(marbl_log_type)          :: driver_status_log
   integer                       :: n, cnt
   character(len=char_len)       :: settings_file_line, varname, log_message
@@ -104,8 +107,9 @@ Program marbl
   labort_after_argparse = .false.
   lhas_namelist_file = .false.
   lhas_settings_file = .false.
-  settings_file = ''
-  namelist_file = ''
+  settings_file   = ''
+  namelist_file   = ''
+  unit_system_opt = 'cgs'
 
   !     (b) get program name and argument count
   call get_command_argument(0, progname)
@@ -165,7 +169,7 @@ Program marbl
           labort_after_argparse = .true.
           lshow_usage = .true.
           if (my_task .eq. 0) &
-            write(*, "(A)") "ERROR: -i argument requires input file as well"
+            write(*, "(A)") "ERROR: -s argument requires settings file as well"
           exit
         end if
 
@@ -178,6 +182,28 @@ Program marbl
           labort_after_argparse = .true.
           if (my_task .eq. 0) &
             write(*, "(2A)") "ERROR: Input file not found: ", trim(settings_file)
+          exit
+        end if
+
+      case ('-u', '--unit_system')
+        ! Error checking: is this the last commandline argument (i.e. no unit system was specified?)
+        if (n .eq. argcnt) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(A)") "ERROR: -u argument requires unit system as well"
+          exit
+        end if
+
+        n = n+1
+        call get_command_argument(n, unit_system_opt)
+
+        ! Error checking: only valid values are 'cgs' and 'mks'
+        if ((unit_system_opt .ne. "cgs") .and. (unit_system_opt .ne. "mks")) then
+          labort_after_argparse = .true.
+          lshow_usage = .true.
+          if (my_task .eq. 0) &
+            write(*, "(3A)") "ERROR: '", trim(unit_system_opt), "' is not a valid unit system"
           exit
         end if
 
@@ -216,9 +242,11 @@ Program marbl
       write(*,"(A)") "required argument:"
       write(*,"(A)") "  -n NAMELIST_FILE, --namelist_file NAMELIST_FILE"
       write(*,"(A)") "                        File containing &marbl_driver_nml"
-      write(*,"(A)") "optional argument:"
-      write(*,"(A)") "  -s settings_file, --settings_file SETTINGS_FILE"
+      write(*,"(A)") "optional arguments:"
+      write(*,"(A)") "  -s SETTINGS_FILE, --settings_file SETTINGS_FILE"
       write(*,"(A)") "                        File containing MARBL input file"
+      write(*,"(A)") "  -u UNIT_SYSTEM, --unit_system UNIT_SYSTEM"
+      write(*,"(A)") "                        Unit system to use (valid values: 'mks', 'cgs')"
     end if
   end if
 
@@ -278,17 +306,17 @@ Program marbl
     ! -- init regression test -- !
     case ('init')
       call verify_single_instance(num_inst, trim(testname))
-      call marbl_init_test(marbl_instances(1))
+      call marbl_init_test(marbl_instances(1), unit_system_opt)
 
     ! -- init-twice test -- !
     case ('init-twice')
       call verify_single_instance(num_inst, trim(testname))
       call marbl_instances(1)%put_setting('ciso_on = .false.')
-      call marbl_init_test(marbl_instances(1))
+      call marbl_init_test(marbl_instances(1), unit_system_opt)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'Without the CISO Tracers')
         call marbl_instances(1)%put_setting('ciso_on = .true.')
-        call marbl_init_test(marbl_instances(1))
+        call marbl_init_test(marbl_instances(1), unit_system_opt)
         if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
           call marbl_tools_summarize_timers(marbl_instances, driver_status_log, header_text = 'With the CISO Tracers')
           lsummarize_timers = .false.
@@ -300,7 +328,7 @@ Program marbl
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
       ldriver_log_to_file = .true.
-      call marbl_init_test(marbl_instances(1), lshutdown=.false.)
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown=.false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         do n=1,marbl_instances(1)%get_settings_var_cnt()
           call marbl_instances(1)%inquire_settings_metadata(n, sname=varname)
@@ -316,7 +344,7 @@ Program marbl
     case ('request_diags')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown = .false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log surface flux diagnostics passed back to driver
         associate(diags => marbl_instances(1)%surface_flux_diags%diags)
@@ -343,13 +371,14 @@ Program marbl
     case ('request_tracers')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown = .false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log tracers requested for initialization
         call driver_status_log%log_header('Requested tracers', subname)
         do n=1, size(marbl_instances(1)%tracer_metadata)
-          write(log_message, "(I0, 2A)") n, '. ',                               &
-            trim(marbl_instances(1)%tracer_metadata(n)%short_name)
+          write(log_message, "(I0, 5A)") n, '. ',                                &
+            trim(marbl_instances(1)%tracer_metadata(n)%short_name), ' (units: ', &
+            trim(marbl_instances(1)%tracer_metadata(n)%units), ')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
         call marbl_instances(1)%shutdown()
@@ -359,7 +388,7 @@ Program marbl
     case ('request_forcings')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown=.false., num_PAR_subcols=num_PAR_subcols)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log requested surface forcing fields
         call driver_status_log%log_header('Requested surface forcing fields', subname)
@@ -369,14 +398,19 @@ Program marbl
                 ' (units: ', trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
+
         ! Log requested interior forcing fields
         call driver_status_log%log_header('Requested interior forcing fields', subname)
+        ! Provide message if no itnerior tendency forcings are requested
+        if (size(marbl_instances(1)%interior_tendency_forcings) == 0) &
+          call driver_status_log%log_noerror('No forcing fields requested for interior_tendency_compute()!', subname)
         do n=1,size(marbl_instances(1)%interior_tendency_forcings)
           write(log_message, "(I0, 5A)") n, '. ', &
                trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname), &
                ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
+
         call marbl_instances(1)%shutdown()
       end if
 
@@ -384,7 +418,7 @@ Program marbl
     case ('request_restoring')
       call verify_single_instance(num_inst, trim(testname))
       lprint_marbl_log = .false.
-      call marbl_init_test(marbl_instances(1), lshutdown = .false.)
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown = .false.)
       if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
         ! Log tracers requested for restoring
         call driver_status_log%log_header('Requested tracers to restore', subname)
@@ -398,15 +432,69 @@ Program marbl
             call driver_status_log%log_noerror(log_message, subname)
           end if
         end do
+        ! Provide message if no tracers are restored
         if (cnt.eq.0) then
           call driver_status_log%log_noerror('No tracers to restore!', subname)
         end if
         call marbl_instances(1)%shutdown()
       end if
 
+    ! -- available_output test -- !
+    case ('available_output')
+      call verify_single_instance(num_inst, trim(testname))
+      lprint_marbl_log = .false.
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown = .false.)
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log available output for GCM and note if any output is unavailable
+        call driver_status_log%log_header('Available output for GCM', subname)
+        lunavailable_output = .false.
+        cnt = 0
+        registered_output => marbl_instances(1)%output_for_gcm_registry%registered_outputs
+        do while (associated(registered_output))
+          if (len_trim(registered_output%err_message) == 0) then
+            cnt = cnt+1
+            write(log_message, "(I0, 2A)") cnt, '. ', trim(registered_output%long_name)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, "(2A)") '   short name: ', trim(registered_output%short_name)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, "(2A)") '   units: ', trim(registered_output%units)
+            call driver_status_log%log_noerror(log_message, subname)
+            write(log_message, "(2A)") '   field_source: ', trim(registered_output%field_source)
+            call driver_status_log%log_noerror(log_message, subname)
+          else
+            lunavailable_output = .true.
+          end if
+          registered_output => registered_output%next
+        end do
+
+        if (cnt.eq.0) then
+          call driver_status_log%log_noerror('No available output for the GCM in this configuration!', subname)
+        end if
+
+        if (lunavailable_output) then
+          call driver_status_log%log_header('Unavailable output for GCM', subname)
+          cnt = 0
+          registered_output => marbl_instances(1)%output_for_gcm_registry%registered_outputs
+          do while (associated(registered_output))
+            if (len_trim(registered_output%err_message) > 0) then
+              cnt = cnt+1
+              write(log_message, "(I0, 2A)") cnt, '. ', trim(registered_output%long_name)
+              call driver_status_log%log_noerror(log_message, subname)
+              write(log_message, "(2A)") '   * ', trim(registered_output%err_message)
+              call driver_status_log%log_noerror(log_message, subname)
+            end if
+            registered_output => registered_output%next
+          end do
+        end if
+        call marbl_instances(1)%shutdown()
+      end if
+
+    ! -- call_compute_subroutines test -- !
     case ('call_compute_subroutines')
       lprint_marbl_log = .false.
-      call marbl_call_compute_subroutines_test(marbl_instances, hist_file, driver_status_log)
+      call marbl_call_compute_subroutines_test(marbl_instances, hist_file, unit_system_opt, driver_status_log)
+      if (driver_status_log%labort_MARBL) &
+        call marbl_io_print_marbl_log(driver_status_log)
 
     !    UNIT TESTS
     ! -- get_put test -- !

@@ -19,6 +19,7 @@ module marbl_interface
 
   use marbl_kinds_mod, only : r8, log_kind, int_kind, log_kind, char_len
 
+  use marbl_settings_mod, only : unit_system_type
   use marbl_settings_mod, only : zooplankton_cnt
   use marbl_settings_mod, only : marbl_settings_type
 
@@ -26,7 +27,8 @@ module marbl_interface
 
   use marbl_interface_public_types, only : marbl_domain_type
   use marbl_interface_public_types, only : marbl_tracer_metadata_type
-  use marbl_interface_public_types, only : marbl_surface_flux_output_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_registry_type
+  use marbl_interface_public_types, only : marbl_output_for_GCM_type
   use marbl_interface_public_types, only : marbl_diagnostics_type
   use marbl_interface_public_types, only : marbl_forcing_fields_type
   use marbl_interface_public_types, only : marbl_saved_state_type
@@ -76,11 +78,11 @@ module marbl_interface
      type(marbl_tracer_index_type)     , pointer    , public  :: tracer_indices => NULL()
      type(marbl_log_type)                           , public  :: StatusLog
 
-     type(marbl_saved_state_type)              , public               :: surface_flux_saved_state             ! input/output
-     type(marbl_saved_state_type)              , public               :: interior_tendency_saved_state        ! input/output
-     type(marbl_surface_flux_saved_state_indexing_type), public       :: surf_state_ind
+     type(marbl_saved_state_type)                           , public  :: surface_flux_saved_state             ! input/output
+     type(marbl_saved_state_type)                           , public  :: interior_tendency_saved_state        ! input/output
+     type(marbl_surface_flux_saved_state_indexing_type)     , public  :: surf_state_ind
      type(marbl_interior_tendency_saved_state_indexing_type), public  :: interior_state_ind
-     type(marbl_timers_type)                   , public               :: timer_summary
+     type(marbl_timers_type)                                , public  :: timer_summary
 
      ! public data related to computing interior tendencies
      real (r8), allocatable                             , public  :: tracers(:,:)                  ! input
@@ -88,6 +90,7 @@ module marbl_interface
      type(marbl_forcing_fields_type), allocatable       , public  :: interior_tendency_forcings(:) ! input
      real (r8), allocatable                             , public  :: interior_tendencies(:,:)      ! output
      type(marbl_interior_tendency_forcing_indexing_type), public  :: interior_tendency_forcing_ind ! FIXME #311: should be private
+     type(marbl_output_for_GCM_type)                    , public  :: interior_tendency_output      ! output
      type(marbl_diagnostics_type)                       , public  :: interior_tendency_diags       ! output
 
      ! public data related to computing surface fluxes
@@ -95,26 +98,31 @@ module marbl_interface
      type(marbl_forcing_fields_type)                , public, allocatable  :: surface_flux_forcings(:)    ! input
      type(marbl_surface_flux_forcing_indexing_type) , public               :: surface_flux_forcing_ind    ! FIXME #311: should be private
      real (r8)                                      , public, allocatable  :: surface_fluxes(:,:)         ! output
-     type(marbl_surface_flux_output_type)           , public               :: surface_flux_output         ! output
+     type(marbl_output_for_GCM_type)                , public               :: surface_flux_output         ! output
      type(marbl_diagnostics_type)                   , public               :: surface_flux_diags          ! output
 
      ! public data - global averages
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
-     real (r8)                                 , public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
+     real (r8), public, allocatable  :: glo_avg_fields_interior_tendency(:)   ! output (nfields)
+     real (r8), public, allocatable  :: glo_avg_averages_interior_tendency(:) ! input (nfields)
+     real (r8), public, allocatable  :: glo_avg_fields_surface_flux(:,:)      ! output (num_elements,nfields)
+     real (r8), public, allocatable  :: glo_avg_averages_surface_flux(:)      ! input (nfields)
 
      ! FIXME #77: for now, running means are being computed in the driver
      !            they will eventually be moved from the interface to inside MARBL
-     real (r8)                                 , public, allocatable  :: glo_scalar_interior_tendency(:)
-     real (r8)                                 , public, allocatable  :: glo_scalar_surface_flux(:)
+     real (r8), public, allocatable  :: glo_scalar_interior_tendency(:)
+     real (r8), public, allocatable  :: glo_scalar_surface_flux(:)
 
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_interior_tendency(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_avg_rmean_surface_flux(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
-     type(marbl_running_mean_0d_type)          , public, allocatable  :: glo_scalar_rmean_surface_flux(:)
+     ! Registry of available output for the GCM
+     ! (Public so we can provide available_output test in the standalone driver)
+     type(marbl_output_for_GCM_registry_type), public :: output_for_gcm_registry
+
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_avg_rmean_surface_flux(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_scalar_rmean_interior_tendency(:)
+     type(marbl_running_mean_0d_type), public, allocatable  :: glo_scalar_rmean_surface_flux(:)
 
      ! private data
+     type(unit_system_type),                   private :: unit_system
      type(marbl_PAR_type),                     private :: PAR
      type(autotroph_derived_terms_type),       private :: autotroph_derived_terms
      type(autotroph_local_type),               private :: autotroph_local
@@ -160,6 +168,7 @@ module marbl_interface
                                           get_logical, &
                                           get_string
      procedure, public  :: get_settings_var_cnt
+     procedure, public  :: add_output_for_GCM
      procedure, private :: inquire_settings_metadata_by_name
      procedure, private :: inquire_settings_metadata_by_id
      procedure, private :: put_real
@@ -196,6 +205,7 @@ contains
        gcm_delta_z,                       &
        gcm_zw,                            &
        gcm_zt,                            &
+       unit_system_opt,                   &
        lgcm_has_global_ops)
 
     use marbl_init_mod, only : marbl_init_log_and_timers
@@ -218,10 +228,12 @@ contains
     real(r8),                     intent(in)    :: gcm_delta_z(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zw(gcm_num_levels) ! thickness of layer k
     real(r8),                     intent(in)    :: gcm_zt(gcm_num_levels) ! thickness of layer k
+    character(len=*),  optional,  intent(in)    :: unit_system_opt
     logical,           optional,  intent(in)    :: lgcm_has_global_ops
 
     character(len=*), parameter :: subname = 'marbl_interface:init'
     integer, parameter :: num_elements_interior_tendency = 1 ! FIXME #66: get this value from interface, let it vary
+    character(len=char_len) :: unit_system_opt_loc
 
     !--------------------------------------------------------------------
     ! initialize status log and timers
@@ -254,7 +266,18 @@ contains
     ! Initialize parameters that do not depend on tracer count or PFT categories
     !---------------------------------------------------------------------------
 
-    call marbl_init_parameters_pre_tracers(this%settings, this%StatusLog)
+    if (present(unit_system_opt)) then
+      unit_system_opt_loc = unit_system_opt
+    else
+      unit_system_opt_loc = 'cgs'
+    end if
+    call this%unit_system%set(unit_system_opt_loc, this%StatusLog)
+    if (this%StatusLog%labort_marbl) then
+      call this%StatusLog%log_error_trace("unit_system%set", subname)
+      return
+    end if
+
+    call marbl_init_parameters_pre_tracers(this%settings, this%unit_system, this%StatusLog)
     if (this%StatusLog%labort_marbl) then
       call this%StatusLog%log_error_trace("marbl_init_parameters_pre_tracers", subname)
       return
@@ -278,6 +301,12 @@ contains
          delta_z                        = gcm_delta_z,                    &
          zw                             = gcm_zw,                         &
          zt                             = gcm_zt)
+
+    !-----------------------------------------------------------------------
+    !  Register variables for add_output()
+    !-----------------------------------------------------------------------
+
+    call this%output_for_gcm_registry%create_registry(this%unit_system%conc_flux_units)
 
     !--------------------------------------------------------------------
     ! call constructors and allocate memory
@@ -305,7 +334,7 @@ contains
     !  Set up tracers
     !-----------------------------------------------------------------------
 
-    call marbl_init_tracers(num_levels, num_elements_surface_flux, &
+    call marbl_init_tracers(num_levels, num_elements_surface_flux, this%unit_system, &
                             this%tracer_indices, this%tracers_at_surface, this%surface_fluxes, &
                             this%tracers, this%bot_flux_to_tend, this%interior_tendencies, &
                             this%tracer_metadata, this%StatusLog)
@@ -340,6 +369,7 @@ contains
          marbl_domain                  = this%domain,                         &
          marbl_tracer_metadata         = this%tracer_metadata,                &
          marbl_tracer_indices          = this%tracer_indices,                 &
+         unit_system                   = this%unit_system,                    &
          marbl_interior_tendency_diags = this%interior_tendency_diags,        &
          marbl_surface_flux_diags      = this%surface_flux_diags,             &
          marbl_status_log              = this%StatusLog)
@@ -375,6 +405,7 @@ contains
 
     call marbl_init_forcing_fields(this%domain, &
                                    this%tracer_metadata, &
+                                   this%unit_system, &
                                    this%surface_flux_forcing_ind, &
                                    this%surface_flux_forcings, &
                                    this%interior_tendency_forcing_ind, &
@@ -745,6 +776,81 @@ contains
 
   !***********************************************************************
 
+  subroutine add_output_for_GCM(this, num_elements, field_name, output_id, field_source, num_levels)
+    ! Check the registry to see if field_name is provided from surface_flux_compute() or interior_tendency_compute()
+    ! add it to the proper output_for_GCM type, or log a useful error message
+
+    use marbl_interface_public_types, only : marbl_output_for_GCM_linked_list_type
+
+    class (marbl_interface_class), intent(inout) :: this
+    character(len=*),     intent(in)    :: field_name
+    integer(int_kind),    intent(in)    :: num_elements
+    integer(int_kind),    intent(out)   :: output_id
+    character(len=*),     intent(out)   :: field_source
+    integer(int_kind),    optional, intent(in) :: num_levels
+
+    character(len=*), parameter :: subname = 'marbl_interface:add_output_for_GCM'
+    character(len=char_len) :: log_message
+    type(marbl_output_for_GCM_linked_list_type), pointer :: registered_output
+
+    output_id = 0
+    field_source = ""
+
+    if (.not. associated(this%output_for_gcm_registry%registered_outputs)) then
+      call this%StatusLog%log_error("No outputs for GCM have been registered!", subname)
+      return
+    end if
+
+    registered_output => this%output_for_gcm_registry%registered_outputs
+    do while (associated(registered_output))
+      if (trim(field_name) == trim(registered_output%short_name)) then
+        ! err_message will be populated if this field is unavailable in current configuration
+        if (len_trim(registered_output%err_message) > 0) then
+          write(log_message, "(A,1X,A)") trim(field_name), trim(registered_output%err_message)
+          call this%StatusLog%log_error(log_message, subname)
+          return
+        end if
+        exit
+      end if
+      registered_output => registered_output%next
+    end do
+
+    ! Abort if field_name was not registered
+    if (.not. associated(registered_output)) then
+      write(log_message, "(2A)") trim(field_name), " is not a valid output field name for the GCM"
+      call this%StatusLog%log_error(log_message, subname)
+      return
+    end if
+
+    write(log_message, "(3A)") "Adding ", trim(field_name), " to outputs needed by the GCM"
+    call this%StatusLog%log_noerror(log_message, subname)
+
+    ! Set field source, and then add output to appropriate output_for_GCM_type
+    field_source = trim(registered_output%field_source)
+    if ( trim(field_source) == "surface_flux") then
+      call this%surface_flux_output%add_output(registered_output%short_name, &
+                                               registered_output%long_name, &
+                                               registered_output%units, &
+                                               num_elements, &
+                                               output_id, &
+                                               num_levels)
+    end if
+    if (trim(field_source) == "interior_tendency") then
+      call this%interior_tendency_output%add_output(registered_output%short_name, &
+                                                    registered_output%long_name, &
+                                                    registered_output%units, &
+                                                    num_elements, &
+                                                    output_id, &
+                                                    num_levels)
+    end if
+
+    ! %id is a pointer to a member of either sfo_ind or ito_ind
+    registered_output%id = output_id
+
+  end subroutine add_output_for_GCM
+
+  !***********************************************************************
+
   subroutine inquire_settings_metadata_by_name(this, varname, id, lname, units, datatype)
 
     class (marbl_interface_class), intent(inout) :: this
@@ -890,6 +996,7 @@ contains
          saved_state_ind                   = this%interior_state_ind,               &
          marbl_tracer_indices              = this%tracer_indices,                   &
          marbl_timer_indices               = this%timer_ids,                        &
+         unit_system                       = this%unit_system,                      &
          PAR                               = this%PAR,                              &
          dissolved_organic_matter          = this%dissolved_organic_matter,         &
          carbonate                         = this%carbonate,                        &
@@ -899,6 +1006,7 @@ contains
          zooplankton_local                 = this%zooplankton_local,                &
          zooplankton_share                 = this%zooplankton_share,                &
          saved_state                       = this%interior_tendency_saved_state,    &
+         interior_tendency_output          = this%interior_tendency_output,         &
          marbl_timers                      = this%timers,                           &
          interior_tendency_share           = this%interior_tendency_share,          &
          marbl_particulate_share           = this%particulate_share,                &
@@ -944,6 +1052,7 @@ contains
          surface_flux_forcings    = this%surface_flux_forcings,               &
          tracers_at_surface       = this%tracers_at_surface,                  &
          surface_fluxes           = this%surface_fluxes,                      &
+         unit_system              = this%unit_system,                         &
          marbl_tracer_indices     = this%tracer_indices,                      &
          saved_state              = this%surface_flux_saved_state,            &
          saved_state_ind          = this%surf_state_ind,                      &

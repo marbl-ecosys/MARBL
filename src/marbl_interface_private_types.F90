@@ -24,7 +24,7 @@ module marbl_interface_private_types
      real(r8), allocatable :: col_frac(:)    ! column fraction occupied by each sub-column, dimension is (PAR_nsubcols)
      real(r8), allocatable :: interface(:,:) ! PAR at layer interfaces, dimensions are (0:km,PAR_nsubcols)
      real(r8), allocatable :: avg(:,:)       ! PAR averaged over layer, dimensions are (km,PAR_nsubcols)
-     real(r8), allocatable :: KPARdz(:)      ! PAR adsorption coefficient times dz (cm), dimension is (km)
+     real(r8), allocatable :: KPARdz(:)      ! PAR absorption coefficient times dz (absorp coeff is 1/L => variable is unitless), dimension is (km)
    contains
      procedure, public :: construct => marbl_PAR_constructor
      procedure, public :: destruct => marbl_PAR_destructor
@@ -124,7 +124,9 @@ module marbl_interface_private_types
     real(r8), allocatable :: zoo_graze_poc(:,:)    ! grazing of zooplankton routed to poc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_doc(:,:)    ! grazing of zooplankton routed to doc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_graze_dic(:,:)    ! grazing of zooplankton routed to dic (mmol C/m^3/sec)
-    real(r8), allocatable :: zoo_loss(:,:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss(:,:)         ! total zooplankton losses (bulk and basal) (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_bulk(:,:)    ! mortality & higher trophic level predation on zooplankton (mmol C/m^3/sec)
+    real(r8), allocatable :: zoo_loss_basal(:,:)   ! zooplankton losses due to basal respiration (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_loss_poc(:,:)     ! zoo_loss routed to poc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_loss_doc(:,:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
     real(r8), allocatable :: zoo_loss_dic(:,:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
@@ -147,7 +149,7 @@ module marbl_interface_private_types
 
   type, public :: zooplankton_share_type
      real(r8), allocatable :: zoototC_loc_fields(:)         ! local copy of model zooC
-     real(r8), allocatable :: zootot_loss_fields(:)         ! mortality & higher trophic grazing on zooplankton (mmol C/m^3/sec)
+     real(r8), allocatable :: zootot_loss_fields(:)         ! mortality & higher trophic level predation on zooplankton (mmol C/m^3/sec)
      real(r8), allocatable :: zootot_loss_poc_fields(:)     ! zoo_loss routed to large detrital (mmol C/m^3/sec)
      real(r8), allocatable :: zootot_loss_doc_fields(:)     ! zoo_loss routed to doc (mmol C/m^3/sec)
      real(r8), allocatable :: zootot_loss_dic_fields(:)     ! zoo_loss routed to dic (mmol C/m^3/sec)
@@ -169,15 +171,15 @@ module marbl_interface_private_types
      real(r8) :: gamma                      ! fraction of production -> hard subclass
      real(r8) :: mass                       ! mass of 1e9 base units in g
      real(r8) :: rho                        ! QA mass ratio of POC to this particle class
-     real(r8) :: to_floor                   ! flux hitting sea floor (base units/cm^s/sec)
-     real(r8) :: flux_at_ref_depth          ! flux at particulate_flux_ref_depth (base units/cm^s/sec)
-     real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: prod     (:) ! production term (base units/cm^3/sec)
-     real(r8), allocatable  :: sflux_out(:) ! outgoing flux of soft subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: hflux_out(:) ! outgoing flux of hard subclass (base units/cm^2/sec)
-     real(r8), allocatable  :: sed_loss (:) ! loss to sediments (base units/cm^s/sec)
-     real(r8), allocatable  :: remin    (:) ! remineralization term (base units/cm^3/sec)
+     real(r8) :: to_floor                   ! flux hitting sea floor (base units/L^2/sec)
+     real(r8) :: flux_at_ref_depth          ! flux at particulate_flux_ref_depth (base units/L^2/sec)
+     real(r8), allocatable  :: sflux_in (:) ! incoming flux of soft subclass (base units/L^2/sec)
+     real(r8), allocatable  :: hflux_in (:) ! incoming flux of hard subclass (base units/L^2/sec)
+     real(r8), allocatable  :: prod     (:) ! production term (base units/L^3/sec)
+     real(r8), allocatable  :: sflux_out(:) ! outgoing flux of soft subclass (base units/L^2/sec)
+     real(r8), allocatable  :: hflux_out(:) ! outgoing flux of hard subclass (base units/L^2/sec)
+     real(r8), allocatable  :: sed_loss (:) ! loss to sediments (base units/L^2/sec)
+     real(r8), allocatable  :: remin    (:) ! remineralization term (base units/L^3/sec)
    contains
      procedure, public :: construct => column_sinking_particle_constructor
      procedure, public :: destruct => column_sinking_particle_destructor
@@ -190,7 +192,7 @@ module marbl_interface_private_types
   type, public :: marbl_surface_flux_internal_type
      real (r8), allocatable, dimension(:)   :: piston_velocity
      real (r8), allocatable, dimension(:)   :: flux_co2
-     real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (nmol/cm^2/s)
+     real (r8), allocatable, dimension(:)   :: flux_alt_co2 ! tracer flux alternative CO2 (conc flux units)
      real (r8), allocatable, dimension(:)   :: co2star
      real (r8), allocatable, dimension(:)   :: dco2star
      real (r8), allocatable, dimension(:)   :: pco2surf
@@ -202,9 +204,9 @@ module marbl_interface_private_types
      real (r8), allocatable, dimension(:)   :: dpco2_alt
      real (r8), allocatable, dimension(:)   :: schmidt_co2  ! Schmidt number
      real (r8), allocatable, dimension(:)   :: schmidt_o2   ! Schmidt number
-     real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (cm/s)
-     real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (cm/s)
-     real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation (mmol/m^3)
+     real (r8), allocatable, dimension(:)   :: pv_o2        ! piston velocity (L/s)
+     real (r8), allocatable, dimension(:)   :: pv_co2       ! piston velocity (L/s)
+     real (r8), allocatable, dimension(:)   :: o2sat        ! used O2 saturation conc units)
      real (r8), allocatable, dimension(:)   :: nhx_surface_emis
    contains
      procedure, public :: construct => marbl_surface_flux_internal_constructor
@@ -233,20 +235,21 @@ module marbl_interface_private_types
   !***********************************************************************
 
   type, public :: marbl_particulate_share_type
-     type(column_sinking_particle_type) :: POC              ! base units = nmol C
-     type(column_sinking_particle_type) :: POP              ! base units = nmol P
-     type(column_sinking_particle_type) :: PON              ! base units = nmol N
-     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol CaCO3
-     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol SiO2
-     type(column_sinking_particle_type) :: dust             ! base units = g
-     type(column_sinking_particle_type) :: P_iron           ! base units = nmol Fe
+     ! units differ depending for cgs and mks
+     type(column_sinking_particle_type) :: POC              ! base units = nmol or mmol C
+     type(column_sinking_particle_type) :: POP              ! base units = nmol or mmol P
+     type(column_sinking_particle_type) :: PON              ! base units = nmol or mmol N
+     type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol or mmol CaCO3
+     type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol or mmol CaCO3
+     type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol or mmol SiO2
+     type(column_sinking_particle_type) :: dust             ! base units = g or kg
+     type(column_sinking_particle_type) :: P_iron           ! base units = nmol or mmol Fe
 
      real(r8), allocatable :: decay_CaCO3_fields       (:) ! scaling factor for dissolution of CaCO3
      real(r8), allocatable :: decay_POC_E_fields       (:) ! scaling factor for dissolution of excess POC
      real(r8), allocatable :: decay_Hard_fields        (:) ! scaling factor for dissolution of Hard Ballast
-     real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (cm)
-     real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (cm)
+     real(r8), allocatable :: poc_diss_fields          (:) ! diss. length used (L)
+     real(r8), allocatable :: caco3_diss_fields        (:) ! caco3 diss. length used (L)
      real(r8), allocatable :: POC_remin_fields         (:) ! POC remin from ecosys before it gets modified for k=KMT
      real(r8), allocatable :: POC_prod_avail_fields    (:) ! POC production available for excess POC flux
 
@@ -343,10 +346,11 @@ module marbl_interface_private_types
   type, public :: marbl_tracer_index_type
     ! Book-keeping (tracer count and index ranges)
     integer (int_kind) :: total_cnt = 0
-    type (marbl_tracer_count_type) :: ecosys_base
+    type (marbl_tracer_count_type) :: base_bio
+    type (marbl_tracer_count_type) :: abio_dic
     type (marbl_tracer_count_type) :: ciso
 
-    ! General tracers
+    ! base biotic tracers
     integer (int_kind) :: po4_ind         = 0 ! dissolved inorganic phosphate
     integer (int_kind) :: no3_ind         = 0 ! dissolved inorganic nitrate
     integer (int_kind) :: sio3_ind        = 0 ! dissolved inorganic silicate
@@ -365,7 +369,11 @@ module marbl_interface_private_types
     integer (int_kind) :: donr_ind        = 0 ! refractory DON
     integer (int_kind) :: docr_ind        = 0 ! refractory DOC
 
-    ! CISO tracers
+    ! abiotic dic tracers
+    integer (int_kind) :: abio_dic_ind    = 0 ! abiotic dissolved inorganic carbon
+    integer (int_kind) :: abio_di14c_ind  = 0 ! abiotic dissolved inorganic carbon 14
+
+    ! carbon isotope tracers
     integer (int_kind) :: di13c_ind       = 0 ! dissolved inorganic carbon 13
     integer (int_kind) :: do13ctot_ind    = 0 ! dissolved organic carbon 13 (semi-labile+refractory)
     integer (int_kind) :: di14c_ind       = 0 ! dissolved inorganic carbon 14
@@ -443,8 +451,9 @@ module marbl_interface_private_types
   !*****************************************************************************
 
   type, public :: marbl_surface_flux_saved_state_indexing_type
-    integer :: ph_surf = 0
-    integer :: ph_alt_co2_surf = 0
+    integer :: base_bio_ph_surf = 0
+    integer :: base_bio_ph_alt_co2_surf = 0
+    integer :: abio_dic_ph_surf = 0
   end type marbl_surface_flux_saved_state_indexing_type
 
   !*****************************************************************************
@@ -469,14 +478,14 @@ module marbl_interface_private_types
      integer(int_kind) :: DpCO2
      integer(int_kind) :: PV_CO2
      integer(int_kind) :: SCHMIDT_CO2
-     integer(int_kind) :: DIC_GAS_FLUX
+     integer(int_kind) :: FG_CO2
      integer(int_kind) :: PH
      integer(int_kind) :: ATM_CO2
      integer(int_kind) :: CO2STAR_ALT_CO2
      integer(int_kind) :: DCO2STAR_ALT_CO2
      integer(int_kind) :: pCO2SURF_ALT_CO2
      integer(int_kind) :: DpCO2_ALT_CO2
-     integer(int_kind) :: DIC_GAS_FLUX_ALT_CO2
+     integer(int_kind) :: FG_CO2_ALT_CO2
      integer(int_kind) :: PH_ALT_CO2
      integer(int_kind) :: ATM_ALT_CO2
      integer(int_kind) :: IRON_FLUX
@@ -484,6 +493,20 @@ module marbl_interface_private_types
      integer(int_kind) :: NOx_FLUX
      integer(int_kind) :: NHy_FLUX
      integer(int_kind) :: NHx_SURFACE_EMIS
+
+     integer(int_kind) :: ABIO_pCO2
+     integer(int_kind) :: ABIO_D14C_atm
+     integer(int_kind) :: ABIO_CO2STAR
+     integer(int_kind) :: ABIO_DCO2STAR
+     integer(int_kind) :: ABIO_pCO2SURF
+     integer(int_kind) :: ABIO_DpCO2
+     integer(int_kind) :: ABIO_PH
+     integer(int_kind) :: ABIO_ALK_SURF
+     integer(int_kind) :: ABIO_FG_DIC
+     integer(int_kind) :: ABIO_FG_DI14C
+     integer(int_kind) :: d_SF_ABIO_DIC_d_ABIO_DIC
+     integer(int_kind) :: d_SF_ABIO_DI14C_d_ABIO_DIC
+     integer(int_kind) :: d_SF_ABIO_DI14C_d_ABIO_DI14C
 
      integer(int_kind) :: CISO_DI13C_GAS_FLUX       ! di13c flux
      integer(int_kind) :: CISO_DI14C_GAS_FLUX       ! di14c flux
@@ -565,8 +588,8 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: auto_graze_poc_zint_100m(:)
     integer(int_kind), allocatable :: auto_graze_doc_zint(:)
     integer(int_kind), allocatable :: auto_graze_doc_zint_100m(:)
-    integer(int_kind), allocatable :: auto_graze_zoo_zint(:)
-    integer(int_kind), allocatable :: auto_graze_zoo_zint_100m(:)
+    integer(int_kind), allocatable :: auto_graze_zoo_zint(:,:)
+    integer(int_kind), allocatable :: auto_graze_zoo_zint_100m(:,:)
     integer(int_kind), allocatable :: auto_loss_zint(:)
     integer(int_kind), allocatable :: auto_loss_zint_100m(:)
     integer(int_kind), allocatable :: auto_loss_poc_zint(:)
@@ -581,6 +604,9 @@ module marbl_interface_private_types
     ! Zooplankton 2D diags
     integer(int_kind), allocatable :: zoo_loss_zint(:)
     integer(int_kind), allocatable :: zoo_loss_zint_100m(:)
+    integer(int_kind), allocatable :: zoo_loss_zint_150m(:)
+    integer(int_kind), allocatable :: zoo_loss_basal_zint(:)
+    integer(int_kind), allocatable :: zoo_loss_basal_zint_100m(:)
     integer(int_kind), allocatable :: zoo_loss_poc_zint(:)
     integer(int_kind), allocatable :: zoo_loss_poc_zint_100m(:)
     integer(int_kind), allocatable :: zoo_loss_doc_zint(:)
@@ -591,8 +617,8 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: zoo_graze_poc_zint_100m(:)
     integer(int_kind), allocatable :: zoo_graze_doc_zint(:)
     integer(int_kind), allocatable :: zoo_graze_doc_zint_100m(:)
-    integer(int_kind), allocatable :: zoo_graze_zoo_zint(:)
-    integer(int_kind), allocatable :: zoo_graze_zoo_zint_100m(:)
+    integer(int_kind), allocatable :: zoo_graze_zoo_zint(:,:)
+    integer(int_kind), allocatable :: zoo_graze_zoo_zint_100m(:,:)
     integer(int_kind), allocatable :: x_graze_zoo_zint(:)
     integer(int_kind), allocatable :: x_graze_zoo_zint_100m(:)
 
@@ -719,6 +745,7 @@ module marbl_interface_private_types
 
     ! Zooplankton 3D diags
     integer(int_kind), allocatable :: zoo_loss(:)
+    integer(int_kind), allocatable :: zoo_loss_basal(:)
     integer(int_kind), allocatable :: zoo_loss_poc(:)
     integer(int_kind), allocatable :: zoo_loss_doc(:)
     integer(int_kind), allocatable :: zoo_graze(:)
@@ -728,64 +755,67 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: zoo_graze_zoo(:,:)
     integer(int_kind), allocatable :: x_graze_zoo(:)
 
-     !  ciso ids for nonstandard 3d fields
-     integer (int_kind) :: CISO_PO13C_FLUX_IN                                 ! po13c flux into cell
-     integer (int_kind) :: CISO_PO14C_FLUX_IN                                 ! po14c flux into cell
-     integer (int_kind) :: CISO_PO13C_PROD                                    ! po13c production
-     integer (int_kind) :: CISO_PO14C_PROD                                    ! po14c production
-     integer (int_kind) :: CISO_PO13C_REMIN                                   ! po13c remineralization
-     integer (int_kind) :: CISO_PO14C_REMIN                                   ! po14c remineralization
-     integer (int_kind) :: CISO_Ca13CO3_PROD                                  ! ca13co3 production
-     integer (int_kind) :: CISO_Ca14CO3_PROD                                  ! ca14co3 production
-     integer (int_kind) :: CISO_Ca13CO3_REMIN                                 ! ca13co3 remineralization
-     integer (int_kind) :: CISO_Ca14CO3_REMIN                                 ! ca14co3 remineralization
-     integer (int_kind) :: CISO_Ca13CO3_FLUX_IN                               ! ca13co3 flux into cell
-     integer (int_kind) :: CISO_Ca14CO3_FLUX_IN                               ! ca14co3 flux into cell
-     integer (int_kind) :: CISO_photo13C_TOT                                  ! total 13C fixation
-     integer (int_kind) :: CISO_photo14C_TOT                                  ! total 14C fixation
-     integer (int_kind) :: CISO_photo13C_TOT_zint                             ! total 13C fixation vertical integral
-     integer (int_kind) :: CISO_photo14C_TOT_zint                             ! total 14C fixation vertical integral
+    !  abio ids
+    integer(int_kind) :: ABIO_D14C_ocn
 
-     ! ciso ids for  MORE nonstandard 3d fields
-     integer (int_kind), allocatable :: CISO_eps_autotroph(:)       ! epsilon for each autotroph
-     integer (int_kind), allocatable :: CISO_mui_to_co2star(:)      ! mui_to_co2star for each autotroph
-     integer (int_kind), allocatable :: CISO_Ca13CO3_form(:)        ! Ca13CO3 formation
-     integer (int_kind), allocatable :: CISO_Ca14CO3_form(:)        ! Ca14CO3 formation
-     integer (int_kind), allocatable :: CISO_Ca13CO3_form_zint(:)   ! Ca13CO3 formation vertical integral 0-100 m
-     integer (int_kind), allocatable :: CISO_Ca14CO3_form_zint(:)   ! Ca14CO3 formation vertical integral 0-100 m
-     integer (int_kind), allocatable :: CISO_photo13C(:)            ! 13C fixation
-     integer (int_kind), allocatable :: CISO_photo14C(:)            ! 14C fixation
-     integer (int_kind), allocatable :: CISO_photo13C_zint(:)       ! 13C fixation vertical integral
-     integer (int_kind), allocatable :: CISO_photo14C_zint(:)       ! 14C fixation vertical integral
-     integer (int_kind), allocatable :: CISO_d13C(:)                ! d13C of autotroph carbon
-     integer (int_kind), allocatable :: CISO_d14C(:)                ! d14C of autotroph carbon
-     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! d14C of autotrophCaCO3
-     integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! d13C of autotrophCaCO3
+    !  ciso ids for nonstandard 3d fields
+    integer (int_kind) :: CISO_PO13C_FLUX_IN                                 ! po13c flux into cell
+    integer (int_kind) :: CISO_PO14C_FLUX_IN                                 ! po14c flux into cell
+    integer (int_kind) :: CISO_PO13C_PROD                                    ! po13c production
+    integer (int_kind) :: CISO_PO14C_PROD                                    ! po14c production
+    integer (int_kind) :: CISO_PO13C_REMIN                                   ! po13c remineralization
+    integer (int_kind) :: CISO_PO14C_REMIN                                   ! po14c remineralization
+    integer (int_kind) :: CISO_Ca13CO3_PROD                                  ! ca13co3 production
+    integer (int_kind) :: CISO_Ca14CO3_PROD                                  ! ca14co3 production
+    integer (int_kind) :: CISO_Ca13CO3_REMIN                                 ! ca13co3 remineralization
+    integer (int_kind) :: CISO_Ca14CO3_REMIN                                 ! ca14co3 remineralization
+    integer (int_kind) :: CISO_Ca13CO3_FLUX_IN                               ! ca13co3 flux into cell
+    integer (int_kind) :: CISO_Ca14CO3_FLUX_IN                               ! ca14co3 flux into cell
+    integer (int_kind) :: CISO_photo13C_TOT                                  ! total 13C fixation
+    integer (int_kind) :: CISO_photo14C_TOT                                  ! total 14C fixation
+    integer (int_kind) :: CISO_photo13C_TOT_zint                             ! total 13C fixation vertical integral
+    integer (int_kind) :: CISO_photo14C_TOT_zint                             ! total 14C fixation vertical integral
 
-     integer (int_kind) :: CISO_eps_aq_g                                      ! eps_aq_g
-     integer (int_kind) :: CISO_eps_dic_g                                     ! eps_dic_g
-     integer (int_kind) :: CISO_DO13Ctot_prod                                 ! do13ctot production
-     integer (int_kind) :: CISO_DO14Ctot_prod                                 ! do14ctot production
-     integer (int_kind) :: CISO_DO13Ctot_remin                                ! do13ctot remineralization
-     integer (int_kind) :: CISO_DO14Ctot_remin                                ! do14ctot remineralization
-     integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
-     integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
-     integer (int_kind) :: CISO_zoototC_d13C                                  ! d13C of total zooC
-     integer (int_kind) :: CISO_zoototC_d14C                                  ! d14C of total zooC
-     integer (int_kind) :: CISO_DOCtot_d13C                                   ! d13C of DOCtot
-     integer (int_kind) :: CISO_DOCtot_d14C                                   ! d14C of DOCtot
-     integer (int_kind) :: CISO_DIC_d13C                                      ! d13C of DIC
-     integer (int_kind) :: CISO_DIC_d14C                                      ! d14C of DIC
-     integer (int_kind) :: calcToSed_13C                                      ! calcite flux sedimentary burial
-     integer (int_kind) :: calcToSed_14C                                      ! calcite flux sedimentary burial
-     integer (int_kind) :: pocToSed_13C                                       ! poc burial flux to sediments
-     integer (int_kind) :: pocToSed_14C                                       ! poc burial flux to sediments
+    ! ciso ids for  MORE nonstandard 3d fields
+    integer (int_kind), allocatable :: CISO_eps_autotroph(:)       ! epsilon for each autotroph
+    integer (int_kind), allocatable :: CISO_mui_to_co2star(:)      ! mui_to_co2star for each autotroph
+    integer (int_kind), allocatable :: CISO_Ca13CO3_form(:)        ! Ca13CO3 formation
+    integer (int_kind), allocatable :: CISO_Ca14CO3_form(:)        ! Ca14CO3 formation
+    integer (int_kind), allocatable :: CISO_Ca13CO3_form_zint(:)   ! Ca13CO3 formation vertical integral 0-100 m
+    integer (int_kind), allocatable :: CISO_Ca14CO3_form_zint(:)   ! Ca14CO3 formation vertical integral 0-100 m
+    integer (int_kind), allocatable :: CISO_photo13C(:)            ! 13C fixation
+    integer (int_kind), allocatable :: CISO_photo14C(:)            ! 14C fixation
+    integer (int_kind), allocatable :: CISO_photo13C_zint(:)       ! 13C fixation vertical integral
+    integer (int_kind), allocatable :: CISO_photo14C_zint(:)       ! 14C fixation vertical integral
+    integer (int_kind), allocatable :: CISO_d13C(:)                ! d13C of autotroph carbon
+    integer (int_kind), allocatable :: CISO_d14C(:)                ! d14C of autotroph carbon
+    integer (int_kind), allocatable :: CISO_autotrophCaCO3_d14C(:) ! d14C of autotrophCaCO3
+    integer (int_kind), allocatable :: CISO_autotrophCaCO3_d13C(:) ! d13C of autotrophCaCO3
 
-     ! restoring 3D diags
-     integer(int_kind), dimension(:), allocatable :: restore_tend
-   contains
-     procedure, public :: lconstructed => interior_diag_ind_constructed
-     procedure, public :: destruct => interior_diag_ind_destructor
+    integer (int_kind) :: CISO_eps_aq_g                                      ! eps_aq_g
+    integer (int_kind) :: CISO_eps_dic_g                                     ! eps_dic_g
+    integer (int_kind) :: CISO_DO13Ctot_prod                                 ! do13ctot production
+    integer (int_kind) :: CISO_DO14Ctot_prod                                 ! do14ctot production
+    integer (int_kind) :: CISO_DO13Ctot_remin                                ! do13ctot remineralization
+    integer (int_kind) :: CISO_DO14Ctot_remin                                ! do14ctot remineralization
+    integer (int_kind) :: CISO_Jint_13Ctot                                   ! vertically integrated source sink term, 13Ctot
+    integer (int_kind) :: CISO_Jint_14Ctot                                   ! vertically integrated source sink term, 14Ctot
+    integer (int_kind) :: CISO_zoototC_d13C                                  ! d13C of total zooC
+    integer (int_kind) :: CISO_zoototC_d14C                                  ! d14C of total zooC
+    integer (int_kind) :: CISO_DOCtot_d13C                                   ! d13C of DOCtot
+    integer (int_kind) :: CISO_DOCtot_d14C                                   ! d14C of DOCtot
+    integer (int_kind) :: CISO_DIC_d13C                                      ! d13C of DIC
+    integer (int_kind) :: CISO_DIC_d14C                                      ! d14C of DIC
+    integer (int_kind) :: calcToSed_13C                                      ! calcite flux sedimentary burial
+    integer (int_kind) :: calcToSed_14C                                      ! calcite flux sedimentary burial
+    integer (int_kind) :: pocToSed_13C                                       ! poc burial flux to sediments
+    integer (int_kind) :: pocToSed_14C                                       ! poc burial flux to sediments
+
+    ! restoring 3D diags
+    integer(int_kind), dimension(:), allocatable :: restore_tend
+  contains
+    procedure, public :: lallocated => interior_diag_ind_allocated
+    procedure, public :: destruct => interior_diag_ind_destructor
   end type marbl_interior_tendency_diagnostics_indexing_type
 
   !***********************************************************************
@@ -1253,6 +1283,8 @@ contains
     allocate(self%zoo_graze_doc(zooplankton_cnt, km))
     allocate(self%zoo_graze_dic(zooplankton_cnt, km))
     allocate(self%zoo_loss(zooplankton_cnt, km))
+    allocate(self%zoo_loss_bulk(zooplankton_cnt, km))
+    allocate(self%zoo_loss_basal(zooplankton_cnt, km))
     allocate(self%zoo_loss_poc(zooplankton_cnt, km))
     allocate(self%zoo_loss_doc(zooplankton_cnt, km))
     allocate(self%zoo_loss_dic(zooplankton_cnt, km))
@@ -1275,6 +1307,8 @@ contains
     deallocate(self%zoo_graze_doc)
     deallocate(self%zoo_graze_dic)
     deallocate(self%zoo_loss)
+    deallocate(self%zoo_loss_bulk)
+    deallocate(self%zoo_loss_basal)
     deallocate(self%zoo_loss_poc)
     deallocate(self%zoo_loss_doc)
     deallocate(self%zoo_loss_dic)
@@ -1352,42 +1386,24 @@ contains
     class(marbl_surface_flux_internal_type), intent(out) :: this
     integer (int_kind),                      intent(in)  :: num_elements
 
-    allocate(this%piston_velocity (num_elements))
-    this%piston_velocity  = c0
-    allocate(this%flux_co2        (num_elements))
-    this%flux_co2         = c0
-    allocate(this%flux_alt_co2    (num_elements))
-    this%flux_alt_co2     = c0
-    allocate(this%co2star         (num_elements))
-    this%co2star          = c0
-    allocate(this%dco2star        (num_elements))
-    this%dco2star         = c0
-    allocate(this%pco2surf        (num_elements))
-    this%pco2surf         = c0
-    allocate(this%dpco2           (num_elements))
-    this%dpco2            = c0
-    allocate(this%co3             (num_elements))
-    this%co3              = c0
-    allocate(this%co2star_alt     (num_elements))
-    this%co2star_alt      = c0
-    allocate(this%dco2star_alt    (num_elements))
-    this%dco2star_alt     = c0
-    allocate(this%pco2surf_alt    (num_elements))
-    this%pco2surf_alt     = c0
-    allocate(this%dpco2_alt       (num_elements))
-    this%dpco2_alt        = c0
-    allocate(this%schmidt_co2     (num_elements))
-    this%schmidt_co2      = c0
-    allocate(this%schmidt_o2      (num_elements))
-    this%schmidt_o2       = c0
-    allocate(this%pv_o2           (num_elements))
-    this%pv_o2            = c0
-    allocate(this%pv_co2          (num_elements))
-    this%pv_co2           = c0
-    allocate(this%o2sat           (num_elements))
-    this%o2sat            = c0
-    allocate(this%nhx_surface_emis(num_elements))
-    this%nhx_surface_emis = c0
+    allocate(this%piston_velocity(num_elements), source=c0)
+    allocate(this%flux_co2(num_elements), source=c0)
+    allocate(this%flux_alt_co2(num_elements), source=c0)
+    allocate(this%co2star(num_elements), source=c0)
+    allocate(this%dco2star(num_elements), source=c0)
+    allocate(this%pco2surf(num_elements), source=c0)
+    allocate(this%dpco2(num_elements), source=c0)
+    allocate(this%co3(num_elements), source=c0)
+    allocate(this%co2star_alt(num_elements), source=c0)
+    allocate(this%dco2star_alt(num_elements), source=c0)
+    allocate(this%pco2surf_alt(num_elements), source=c0)
+    allocate(this%dpco2_alt(num_elements), source=c0)
+    allocate(this%schmidt_co2(num_elements), source=c0)
+    allocate(this%schmidt_o2(num_elements), source=c0)
+    allocate(this%pv_o2(num_elements), source=c0)
+    allocate(this%pv_co2(num_elements), source=c0)
+    allocate(this%o2sat(num_elements), source=c0)
+    allocate(this%nhx_surface_emis(num_elements), source=c0)
 
   end subroutine marbl_surface_flux_internal_constructor
 
@@ -1398,23 +1414,23 @@ contains
     class(marbl_surface_flux_internal_type), intent(inout) :: this
 
     if (allocated(this%piston_velocity)) then
-      deallocate(this%piston_velocity )
-      deallocate(this%flux_co2        )
-      deallocate(this%flux_alt_co2    )
-      deallocate(this%co2star         )
-      deallocate(this%dco2star        )
-      deallocate(this%pco2surf        )
-      deallocate(this%dpco2           )
-      deallocate(this%co3             )
-      deallocate(this%co2star_alt     )
-      deallocate(this%dco2star_alt    )
-      deallocate(this%pco2surf_alt    )
-      deallocate(this%dpco2_alt       )
-      deallocate(this%schmidt_co2     )
-      deallocate(this%schmidt_o2      )
-      deallocate(this%pv_o2           )
-      deallocate(this%pv_co2          )
-      deallocate(this%o2sat           )
+      deallocate(this%piston_velocity)
+      deallocate(this%flux_co2)
+      deallocate(this%flux_alt_co2)
+      deallocate(this%co2star)
+      deallocate(this%dco2star)
+      deallocate(this%pco2surf)
+      deallocate(this%dpco2)
+      deallocate(this%co3)
+      deallocate(this%co2star_alt)
+      deallocate(this%dco2star_alt)
+      deallocate(this%pco2surf_alt)
+      deallocate(this%dpco2_alt)
+      deallocate(this%schmidt_co2)
+      deallocate(this%schmidt_o2)
+      deallocate(this%pv_o2)
+      deallocate(this%pv_co2)
+      deallocate(this%o2sat)
       deallocate(this%nhx_surface_emis)
     end if
 
@@ -1455,8 +1471,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, ciso_on, lvariable_PtoC, lvariable_NtoC, autotroph_settings, &
-             zooplankton_settings, marbl_status_log)
+  subroutine tracer_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC,  &
+                                      lvariable_NtoC, autotroph_settings, zooplankton_settings, &
+                                      marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -1467,6 +1484,8 @@ contains
     use marbl_pft_mod, only : zooplankton_settings_type
 
     class(marbl_tracer_index_type),  intent(out)   :: this
+    logical,                         intent(in)    :: base_bio_on
+    logical,                         intent(in)    :: abio_dic_on
     logical,                         intent(in)    :: ciso_on
     logical,                         intent(in)    :: lvariable_PtoC
     logical,                         intent(in)    :: lvariable_NtoC
@@ -1485,62 +1504,65 @@ contains
     allocate(this%auto_inds(autotroph_cnt))
     allocate(this%zoo_inds(zooplankton_cnt))
 
-    ! General ecosys tracers
-    call this%add_tracer_index('po4', 'ecosys_base', this%po4_ind, marbl_status_log)
-    call this%add_tracer_index('no3', 'ecosys_base', this%no3_ind, marbl_status_log)
-    call this%add_tracer_index('sio3', 'ecosys_base', this%sio3_ind, marbl_status_log)
-    call this%add_tracer_index('nh4', 'ecosys_base', this%nh4_ind, marbl_status_log)
-    call this%add_tracer_index('fe', 'ecosys_base', this%fe_ind, marbl_status_log)
-    call this%add_tracer_index('lig', 'ecosys_base', this%lig_ind, marbl_status_log)
-    call this%add_tracer_index('o2', 'ecosys_base', this%o2_ind, marbl_status_log)
-    call this%add_tracer_index('dic', 'ecosys_base', this%dic_ind, marbl_status_log)
-    call this%add_tracer_index('dic_alt_co2', 'ecosys_base', this%dic_alt_co2_ind, marbl_status_log)
-    call this%add_tracer_index('alk', 'ecosys_base', this%alk_ind, marbl_status_log)
-    call this%add_tracer_index('alk_alt_co2', 'ecosys_base', this%alk_alt_co2_ind, marbl_status_log)
-    call this%add_tracer_index('doc', 'ecosys_base', this%doc_ind, marbl_status_log)
-    call this%add_tracer_index('don', 'ecosys_base', this%don_ind, marbl_status_log)
-    call this%add_tracer_index('dop', 'ecosys_base', this%dop_ind, marbl_status_log)
-    call this%add_tracer_index('dopr', 'ecosys_base', this%dopr_ind, marbl_status_log)
-    call this%add_tracer_index('donr', 'ecosys_base', this%donr_ind, marbl_status_log)
-    call this%add_tracer_index('docr', 'ecosys_base', this%docr_ind, marbl_status_log)
+    ! Base biotic tracers
+    if (base_bio_on) then
+      call this%add_tracer_index('po4', 'base_bio', this%po4_ind, marbl_status_log)
+      call this%add_tracer_index('no3', 'base_bio', this%no3_ind, marbl_status_log)
+      call this%add_tracer_index('sio3', 'base_bio', this%sio3_ind, marbl_status_log)
+      call this%add_tracer_index('nh4', 'base_bio', this%nh4_ind, marbl_status_log)
+      call this%add_tracer_index('fe', 'base_bio', this%fe_ind, marbl_status_log)
+      call this%add_tracer_index('lig', 'base_bio', this%lig_ind, marbl_status_log)
+      call this%add_tracer_index('o2', 'base_bio', this%o2_ind, marbl_status_log)
+      call this%add_tracer_index('dic', 'base_bio', this%dic_ind, marbl_status_log)
+      call this%add_tracer_index('dic_alt_co2', 'base_bio', this%dic_alt_co2_ind, marbl_status_log)
+      call this%add_tracer_index('alk', 'base_bio', this%alk_ind, marbl_status_log)
+      call this%add_tracer_index('alk_alt_co2', 'base_bio', this%alk_alt_co2_ind, marbl_status_log)
+      call this%add_tracer_index('doc', 'base_bio', this%doc_ind, marbl_status_log)
+      call this%add_tracer_index('don', 'base_bio', this%don_ind, marbl_status_log)
+      call this%add_tracer_index('dop', 'base_bio', this%dop_ind, marbl_status_log)
+      call this%add_tracer_index('dopr', 'base_bio', this%dopr_ind, marbl_status_log)
+      call this%add_tracer_index('donr', 'base_bio', this%donr_ind, marbl_status_log)
+      call this%add_tracer_index('docr', 'base_bio', this%docr_ind, marbl_status_log)
 
-    do n=1,zooplankton_cnt
-      write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%zoo_inds(n)%C_ind, marbl_status_log)
-    end do
+      do n=1,zooplankton_cnt
+        write(ind_name, "(2A)") trim(zooplankton_settings(n)%sname), "C"
+        call this%add_tracer_index(ind_name, 'base_bio', this%zoo_inds(n)%C_ind, marbl_status_log)
+      end do
 
-    do n=1,autotroph_cnt
-      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Chl_ind, marbl_status_log)
+      do n=1,autotroph_cnt
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Chl"
+        call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%Chl_ind, marbl_status_log)
 
-      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%C_ind, marbl_status_log)
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "C"
+        call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%C_ind, marbl_status_log)
 
-      if (lvariable_PtoC) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%P_ind, marbl_status_log)
-      end if
+        if (lvariable_PtoC) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%P_ind, marbl_status_log)
+        end if
 
-      if (lvariable_NtoC) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "N"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%N_ind, marbl_status_log)
-      end if
+        if (lvariable_NtoC) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "N"
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%N_ind, marbl_status_log)
+        end if
 
-      write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
-      call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Fe_ind, marbl_status_log)
+        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
+        call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%Fe_ind, marbl_status_log)
 
-      if (autotroph_settings(n)%silicifier) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%Si_ind, marbl_status_log)
-      end if
+        if (autotroph_settings(n)%silicifier) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Si"
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%Si_ind, marbl_status_log)
+        end if
 
-      if (autotroph_settings(n)%imp_calcifier.or. &
-          autotroph_settings(n)%exp_calcifier) then
-        write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
-        call this%add_tracer_index(ind_name, 'ecosys_base', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
-      end if
-    end do
+        if (autotroph_settings(n)%imp_calcifier.or. &
+            autotroph_settings(n)%exp_calcifier) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "CaCO3"
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%CaCO3_ind, marbl_status_log)
+        end if
+      end do
+    end if
 
+    ! Carbon isotope tracers
     if (ciso_on) then
       call this%add_tracer_index('di13c',    'ciso', this%di13c_ind,    marbl_status_log)
       call this%add_tracer_index('do13ctot', 'ciso', this%do13ctot_ind, marbl_status_log)
@@ -1567,6 +1589,12 @@ contains
       end do
     end if
 
+    ! Abiotic tracers
+    if (abio_dic_on) then
+      call this%add_tracer_index('abio_dic',   'abio_dic', this%abio_dic_ind,   marbl_status_log)
+      call this%add_tracer_index('abio_di14c', 'abio_dic', this%abio_di14c_ind, marbl_status_log)
+    end if
+
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("add_tracer_index", subname)
       return
@@ -1582,7 +1610,7 @@ contains
 
     ! Zero out counts
     this%total_cnt = 0
-    call this%ecosys_base%reset()
+    call this%base_bio%reset()
     call this%ciso%reset()
 
     ! Deallocate memory
@@ -1622,8 +1650,10 @@ contains
 
     ind = this%total_cnt+1
     select case (trim(category))
-      case ('ecosys_base')
-        call this%ecosys_base%update_count(ind, marbl_status_log)
+      case ('base_bio')
+        call this%base_bio%update_count(ind, marbl_status_log)
+      case ('abio_dic')
+        call this%abio_dic%update_count(ind, marbl_status_log)
       case ('ciso')
         call this%ciso%update_count(ind, marbl_status_log)
       case DEFAULT
@@ -1679,13 +1709,15 @@ contains
 
   !*****************************************************************************
 
-  subroutine surface_flux_forcing_index_constructor(this, ciso_on, lflux_gas_o2,   &
-             lflux_gas_co2, ladjust_bury_coeff, num_surface_flux_forcing_fields)
+  subroutine surface_flux_forcing_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, &
+             lflux_gas_o2, lflux_gas_co2, ladjust_bury_coeff, num_surface_flux_forcing_fields)
 
     ! This subroutine sets the surface forcing indices, which are used to
     ! determine what forcing fields are required from the driver.
 
     class(marbl_surface_flux_forcing_indexing_type), intent(out) :: this
+    logical,                                         intent(in)  :: base_bio_on
+    logical,                                         intent(in)  :: abio_dic_on
     logical,                                         intent(in)  :: ciso_on
     logical,                                         intent(in)  :: lflux_gas_o2
     logical,                                         intent(in)  :: lflux_gas_co2
@@ -1696,94 +1728,107 @@ contains
 
       forcing_cnt = 0
 
-      ! -------------------------------
-      ! | Always request these fields |
-      ! -------------------------------
+      ! -----------------------------------------------------------------
+      ! | Request these fields if abiotic or base biotic tracers are on |
+      ! -----------------------------------------------------------------
 
-      ! Square of 10m wind
-      forcing_cnt = forcing_cnt + 1
-      this%u10_sqr_id = forcing_cnt
-
-      ! Sea-surface salinity
-      forcing_cnt = forcing_cnt + 1
-      this%sss_id = forcing_cnt
-
-      ! Sea-surface temp
-      forcing_cnt = forcing_cnt + 1
-      this%sst_id = forcing_cnt
-
-      ! Ice Fraction
-      forcing_cnt = forcing_cnt + 1
-      this%ifrac_id = forcing_cnt
-
-      ! Dust Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dust_flux_id = forcing_cnt
-
-      ! Iron Flux
-      forcing_cnt = forcing_cnt + 1
-      this%iron_flux_id = forcing_cnt
-
-      ! NOx Flux
-      forcing_cnt = forcing_cnt + 1
-      this%nox_flux_id = forcing_cnt
-
-      ! NHy Flux
-      forcing_cnt = forcing_cnt + 1
-      this%nhy_flux_id = forcing_cnt
-
-      ! ---------------------------------------------------------
-      ! | Request these if bury coefficients are being adjusted |
-      ! ---------------------------------------------------------
-
-      if (ladjust_bury_coeff) then
-        ! external C Flux
+      if (base_bio_on .or. abio_dic_on) then
+        ! Square of 10m wind
         forcing_cnt = forcing_cnt + 1
-        this%ext_C_flux_id = forcing_cnt
+        this%u10_sqr_id = forcing_cnt
 
-        ! external P Flux
+        ! Sea-surface salinity
         forcing_cnt = forcing_cnt + 1
-        this%ext_P_flux_id = forcing_cnt
+        this%sss_id = forcing_cnt
 
-        ! external Si Flux
+        ! Sea-surface temp
         forcing_cnt = forcing_cnt + 1
-        this%ext_Si_flux_id = forcing_cnt
+        this%sst_id = forcing_cnt
+
+        ! Ice Fraction
+        forcing_cnt = forcing_cnt + 1
+        this%ifrac_id = forcing_cnt
+
+        ! ------------------------------------------
+        ! | Request these if gas fluxes are needed |
+        ! ------------------------------------------
+
+        if (lflux_gas_o2 .or. lflux_gas_co2) then
+          ! atm pressure
+          forcing_cnt = forcing_cnt + 1
+          this%atm_pressure_id = forcing_cnt
+        end if
+
+        if (lflux_gas_co2) then
+          ! xco2
+          forcing_cnt = forcing_cnt + 1
+          this%xco2_id = forcing_cnt
+
+          ! xco2_alt_co2
+          if (base_bio_on) then
+            forcing_cnt = forcing_cnt + 1
+            this%xco2_alt_co2_id = forcing_cnt
+          end if
+        end if
+
       end if
 
-      ! ------------------------------------------
-      ! | Request these if gas fluxes are needed |
-      ! ------------------------------------------
+      ! -----------------------------------------------
+      ! | Request these fields if base tracers are on |
+      ! -----------------------------------------------
 
-      if (lflux_gas_o2.or.lflux_gas_co2) then
-        ! atm pressure
+      if (base_bio_on) then
+        ! Dust Flux
         forcing_cnt = forcing_cnt + 1
-        this%atm_pressure_id = forcing_cnt
+        this%dust_flux_id = forcing_cnt
+
+        ! Iron Flux
+        forcing_cnt = forcing_cnt + 1
+        this%iron_flux_id = forcing_cnt
+
+        ! NOx Flux
+        forcing_cnt = forcing_cnt + 1
+        this%nox_flux_id = forcing_cnt
+
+        ! NHy Flux
+        forcing_cnt = forcing_cnt + 1
+        this%nhy_flux_id = forcing_cnt
+
+        ! ---------------------------------------------------------
+        ! | Request these if bury coefficients are being adjusted |
+        ! ---------------------------------------------------------
+
+        if (ladjust_bury_coeff) then
+          ! external C Flux
+          forcing_cnt = forcing_cnt + 1
+          this%ext_C_flux_id = forcing_cnt
+
+          ! external P Flux
+          forcing_cnt = forcing_cnt + 1
+          this%ext_P_flux_id = forcing_cnt
+
+          ! external Si Flux
+          forcing_cnt = forcing_cnt + 1
+          this%ext_Si_flux_id = forcing_cnt
+        end if
+
+        ! -----------------------------------
+        ! | Request these fields if ciso_on |
+        ! -----------------------------------
+
+        if (ciso_on) then
+
+          ! d13c
+          forcing_cnt = forcing_cnt + 1
+          this%d13c_id = forcing_cnt
+
+        end if
       end if
 
-      if (lflux_gas_co2) then
-        ! xco2
-        forcing_cnt = forcing_cnt + 1
-        this%xco2_id = forcing_cnt
-
-        ! xco2_alt_co2
-        forcing_cnt = forcing_cnt + 1
-        this%xco2_alt_co2_id = forcing_cnt
-      end if
-
-      ! -----------------------------------
-      ! | Request these fields if ciso_on |
-      ! -----------------------------------
-
-      if (ciso_on) then
-
-        ! d13c
-        forcing_cnt = forcing_cnt + 1
-        this%d13c_id = forcing_cnt
-
-        ! d14c
+      if (abio_dic_on .or. ciso_on) then
+          ! d14c
         forcing_cnt = forcing_cnt + 1
         this%d14c_id = forcing_cnt
-
       end if
 
     end associate
@@ -1793,6 +1838,7 @@ contains
   !*****************************************************************************
 
   subroutine interior_tendency_forcing_index_constructor(this,                                 &
+                                                         base_bio_on,                          &
                                                          tracer_names,                         &
                                                          tracer_restore_vars,                  &
                                                          num_PAR_subcols,                      &
@@ -1806,6 +1852,7 @@ contains
     use marbl_settings_mod, only : lp_remin_scalef
 
     class(marbl_interior_tendency_forcing_indexing_type), intent(out)   :: this
+    logical,                                              intent(in)    :: base_bio_on
     character(len=char_len), dimension(:),                intent(in)    :: tracer_names
     character(len=char_len), dimension(:),                intent(in)    :: tracer_restore_vars
     integer(int_kind),                                    intent(in)    :: num_PAR_subcols
@@ -1824,55 +1871,57 @@ contains
 
       forcing_cnt = 0
 
-      ! Dust Flux
-      forcing_cnt = forcing_cnt + 1
-      this%dustflux_id = forcing_cnt
-
-      ! PAR column fraction (not needed if num_PAR_subcols = 1)
-      if (num_PAR_subcols .gt. 1) then
+      if (base_bio_on) then
+        ! Dust Flux
         forcing_cnt = forcing_cnt + 1
-        this%PAR_col_frac_id = forcing_cnt
+        this%dustflux_id = forcing_cnt
+
+        ! PAR column fraction (not needed if num_PAR_subcols = 1)
+        if (num_PAR_subcols .gt. 1) then
+          forcing_cnt = forcing_cnt + 1
+          this%PAR_col_frac_id = forcing_cnt
+        end if
+
+        ! PAR column shortwave
+        forcing_cnt = forcing_cnt + 1
+        this%surf_shortwave_id = forcing_cnt
+
+        ! Potential Temperature
+        forcing_cnt = forcing_cnt + 1
+        this%potemp_id = forcing_cnt
+
+        ! Salinity
+        forcing_cnt = forcing_cnt + 1
+        this%salinity_id = forcing_cnt
+
+        ! Pressure
+        forcing_cnt = forcing_cnt + 1
+        this%pressure_id = forcing_cnt
+
+        ! Iron Sediment Flux
+        forcing_cnt = forcing_cnt + 1
+        this%fesedflux_id = forcing_cnt
+
+        ! Iron Red Sediment Flux
+        forcing_cnt = forcing_cnt + 1
+        this%feRedsedflux_id = forcing_cnt
+
+        ! Iron Vent Sediment Flux
+        forcing_cnt = forcing_cnt + 1
+        this%feventflux_id = forcing_cnt
+
+        ! O2 Consumption Scale Factor
+        if (lo2_consumption_scalef) then
+          forcing_cnt = forcing_cnt + 1
+          this%o2_consumption_scalef_id = forcing_cnt
+        end if
+
+        ! Particulate Remin Scale Factor
+        if (lp_remin_scalef) then
+          forcing_cnt = forcing_cnt + 1
+          this%p_remin_scalef_id = forcing_cnt
+        end if
       end if
-
-      ! PAR column shortwave
-      forcing_cnt = forcing_cnt + 1
-      this%surf_shortwave_id = forcing_cnt
-
-      ! Potential Temperature
-      forcing_cnt = forcing_cnt + 1
-      this%potemp_id = forcing_cnt
-
-      ! Salinity
-      forcing_cnt = forcing_cnt + 1
-      this%salinity_id = forcing_cnt
-
-      ! Pressure
-      forcing_cnt = forcing_cnt + 1
-      this%pressure_id = forcing_cnt
-
-      ! Iron Sediment Flux
-      forcing_cnt = forcing_cnt + 1
-      this%fesedflux_id = forcing_cnt
-
-      ! Iron Red Sediment Flux
-      forcing_cnt = forcing_cnt + 1
-      this%feRedsedflux_id = forcing_cnt
-
-      ! Iron Vent Sediment Flux
-      forcing_cnt = forcing_cnt + 1
-      this%feventflux_id = forcing_cnt
-
-      ! O2 Consumption Scale Factor
-      if (lo2_consumption_scalef) then
-        forcing_cnt = forcing_cnt + 1
-        this%o2_consumption_scalef_id = forcing_cnt
-      endif
-
-      ! Particulate Remin Scale Factor
-      if (lp_remin_scalef) then
-        forcing_cnt = forcing_cnt + 1
-        this%p_remin_scalef_id = forcing_cnt
-      endif
 
       ! Tracer restoring
       ! Note that this section
@@ -1938,118 +1987,125 @@ contains
 
   !*****************************************************************************
 
-  function interior_diag_ind_constructed(this) result(constructed)
+  function interior_diag_ind_allocated(this) result(constructed)
 
     class(marbl_interior_tendency_diagnostics_indexing_type), intent(inout) :: this
     logical(log_kind) :: constructed
 
     constructed = allocated(this%restore_tend)
 
-  end function interior_diag_ind_constructed
+  end function interior_diag_ind_allocated
 
   !*****************************************************************************
 
   subroutine interior_diag_ind_destructor(this)
 
+    use marbl_settings_mod, only : base_bio_on
     use marbl_settings_mod, only : ciso_on
 
     class(marbl_interior_tendency_diagnostics_indexing_type), intent(inout) :: this
 
-    if (this%lconstructed()) then
-      deallocate(this%N_lim_surf)
-      deallocate(this%N_lim_Cweight_avg_100m)
-      deallocate(this%P_lim_surf)
-      deallocate(this%P_lim_Cweight_avg_100m)
-      deallocate(this%Fe_lim_surf)
-      deallocate(this%Fe_lim_Cweight_avg_100m)
-      deallocate(this%SiO3_lim_surf)
-      deallocate(this%SiO3_lim_Cweight_avg_100m)
-      deallocate(this%C_lim_surf)
-      deallocate(this%C_lim_Cweight_avg_100m)
-      deallocate(this%light_lim_surf)
-      deallocate(this%light_lim_Cweight_avg_100m)
-      deallocate(this%photoC_zint)
-      deallocate(this%photoC_zint_100m)
-      deallocate(this%photoC_NO3_zint)
-      deallocate(this%CaCO3_form_zint)
-      deallocate(this%CaCO3_form_zint_100m)
-      deallocate(this%auto_graze_zint)
-      deallocate(this%auto_graze_zint_100m)
-      deallocate(this%auto_graze_poc_zint)
-      deallocate(this%auto_graze_poc_zint_100m)
-      deallocate(this%auto_graze_doc_zint)
-      deallocate(this%auto_graze_doc_zint_100m)
-      deallocate(this%auto_graze_zoo_zint)
-      deallocate(this%auto_graze_zoo_zint_100m)
-      deallocate(this%auto_loss_zint)
-      deallocate(this%auto_loss_zint_100m)
-      deallocate(this%auto_loss_poc_zint)
-      deallocate(this%auto_loss_poc_zint_100m)
-      deallocate(this%auto_loss_doc_zint)
-      deallocate(this%auto_loss_doc_zint_100m)
-      deallocate(this%auto_agg_zint)
-      deallocate(this%auto_agg_zint_100m)
-      deallocate(this%zoo_loss_zint)
-      deallocate(this%zoo_loss_zint_100m)
-      deallocate(this%zoo_loss_poc_zint)
-      deallocate(this%zoo_loss_poc_zint_100m)
-      deallocate(this%zoo_loss_doc_zint)
-      deallocate(this%zoo_loss_doc_zint_100m)
-      deallocate(this%zoo_graze_zint)
-      deallocate(this%zoo_graze_zint_100m)
-      deallocate(this%zoo_graze_poc_zint)
-      deallocate(this%zoo_graze_poc_zint_100m)
-      deallocate(this%zoo_graze_doc_zint)
-      deallocate(this%zoo_graze_doc_zint_100m)
-      deallocate(this%zoo_graze_zoo_zint)
-      deallocate(this%zoo_graze_zoo_zint_100m)
-      deallocate(this%x_graze_zoo_zint)
-      deallocate(this%x_graze_zoo_zint_100m)
-      deallocate(this%Qp)
-      deallocate(this%Qn)
-      deallocate(this%photoC)
-      deallocate(this%photoC_NO3)
-      deallocate(this%photoFe)
-      deallocate(this%photoNO3)
-      deallocate(this%photoNH4)
-      deallocate(this%DOP_uptake)
-      deallocate(this%PO4_uptake)
-      deallocate(this%auto_graze)
-      deallocate(this%auto_graze_poc)
-      deallocate(this%auto_graze_doc)
-      deallocate(this%auto_graze_zootot)
-      deallocate(this%auto_graze_zoo)
-      deallocate(this%auto_loss)
-      deallocate(this%auto_loss_poc)
-      deallocate(this%auto_loss_doc)
-      deallocate(this%auto_agg)
-      deallocate(this%bSi_form)
-      deallocate(this%CaCO3_form)
-      deallocate(this%Nfix)
-      deallocate(this%zoo_loss)
-      deallocate(this%zoo_loss_poc)
-      deallocate(this%zoo_loss_doc)
-      deallocate(this%zoo_graze)
-      deallocate(this%zoo_graze_poc)
-      deallocate(this%zoo_graze_doc)
-      deallocate(this%zoo_graze_zootot)
-      deallocate(this%zoo_graze_zoo)
-      deallocate(this%x_graze_zoo)
-      if (ciso_on) then
-        deallocate(this%CISO_eps_autotroph)
-        deallocate(this%CISO_mui_to_co2star)
-        deallocate(this%CISO_Ca13CO3_form)
-        deallocate(this%CISO_Ca14CO3_form)
-        deallocate(this%CISO_Ca13CO3_form_zint)
-        deallocate(this%CISO_Ca14CO3_form_zint)
-        deallocate(this%CISO_photo13C)
-        deallocate(this%CISO_photo14C)
-        deallocate(this%CISO_photo13C_zint)
-        deallocate(this%CISO_photo14C_zint)
-        deallocate(this%CISO_d13C)
-        deallocate(this%CISO_d14C)
-        deallocate(this%CISO_autotrophCaCO3_d14C)
-        deallocate(this%CISO_autotrophCaCO3_d13C)
+    if (this%lallocated()) then
+      if (base_bio_on) then
+        deallocate(this%N_lim_surf)
+        deallocate(this%N_lim_Cweight_avg_100m)
+        deallocate(this%P_lim_surf)
+        deallocate(this%P_lim_Cweight_avg_100m)
+        deallocate(this%Fe_lim_surf)
+        deallocate(this%Fe_lim_Cweight_avg_100m)
+        deallocate(this%SiO3_lim_surf)
+        deallocate(this%SiO3_lim_Cweight_avg_100m)
+        deallocate(this%C_lim_surf)
+        deallocate(this%C_lim_Cweight_avg_100m)
+        deallocate(this%light_lim_surf)
+        deallocate(this%light_lim_Cweight_avg_100m)
+        deallocate(this%photoC_zint)
+        deallocate(this%photoC_zint_100m)
+        deallocate(this%photoC_NO3_zint)
+        deallocate(this%CaCO3_form_zint)
+        deallocate(this%CaCO3_form_zint_100m)
+        deallocate(this%auto_graze_zint)
+        deallocate(this%auto_graze_zint_100m)
+        deallocate(this%auto_graze_poc_zint)
+        deallocate(this%auto_graze_poc_zint_100m)
+        deallocate(this%auto_graze_doc_zint)
+        deallocate(this%auto_graze_doc_zint_100m)
+        deallocate(this%auto_graze_zoo_zint)
+        deallocate(this%auto_graze_zoo_zint_100m)
+        deallocate(this%auto_loss_zint)
+        deallocate(this%auto_loss_zint_100m)
+        deallocate(this%auto_loss_poc_zint)
+        deallocate(this%auto_loss_poc_zint_100m)
+        deallocate(this%auto_loss_doc_zint)
+        deallocate(this%auto_loss_doc_zint_100m)
+        deallocate(this%auto_agg_zint)
+        deallocate(this%auto_agg_zint_100m)
+        deallocate(this%zoo_loss_zint)
+        deallocate(this%zoo_loss_zint_100m)
+        deallocate(this%zoo_loss_zint_150m)
+        deallocate(this%zoo_loss_basal_zint)
+        deallocate(this%zoo_loss_basal_zint_100m)
+        deallocate(this%zoo_loss_poc_zint)
+        deallocate(this%zoo_loss_poc_zint_100m)
+        deallocate(this%zoo_loss_doc_zint)
+        deallocate(this%zoo_loss_doc_zint_100m)
+        deallocate(this%zoo_graze_zint)
+        deallocate(this%zoo_graze_zint_100m)
+        deallocate(this%zoo_graze_poc_zint)
+        deallocate(this%zoo_graze_poc_zint_100m)
+        deallocate(this%zoo_graze_doc_zint)
+        deallocate(this%zoo_graze_doc_zint_100m)
+        deallocate(this%zoo_graze_zoo_zint)
+        deallocate(this%zoo_graze_zoo_zint_100m)
+        deallocate(this%x_graze_zoo_zint)
+        deallocate(this%x_graze_zoo_zint_100m)
+        deallocate(this%Qp)
+        deallocate(this%Qn)
+        deallocate(this%photoC)
+        deallocate(this%photoC_NO3)
+        deallocate(this%photoFe)
+        deallocate(this%photoNO3)
+        deallocate(this%photoNH4)
+        deallocate(this%DOP_uptake)
+        deallocate(this%PO4_uptake)
+        deallocate(this%auto_graze)
+        deallocate(this%auto_graze_poc)
+        deallocate(this%auto_graze_doc)
+        deallocate(this%auto_graze_zootot)
+        deallocate(this%auto_graze_zoo)
+        deallocate(this%auto_loss)
+        deallocate(this%auto_loss_poc)
+        deallocate(this%auto_loss_doc)
+        deallocate(this%auto_agg)
+        deallocate(this%bSi_form)
+        deallocate(this%CaCO3_form)
+        deallocate(this%Nfix)
+        deallocate(this%zoo_loss)
+        deallocate(this%zoo_loss_basal)
+        deallocate(this%zoo_loss_poc)
+        deallocate(this%zoo_loss_doc)
+        deallocate(this%zoo_graze)
+        deallocate(this%zoo_graze_poc)
+        deallocate(this%zoo_graze_doc)
+        deallocate(this%zoo_graze_zootot)
+        deallocate(this%zoo_graze_zoo)
+        deallocate(this%x_graze_zoo)
+        if (ciso_on) then
+          deallocate(this%CISO_eps_autotroph)
+          deallocate(this%CISO_mui_to_co2star)
+          deallocate(this%CISO_Ca13CO3_form)
+          deallocate(this%CISO_Ca14CO3_form)
+          deallocate(this%CISO_Ca13CO3_form_zint)
+          deallocate(this%CISO_Ca14CO3_form_zint)
+          deallocate(this%CISO_photo13C)
+          deallocate(this%CISO_photo14C)
+          deallocate(this%CISO_photo13C_zint)
+          deallocate(this%CISO_photo14C_zint)
+          deallocate(this%CISO_d13C)
+          deallocate(this%CISO_d14C)
+          deallocate(this%CISO_autotrophCaCO3_d14C)
+          deallocate(this%CISO_autotrophCaCO3_d13C)
+        end if
       end if
       deallocate(this%restore_tend)
     end if

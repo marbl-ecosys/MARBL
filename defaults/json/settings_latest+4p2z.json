@@ -1,0 +1,1648 @@
+{
+   "PFT_counts": {
+      "autotroph_cnt": {
+         "cannot change": "PFT_defaults == '4p2z'",
+         "datatype": "integer",
+         "default_value": {
+            "PFT_defaults == \"4p2z\"": 4,
+            "default": 1
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Number of autotroph classes",
+         "must set": "PFT_defaults == 'user-specified'",
+         "subcategory": "2. config PFTs",
+         "units": "unitless"
+      },
+      "max_grazer_prey_cnt": {
+         "datatype": "integer",
+         "default_value": {
+            "PFT_defaults == \"4p2z\"": 4,
+            "default": 1
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Number of grazer prey classes",
+         "subcategory": "2. config PFTs",
+         "units": "unitless"
+      },
+      "zooplankton_cnt": {
+         "datatype": "integer",
+         "default_value": {
+            "PFT_defaults == \"4p2z\"": 2,
+            "default": 1
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Number of zooplankton classes",
+         "subcategory": "2. config PFTs",
+         "units": "unitless"
+      }
+   },
+   "PFT_derived_types": {
+      "autotroph_settings": {
+         "_array_shape": "autotroph_cnt",
+         "_is_allocatable": true,
+         "datatype": {
+            "Ea": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.32,
+                  "((autotroph_sname)) == \"diat\"": 0.32,
+                  "((autotroph_sname)) == \"diaz\"": 0.32,
+                  "((autotroph_sname)) == \"sp\"": 0.32,
+                  "default": "1e34"
+               },
+               "longname": "Activation energy for Arrhenius equation",
+               "subcategory": "10. autotrophs",
+               "units": "eV"
+            },
+            "Nfixer": {
+               "datatype": "logical",
+               "default_value": {
+                  "((autotroph_sname)) == \"diaz\"": ".true.",
+                  "default": ".false."
+               },
+               "longname": "Flag set to true if autotroph fixes nitrogen",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "PCref_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 4.7,
+                  "((autotroph_sname)) == \"diat\"": 5.3,
+                  "((autotroph_sname)) == \"diaz\"": 1.6,
+                  "((autotroph_sname)) == \"sp\"": 4.8,
+                  "default": "1e34"
+               },
+               "longname": "Maximum C-spec growth rate at Tref",
+               "subcategory": "10. autotrophs",
+               "units": "1/day"
+            },
+            "Qp_fixed": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": "1.0/117",
+                  "((autotroph_sname)) == \"diat\"": "1.0/117",
+                  "((autotroph_sname)) == \"diaz\"": "0.32*(1.0/117)",
+                  "((autotroph_sname)) == \"sp\"": "1.0/117",
+                  "default": "1e34"
+               },
+               "longname": "P/C ratio when using fixed P/C ratios",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "_type_name": "autotroph_settings_type",
+            "agg_rate_max": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.5,
+                  "((autotroph_sname)) == \"diat\"": 0.5,
+                  "((autotroph_sname)) == \"diaz\"": 0.5,
+                  "((autotroph_sname)) == \"sp\"": 0.5,
+                  "default": "1e34"
+               },
+               "longname": "Maximum agg rate",
+               "subcategory": "10. autotrophs",
+               "units": "1/day"
+            },
+            "agg_rate_min": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.01,
+                  "((autotroph_sname)) == \"diat\"": 0.02,
+                  "((autotroph_sname)) == \"diaz\"": 0.01,
+                  "((autotroph_sname)) == \"sp\"": 0.01,
+                  "default": "1e34"
+               },
+               "longname": "Minimum agg rate",
+               "subcategory": "10. autotrophs",
+               "units": "1/day"
+            },
+            "alphaPI_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.31,
+                  "((autotroph_sname)) == \"diat\"": 0.39,
+                  "((autotroph_sname)) == \"diaz\"": 0.31,
+                  "((autotroph_sname)) == \"sp\"": 0.35,
+                  "default": "1e34"
+               },
+               "longname": "Initial slope of P_I curve (GD98)",
+               "subcategory": "10. autotrophs",
+               "units": "mmol m^2/(mg Chl W day)"
+            },
+            "exp_calcifier": {
+               "datatype": "logical",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": ".true.",
+                  "default": ".false."
+               },
+               "longname": "Flag set to true if autotroph explicitly handles calcification",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "gQfe_0": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": "30e-6",
+                  "((autotroph_sname)) == \"diat\"": "30e-6",
+                  "((autotroph_sname)) == \"diaz\"": "60e-6",
+                  "((autotroph_sname)) == \"sp\"": "30e-6",
+                  "default": "1e34"
+               },
+               "longname": "Initial Fe/C ratio for growth",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "gQfe_min": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 2.5e-06,
+                  "((autotroph_sname)) == \"diat\"": 2.5e-06,
+                  "((autotroph_sname)) == \"diaz\"": 2.5e-06,
+                  "((autotroph_sname)) == \"sp\"": 2.5e-06,
+                  "default": "1e34"
+               },
+               "longname": "Minimum Fe/C ratio for growth",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "imp_calcifier": {
+               "datatype": "logical",
+               "default_value": {
+                  "default": ".false."
+               },
+               "longname": "Flag set to true if autotroph implicitly handles calcification",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "is_carbon_limited": {
+               "datatype": "logical",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": ".true.",
+                  "default": ".false."
+               },
+               "longname": "Flag set to true if autotroph is carbon limited",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "kCO2": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 1,
+                  "((autotroph_sname)) == \"diat\"": 0,
+                  "((autotroph_sname)) == \"diaz\"": 0,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "CO2 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "kDOP": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.25,
+                  "((autotroph_sname)) == \"diat\"": 0.5,
+                  "((autotroph_sname)) == \"diaz\"": 0.075,
+                  "((autotroph_sname)) == \"sp\"": 0.3,
+                  "default": "1e34"
+               },
+               "longname": "DOP uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "kFe": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 3.2e-05,
+                  "((autotroph_sname)) == \"diat\"": 5e-05,
+                  "((autotroph_sname)) == \"diaz\"": 4.5e-05,
+                  "((autotroph_sname)) == \"sp\"": 3e-05,
+                  "default": "1e34"
+               },
+               "longname": "Fe uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "kNH4": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.01,
+                  "((autotroph_sname)) == \"diat\"": 0.05,
+                  "((autotroph_sname)) == \"diaz\"": 0.2,
+                  "((autotroph_sname)) == \"sp\"": 0.01,
+                  "default": "1e34"
+               },
+               "longname": "NH4 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "kNO3": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.41,
+                  "((autotroph_sname)) == \"diat\"": 0.4,
+                  "((autotroph_sname)) == \"diaz\"": 2,
+                  "((autotroph_sname)) == \"sp\"": 0.2,
+                  "default": "1e34"
+               },
+               "longname": "NO3 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "kPO4": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.006,
+                  "((autotroph_sname)) == \"diat\"": 0.05,
+                  "((autotroph_sname)) == \"diaz\"": 0.015,
+                  "((autotroph_sname)) == \"sp\"": 0.01,
+                  "default": "1e34"
+               },
+               "longname": "PO4 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "kSiO3": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0,
+                  "((autotroph_sname)) == \"diat\"": 1.6,
+                  "((autotroph_sname)) == \"diaz\"": 0,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "SiO3 uptake half-sat constant",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "lname": {
+               "datatype": "string",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": "Coccolithophores",
+                  "((autotroph_sname)) == \"diat\"": "Diatom",
+                  "((autotroph_sname)) == \"diaz\"": "Diazotroph",
+                  "((autotroph_sname)) == \"sp\"": "Small Phyto",
+                  "default": "UNSET"
+               },
+               "longname": "Long name of the autotroph",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "loss_poc": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0,
+                  "((autotroph_sname)) == \"diat\"": 0,
+                  "((autotroph_sname)) == \"diaz\"": 0,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "Routing of loss term",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "loss_thres": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.01,
+                  "((autotroph_sname)) == \"diat\"": 0.02,
+                  "((autotroph_sname)) == \"diaz\"": 0.02,
+                  "((autotroph_sname)) == \"sp\"": 0.01,
+                  "default": "1e34"
+               },
+               "longname": "concentration where losses go to zero",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "loss_thres2": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0,
+                  "((autotroph_sname)) == \"diat\"": 0,
+                  "((autotroph_sname)) == \"diaz\"": 0.001,
+                  "((autotroph_sname)) == \"sp\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "concentration where losses go to zero",
+               "subcategory": "10. autotrophs",
+               "units": "nmol/cm^3"
+            },
+            "mort2_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.01,
+                  "((autotroph_sname)) == \"diat\"": 0.01,
+                  "((autotroph_sname)) == \"diaz\"": 0.01,
+                  "((autotroph_sname)) == \"sp\"": 0.01,
+                  "default": "1e34"
+               },
+               "longname": "Quadratic mortality rate",
+               "subcategory": "10. autotrophs",
+               "units": "(1/day)/(mmol/m^3)"
+            },
+            "mort_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.1,
+                  "((autotroph_sname)) == \"diat\"": 0.1,
+                  "((autotroph_sname)) == \"diaz\"": 0.1,
+                  "((autotroph_sname)) == \"sp\"": 0.1,
+                  "default": "1e34"
+               },
+               "longname": "Linear mortality rate",
+               "subcategory": "10. autotrophs",
+               "units": "1/day"
+            },
+            "silicifier": {
+               "datatype": "logical",
+               "default_value": {
+                  "((autotroph_sname)) == \"diat\"": ".true.",
+                  "default": ".false."
+               },
+               "longname": "Flag set to true if autotroph is a silicifier",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "sname": {
+               "datatype": "string",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": "cocco",
+                  "((autotroph_sname)) == \"diat\"": "diat",
+                  "((autotroph_sname)) == \"diaz\"": "diaz",
+                  "((autotroph_sname)) == \"sp\"": "sp",
+                  "default": "UNSET"
+               },
+               "longname": "Short name of the autotroph",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric"
+            },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": "power",
+                  "((autotroph_sname)) == \"diat\"": "q_10",
+                  "((autotroph_sname)) == \"diaz\"": "q_10",
+                  "((autotroph_sname)) == \"sp\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "10. autotrophs",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
+            },
+            "temp_thres": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0,
+                  "((autotroph_sname)) == \"diat\"": -10,
+                  "((autotroph_sname)) == \"diaz\"": 15,
+                  "((autotroph_sname)) == \"sp\"": -10,
+                  "default": "1e34"
+               },
+               "longname": "Temperature where concentration threshold and photosynthesis rate drops",
+               "subcategory": "10. autotrophs",
+               "units": "degC"
+            },
+            "thetaN_max": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 3.8,
+                  "((autotroph_sname)) == \"diat\"": 4,
+                  "((autotroph_sname)) == \"diaz\"": 2.5,
+                  "((autotroph_sname)) == \"sp\"": 2.5,
+                  "default": "1e34"
+               },
+               "longname": "Maximum thetaN (Chl / N)",
+               "subcategory": "10. autotrophs",
+               "units": "mg Chl / mmol"
+            }
+         }
+      },
+      "grazing_relationship_settings": {
+         "_array_shape": [
+            "max_grazer_prey_cnt",
+            "zooplankton_cnt"
+         ],
+         "_is_allocatable": true,
+         "datatype": {
+            "_type_name": "grazing_relationship_settings_type",
+            "auto_ind": {
+               "_array_len_to_print": "auto_ind_cnt",
+               "_array_shape": "autotroph_cnt",
+               "_is_allocatable": true,
+               "datatype": "integer",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 4,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 4,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 2,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 3,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 3,
+                  "((grazer_sname)) == \"sp_microzoo\"": 1,
+                  "default": 0
+               },
+               "longname": "Indices of autotrophs being grazed",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "auto_ind_cnt": {
+               "datatype": "integer",
+               "default_value": {
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "default": 1
+               },
+               "longname": "Number of autotrophs being grazed",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "f_zoo_detr": {
+               "datatype": "real",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.27,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 0.27,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.4,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.4,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 0.17,
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0.27,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "((grazer_sname)) == \"sp_microzoo\"": 0.17,
+                  "default": "1e34"
+               },
+               "longname": "Fraction of zoo losses to detrital",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "graze_doc": {
+               "datatype": "real",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.09,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 0.09,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.09,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.09,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 0.057,
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0.09,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "((grazer_sname)) == \"sp_microzoo\"": 0.057,
+                  "default": "1e34"
+               },
+               "longname": "Routing of grazed term, remainder goes to dic",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "graze_poc": {
+               "datatype": "real",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.18,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 0.18,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.28,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.18,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 0.01,
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0.28,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "((grazer_sname)) == \"sp_microzoo\"": 0.01,
+                  "default": "1e34"
+               },
+               "longname": "Routing of grazed term, remainder goes to dic",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "graze_zoo": {
+               "datatype": "real",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.25,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 0.25,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.25,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.25,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 0.35,
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0.25,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "((grazer_sname)) == \"sp_microzoo\"": 0.35,
+                  "default": "1e34"
+               },
+               "longname": "Routing of grazed term, remainder goes to dic",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "grazing_function": {
+               "_comment": "1 => Michaelis-Menten, 2 => Sigmoidal",
+               "datatype": "integer",
+               "default_value": {
+                  "((grazer_sname)) == \"sp_microzoo\"": 2,
+                  "default": 1
+               },
+               "longname": "Functional form of grazing parameterization",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "lname": {
+               "datatype": "string",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": "Grazing of cocco by mesozoo",
+                  "((grazer_sname)) == \"cocco_microzoo\"": "Grazing of cocco by microzoo",
+                  "((grazer_sname)) == \"diat_mesozoo\"": "Grazing of diat by mesozoo",
+                  "((grazer_sname)) == \"diaz_mesozoo\"": "Grazing of diaz by mesozoo",
+                  "((grazer_sname)) == \"diaz_microzoo\"": "Grazing of diaz by microzoo",
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": "Grazing of microzoo by mesozoo",
+                  "((grazer_sname)) == \"null\"": "null",
+                  "((grazer_sname)) == \"sp_microzoo\"": "Grazing of sp by microzoo",
+                  "default": "UNSET"
+               },
+               "longname": "Long name of the grazing relationship",
+               "subcategory": "12. grazing",
+               "units": "non-numeric"
+            },
+            "sname": {
+               "datatype": "string",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": "grz_cocco_mesozoo",
+                  "((grazer_sname)) == \"cocco_microzoo\"": "grz_cocco_microzoo",
+                  "((grazer_sname)) == \"diat_mesozoo\"": "grz_diat_mesozoo",
+                  "((grazer_sname)) == \"diaz_mesozoo\"": "grz_diaz_mesozoo",
+                  "((grazer_sname)) == \"diaz_microzoo\"": "grz_diaz_microzoo",
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": "grz_microzoo_mesozoo",
+                  "((grazer_sname)) == \"null\"": "null",
+                  "((grazer_sname)) == \"sp_microzoo\"": "grz_sp_microzoo",
+                  "default": "UNSET"
+               },
+               "longname": "Short name of the grazing relationship",
+               "subcategory": "12. grazing",
+               "units": "non-numeric"
+            },
+            "z_grz": {
+               "datatype": "real",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 1.4,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 1.5,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 1,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 1.2,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 1.2,
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 1.3,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "((grazer_sname)) == \"sp_microzoo\"": 1.4,
+                  "default": "1e34"
+               },
+               "longname": "Grazing coefficient",
+               "subcategory": "12. grazing",
+               "units": "(mmol/m^3)^2"
+            },
+            "z_umax_0_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.015,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 1.7,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.9,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 0.5,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 1,
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 0.2,
+                  "((grazer_sname)) == \"null\"": 0,
+                  "((grazer_sname)) == \"sp_microzoo\"": 4.1,
+                  "default": "1e34"
+               },
+               "longname": "Max zoo growth rate at tref",
+               "subcategory": "12. grazing",
+               "units": "1/day"
+            },
+            "zoo_ind": {
+               "_array_len_to_print": "zoo_ind_cnt",
+               "_array_shape": "zooplankton_cnt",
+               "_is_allocatable": true,
+               "datatype": "integer",
+               "default_value": {
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 1,
+                  "default": 0
+               },
+               "longname": "Indices of zooplankton being grazed",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            },
+            "zoo_ind_cnt": {
+               "datatype": "integer",
+               "default_value": {
+                  "((grazer_sname)) == \"microzoo_mesozoo\"": 1,
+                  "default": 0
+               },
+               "longname": "Number of zooplankton being grazed",
+               "subcategory": "12. grazing",
+               "units": "unitless"
+            }
+         }
+      },
+      "zooplankton_settings": {
+         "_array_shape": "zooplankton_cnt",
+         "_is_allocatable": true,
+         "datatype": {
+            "Ea": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": 0.55,
+                  "((zooplankton_sname)) == \"microzoo\"": 0.55,
+                  "default": "1e34"
+               },
+               "longname": "Activation energy for Arrhenius equation",
+               "subcategory": "11. zooplankton",
+               "units": "eV"
+            },
+            "_type_name": "zooplankton_settings_type",
+            "basal_respiration_rate_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": 0,
+                  "((zooplankton_sname)) == \"microzoo\"": 0,
+                  "default": "1e34"
+               },
+               "longname": "Basal respiration rate",
+               "subcategory": "11. zooplankton",
+               "units": "1/day"
+            },
+            "lname": {
+               "datatype": "string",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": "Mesozooplankton",
+                  "((zooplankton_sname)) == \"microzoo\"": "Microzooplankton",
+                  "default": "UNSET"
+               },
+               "longname": "Long name of the zooplankton",
+               "subcategory": "11. zooplankton",
+               "units": "non-numeric"
+            },
+            "loss_thres": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": 0.075,
+                  "((zooplankton_sname)) == \"microzoo\"": 0.075,
+                  "default": "1e34"
+               },
+               "longname": "Zoo concentration where losses go to zero",
+               "subcategory": "11. zooplankton",
+               "units": "nmol/cm^3"
+            },
+            "sname": {
+               "datatype": "string",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": "mesozoo",
+                  "((zooplankton_sname)) == \"microzoo\"": "microzoo",
+                  "default": "UNSET"
+               },
+               "longname": "Short name of the zooplankton",
+               "subcategory": "11. zooplankton",
+               "units": "non-numeric"
+            },
+            "temp_func_form_opt": {
+               "datatype": "string",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": "q_10",
+                  "((zooplankton_sname)) == \"microzoo\"": "q_10",
+                  "default": "UNSET"
+               },
+               "longname": "Option for the temperature scaling functional form",
+               "subcategory": "11. zooplankton",
+               "units": "non-numeric",
+               "valid_values": [
+                  "q_10",
+                  "arrhenius",
+                  "power"
+               ]
+            },
+            "z_mort2_0_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": 0.02,
+                  "((zooplankton_sname)) == \"microzoo\"": 0.0028,
+                  "default": "1e34"
+               },
+               "longname": "Quadratic mortality rate",
+               "subcategory": "11. zooplankton",
+               "units": "1/day / (mmol/m^3)"
+            },
+            "z_mort_0_per_day": {
+               "datatype": "real",
+               "default_value": {
+                  "((zooplankton_sname)) == \"mesozoo\"": 0.035,
+                  "((zooplankton_sname)) == \"microzoo\"": 0.1,
+                  "default": "1e34"
+               },
+               "longname": "Linear mortality rate",
+               "subcategory": "11. zooplankton",
+               "units": "1/day"
+            }
+         }
+      }
+   },
+   "_order": [
+      "tracer_modules",
+      "general_parms",
+      "general_parms2",
+      "PFT_counts",
+      "PFT_derived_types",
+      "tracer_dependent"
+   ],
+   "_tracer_list": {
+      "((autotroph_sname))13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Carbon-13",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))C": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Carbon",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Ca13CO3": {
+         "dependencies": {
+            "((autotroph_calcifier))": true,
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Ca13CO3",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Ca14CO3": {
+         "dependencies": {
+            "((autotroph_calcifier))": true,
+            "ciso_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Ca14CO3",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))CaCO3": {
+         "dependencies": {
+            "((autotroph_calcifier))": true,
+            "base_bio_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) CaCO3",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Chl": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Chlorophyll",
+         "units": "mg/m^3"
+      },
+      "((autotroph_sname))Fe": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Iron",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))P": {
+         "dependencies": {
+            "base_bio_on": ".true.",
+            "lvariable_PtoC": ".true."
+         },
+         "long_name": "((autotroph_lname)) Phosphorus",
+         "units": "mmol/m^3"
+      },
+      "((autotroph_sname))Si": {
+         "dependencies": {
+            "((autotroph_silicifier))": true,
+            "base_bio_on": ".true."
+         },
+         "long_name": "((autotroph_lname)) Silicon",
+         "units": "mmol/m^3"
+      },
+      "((zooplankton_sname))C": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "((zooplankton_lname)) Carbon",
+         "units": "mmol/m^3"
+      },
+      "ABIO_DI14C": {
+         "dependencies": {
+            "abio_dic_on": ".true."
+         },
+         "long_name": "Abiotic Dissolved Inorganic Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "ABIO_DIC": {
+         "dependencies": {
+            "abio_dic_on": ".true."
+         },
+         "long_name": "Abiotic Dissolved Inorganic Carbon",
+         "units": "mmol/m^3"
+      },
+      "ALK": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Alkalinity",
+         "units": "meq/m^3"
+      },
+      "ALK_ALT_CO2": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Alkalinity, Alternative CO2",
+         "units": "meq/m^3"
+      },
+      "DI13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Carbon-13",
+         "units": "mmol/m^3"
+      },
+      "DI14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Carbon-14",
+         "units": "mmol/m^3"
+      },
+      "DIC": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Carbon",
+         "units": "mmol/m^3"
+      },
+      "DIC_ALT_CO2": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Carbon, Alternative CO2",
+         "units": "mmol/m^3"
+      },
+      "DO13Ctot": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Organic Carbon-13 (semi-labile+refractory)",
+         "units": "mmol/m^3"
+      },
+      "DO14Ctot": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Dissolved Organic Carbon-14 (semi-labile+refractory)",
+         "units": "mmol/m^3"
+      },
+      "DOC": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Organic Carbon",
+         "units": "mmol/m^3"
+      },
+      "DOCr": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Refractory DOC",
+         "units": "mmol/m^3"
+      },
+      "DON": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Organic Nitrogen",
+         "units": "mmol/m^3"
+      },
+      "DONr": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Refractory DON",
+         "units": "mmol/m^3"
+      },
+      "DOP": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Organic Phosphorus",
+         "units": "mmol/m^3"
+      },
+      "DOPr": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Refractory DOP",
+         "units": "mmol/m^3"
+      },
+      "Fe": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Iron",
+         "units": "mmol/m^3"
+      },
+      "Lig": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Iron Binding Ligand",
+         "units": "mmol/m^3"
+      },
+      "NH4": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Ammonia",
+         "units": "mmol/m^3"
+      },
+      "NO3": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Nitrate",
+         "units": "mmol/m^3"
+      },
+      "O2": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Oxygen",
+         "units": "mmol/m^3"
+      },
+      "PO4": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Phosphate",
+         "units": "mmol/m^3"
+      },
+      "SiO3": {
+         "dependencies": {
+            "base_bio_on": ".true."
+         },
+         "long_name": "Dissolved Inorganic Silicate",
+         "units": "mmol/m^3"
+      },
+      "zootot13C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Zooplankton Carbon-13 (sum over all zooplankton)",
+         "units": "mmol/m^3"
+      },
+      "zootot14C": {
+         "dependencies": {
+            "ciso_on": ".true."
+         },
+         "long_name": "Zooplankton Carbon-14 (sum over all zooplankton)",
+         "units": "mmol/m^3"
+      }
+   },
+   "general_parms": {
+      "Jint_Ctot_thres_molpm2pyr": {
+         "datatype": "real",
+         "default_value": 1e-09,
+         "dependencies": "base_bio_on",
+         "longname": "MARBL will abort if abs(Jint_Ctot) exceeds this threshold",
+         "subcategory": "5. general parameters",
+         "units": "mol m-2 yr-1"
+      },
+      "PFT_defaults": {
+         "_4p2z_PFT_keys": {
+            "autotroph_settings": [
+               "sp",
+               "diat",
+               "diaz",
+               "cocco"
+            ],
+            "grazing_relationship_settings": [
+               "sp_microzoo",
+               "diat_mesozoo",
+               "diaz_microzoo",
+               "cocco_mesozoo",
+               "cocco_microzoo",
+               "diaz_mesozoo",
+               "null",
+               "microzoo_mesozoo"
+            ],
+            "zooplankton_settings": [
+               "microzoo",
+               "mesozoo"
+            ]
+         },
+         "_append_to_config_keywords": true,
+         "datatype": "string",
+         "default_value": "4p2z",
+         "dependencies": "base_bio_on",
+         "longname": "Define how PFTs are initialized",
+         "subcategory": "2. config PFTs",
+         "units": "unitless",
+         "valid_values": [
+            "4p2z",
+            "user-specified"
+         ]
+      },
+      "POM_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 0.8,
+         "dependencies": "base_bio_on",
+         "longname": "maximum bury fraction for POM",
+         "subcategory": "5. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "PON_bury_coeff": {
+         "datatype": "real",
+         "default_value": 0.5,
+         "dependencies": "base_bio_on",
+         "longname": "Scale factor for burial of PON",
+         "subcategory": "5. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "QCaCO3_max": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "dependencies": "base_bio_on",
+         "longname": "Max CaCO3/C ratio for calcifiers",
+         "subcategory": "5. general parameters",
+         "units": "mmol CaCO3/mmol C"
+      },
+      "auto_mort2_exp": {
+         "datatype": "real",
+         "default_value": 1.75,
+         "dependencies": "base_bio_on",
+         "longname": "Value of power loss exponent for autotrophs",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "bSi_bury_frac_max": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "dependencies": "base_bio_on",
+         "longname": "maximum bury fraction for bSi",
+         "subcategory": "5. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "bftt_dz_sum_thres": {
+         "datatype": "real",
+         "default_value": 1e-14,
+         "dependencies": "base_bio_on",
+         "longname": "MARBL will abort if abs(1 - sum(bot_flux_to_tend)) exceeds this threshold",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "bury_coeff_rmean_timescale_years": {
+         "datatype": "real",
+         "default_value": 10,
+         "dependencies": "base_bio_on",
+         "longname": "Running mean time scale for bury coefficients",
+         "subcategory": "5. general parameters",
+         "units": "years"
+      },
+      "caco3_bury_thres_depth": {
+         "datatype": "real",
+         "default_value": "3000e2",
+         "dependencies": "base_bio_on",
+         "longname": "Threshold depth for CaCO3 burial when opt = 'fixed_depth'",
+         "subcategory": "5. general parameters",
+         "units": "cm"
+      },
+      "caco3_bury_thres_omega_calc": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "dependencies": "base_bio_on",
+         "longname": "omega calcite threshold for CaCO3 burial when opt = 'omega_calc'",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "caco3_bury_thres_opt": {
+         "datatype": "string",
+         "default_value": "omega_calc",
+         "dependencies": "base_bio_on",
+         "longname": "Option of threshold of CaCO3 burial",
+         "subcategory": "5. general parameters",
+         "units": "non-numeric",
+         "valid_values": [
+            "fixed_depth",
+            "omega_calc"
+         ]
+      },
+      "ciso_fract_factors": {
+         "datatype": "string",
+         "default_value": "Laws",
+         "dependencies": "ciso_on",
+         "longname": "Option for which biological fractionation calculation to use",
+         "subcategory": "5. general parameters",
+         "units": "non-numeric"
+      },
+      "ciso_lsource_sink": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "dependencies": "ciso_on",
+         "longname": "Control which portions of the carbon isotope code are executed (useful for debugging)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "f_graze_CaCO3_remin": {
+         "datatype": "real",
+         "default_value": 0.5,
+         "dependencies": "base_bio_on",
+         "longname": "Fraction of spCaCO3 grazing which is remineralized in zooplankton guts",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "gQ_Fe_kFe_thres": {
+         "datatype": "real",
+         "default_value": 10.0,
+         "dependencies": "base_bio_on",
+         "longname": "Fe:kFe ratio threshold in uptake ratio computations",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "gQ_Si_kSi_thres": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "dependencies": "base_bio_on",
+         "longname": "Si:kSi ratio threshold in uptake ratio computations",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "gQsi_0": {
+         "datatype": "real",
+         "default_value": 0.137,
+         "dependencies": "base_bio_on",
+         "longname": "initial Si/C ratio for growth",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "gQsi_max": {
+         "datatype": "real",
+         "default_value": 0.685,
+         "dependencies": "base_bio_on",
+         "longname": "max Si/C ratio for growth",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "gQsi_min": {
+         "datatype": "real",
+         "default_value": 0.0457,
+         "dependencies": "base_bio_on",
+         "longname": "min Si/C ratio for growth",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "labio_derivative_diags": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "dependencies": "abio_dic_on",
+         "longname": "Control whether derivative diagnostics are computed in abiotic surface flux (useful for Newton-Krylov)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "ladjust_bury_coeff": {
+         "_append_to_config_keywords": true,
+         "datatype": "logical",
+         "default_value": ".false.",
+         "dependencies": "base_bio_on",
+         "longname": "Control if bury coefficients are adjusted (rather than constant)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lcheck_forcing": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Control whether consistency checks are performed on forcing input (useful for debugging)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lcompute_nhx_surface_emis": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "dependencies": "base_bio_on",
+         "longname": "Control if NHx emissions are computed",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lecovars_full_depth_tavg": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "If .false., MARBL will recommend truncating the column for some diagnostics",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lflux_gas_co2": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "longname": "Control which portions of code are executed (useful for debugging)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lflux_gas_o2": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "dependencies": "base_bio_on",
+         "longname": "Control which portions of code are executed (useful for debugging)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lo2_consumption_scalef": {
+         "datatype": "logical",
+         "default_value": {
+            "GRID == \"CESM_x1\"": ".true.",
+            "default": ".false."
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Apply o2_consumption_scalef to o2 consumption (and request it as a forcing)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lp_remin_scalef": {
+         "datatype": "logical",
+         "default_value": ".false.",
+         "dependencies": "base_bio_on",
+         "longname": "Apply p_remin_scalef to particulate remin (and request it as a forcing)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lsource_sink": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "longname": "Control which portions of code are executed (useful for debugging)",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "lvariable_PtoC": {
+         "datatype": "logical",
+         "default_value": ".true.",
+         "dependencies": "base_bio_on",
+         "longname": "Control if PtoC ratios in autotrophs vary",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
+      "o2_sf_o2_range_hi": {
+         "datatype": "real",
+         "default_value": 45.0,
+         "dependencies": "base_bio_on",
+         "longname": "o2_scalefactor is applied to diss length scales for O2 less than this",
+         "subcategory": "5. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_o2_range_lo": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "dependencies": "base_bio_on",
+         "longname": "o2_scalefactor is constant for O2 less than this",
+         "subcategory": "5. general parameters",
+         "units": "mmol/m^3"
+      },
+      "o2_sf_val_lo_o2": {
+         "datatype": "real",
+         "default_value": 3.0,
+         "dependencies": "base_bio_on",
+         "longname": "o2_scalefactor constant for O2 less than o2_sf_o2_range_lo",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "parm_CaCO3_diss": {
+         "datatype": "real",
+         "default_value": "500e2",
+         "dependencies": "base_bio_on",
+         "longname": "Base CaCO3 dissolution length scale",
+         "subcategory": "5. general parameters (dissolution)",
+         "units": "cm"
+      },
+      "parm_CaCO3_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "dependencies": "base_bio_on",
+         "longname": "CaCO3 gamma (fraction of production -> hard subclass)",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "parm_FeLig_scavenge_rate0": {
+         "datatype": "real",
+         "default_value": 1.3,
+         "dependencies": "base_bio_on",
+         "longname": "Scavenging base rate for bound iron",
+         "subcategory": "5. general parameters (scavenging)",
+         "units": "cm^2/ng s/yr"
+      },
+      "parm_Fe_bioavail": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "dependencies": "base_bio_on",
+         "longname": "Fraction of Fe flux that is bioavailable",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "parm_Fe_desorption_rate0": {
+         "datatype": "real",
+         "default_value": "1e-6",
+         "dependencies": "base_bio_on",
+         "longname": "Desorption rate for scavenged Fe from particles",
+         "subcategory": "5. general parameters",
+         "units": "1/cm"
+      },
+      "parm_Fe_scavenge_rate0": {
+         "datatype": "real",
+         "default_value": 24.0,
+         "dependencies": "base_bio_on",
+         "longname": "Scavenging base rate for Fe",
+         "subcategory": "5. general parameters (scavenging)",
+         "units": "cm^2/ng s/yr"
+      },
+      "parm_Lig_degrade_rate0": {
+         "datatype": "real",
+         "default_value": 9.4e-05,
+         "dependencies": "base_bio_on",
+         "longname": "Fe-binding ligand bacterial degradation base rate coefficient",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "parm_Lig_scavenge_rate0": {
+         "datatype": "real",
+         "default_value": 0.015,
+         "dependencies": "base_bio_on",
+         "longname": "Scavenging base rate for bound ligand",
+         "subcategory": "5. general parameters (scavenging)",
+         "units": "cm^2/ng s/yr"
+      },
+      "parm_POC_diss": {
+         "datatype": "real",
+         "default_value": "100e2",
+         "dependencies": "base_bio_on",
+         "longname": "Base POC dissolution length scale",
+         "subcategory": "5. general parameters (dissolution)",
+         "units": "cm"
+      },
+      "parm_SiO2_diss": {
+         "datatype": "real",
+         "default_value": "650e2",
+         "dependencies": "base_bio_on",
+         "longname": "Base SiO2 dissolution length scale",
+         "subcategory": "5. general parameters (dissolution)",
+         "units": "cm"
+      },
+      "parm_SiO2_gamma": {
+         "datatype": "real",
+         "default_value": 0.1,
+         "dependencies": "base_bio_on",
+         "longname": "SiO2 gamma (fraction of production -> hard subclass)",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "parm_f_prod_sp_CaCO3": {
+         "datatype": "real",
+         "default_value": {
+            "GRID == \"CESM_x3\"": 0.075,
+            "default": 0.07
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Fraction of sp production as CaCO3 production",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "parm_hPOC_CaCO3_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "dependencies": "base_bio_on",
+         "longname": "hPOC to CaCO3 ratio",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_SiO2_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "dependencies": "base_bio_on",
+         "longname": "hPOC to SiO2 ratio",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "parm_hPOC_dust_ratio": {
+         "datatype": "real",
+         "default_value": 0.05,
+         "dependencies": "base_bio_on",
+         "longname": "hPOC to dust ratio",
+         "subcategory": "5. general parameters",
+         "units": 1
+      },
+      "parm_init_POC_bury_coeff": {
+         "datatype": "real",
+         "default_value": {
+            "GRID == \"CESM_x3\"": 5.0,
+            "default": 1.1
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Initial scale factor for burial of POC, PON",
+         "subcategory": "5. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "parm_init_POP_bury_coeff": {
+         "datatype": "real",
+         "default_value": {
+            "GRID == \"CESM_x3\"": 5.0,
+            "default": 1.1
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Initial scale factor for burial of POP",
+         "subcategory": "5. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "parm_init_bSi_bury_coeff": {
+         "datatype": "real",
+         "default_value": {
+            "GRID == \"CESM_x3\"": 1.1,
+            "default": 1.0
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Initial scale factor for burial of bSi",
+         "subcategory": "5. general parameters (bury coeffs)",
+         "units": "unitless"
+      },
+      "parm_kappa_nitrif_per_day": {
+         "datatype": "real",
+         "default_value": 0.06,
+         "dependencies": "base_bio_on",
+         "longname": "Nitrification inverse time constant",
+         "subcategory": "5. general parameters (nitrification)",
+         "units": "1/day"
+      },
+      "parm_labile_ratio": {
+         "datatype": "real",
+         "default_value": 0.94,
+         "dependencies": "base_bio_on",
+         "longname": "Fraction of loss to DOC that routed directly to DIC",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "parm_nitrif_par_lim": {
+         "datatype": "real",
+         "default_value": 1.0,
+         "dependencies": "base_bio_on",
+         "longname": "PAR limit for nitrification",
+         "subcategory": "5. general parameters (nitrification)",
+         "units": "W/m^2"
+      },
+      "parm_o2_min": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "dependencies": "base_bio_on",
+         "longname": "Minimum O2 needed for production & consumption",
+         "subcategory": "5. general parameters",
+         "units": "nmol/cm^3"
+      },
+      "parm_o2_min_delta": {
+         "datatype": "real",
+         "default_value": 5.0,
+         "dependencies": "base_bio_on",
+         "longname": "Width of min O2 range",
+         "subcategory": "5. general parameters",
+         "units": "nmol/cm^3"
+      },
+      "parm_scalelen_vals": {
+         "_array_shape": 4,
+         "datatype": "real",
+         "default_value": {
+            "GRID == \"CESM_x3\"": [
+               1,
+               3.3,
+               4.2,
+               4.4
+            ],
+            "default": [
+               1,
+               3.2,
+               4.8,
+               5.3
+            ]
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Prescribed scalelen values",
+         "subcategory": "6. Scale lengths",
+         "units": "unitless"
+      },
+      "parm_scalelen_z": {
+         "_array_shape": 4,
+         "datatype": "real",
+         "default_value": [
+            "100.0e2",
+            "250.0e2",
+            "500.0e2",
+            "1000.0e2"
+         ],
+         "dependencies": "base_bio_on",
+         "longname": "Depths of prescribed scalelen values",
+         "subcategory": "6. Scale lengths",
+         "units": "cm"
+      },
+      "parm_sed_denitrif_coeff": {
+         "datatype": "real",
+         "default_value": {
+            "GRID == \"CESM_x3\"": 1.4,
+            "default": 1
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Global scaling factor for sed_denitrif",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      },
+      "particulate_flux_ref_depth": {
+         "datatype": "real",
+         "default_value": 100.0,
+         "dependencies": "base_bio_on",
+         "longname": "reference depth for particulate flux diagnostics",
+         "subcategory": "5. general parameters",
+         "units": "m"
+      },
+      "zoo_mort2_exp": {
+         "datatype": "real",
+         "default_value": 2.0,
+         "dependencies": "base_bio_on",
+         "longname": "Value of power loss exponent for zooplankton",
+         "subcategory": "5. general parameters",
+         "units": "unitless"
+      }
+   },
+   "general_parms2": {
+      "init_bury_coeff_opt": {
+         "datatype": "string",
+         "default_value": {
+            "SAVED_STATE_VARS_SOURCE == \"GCM\"": "GCM",
+            "default": "settings_file",
+            "not ladjust_bury_coeff": "settings_file"
+         },
+         "dependencies": "base_bio_on",
+         "longname": "Source of initial burial coefficient",
+         "subcategory": "4. config strings",
+         "units": "unitless"
+      }
+   },
+   "tracer_dependent": {
+      "tracer_restore_vars": {
+         "_array_shape": "_tracer_list",
+         "_is_allocatable": true,
+         "datatype": "string",
+         "default_value": {
+            "GCM == \"CESM\"": [
+               "PO4",
+               "NO3",
+               "SiO3",
+               "ALK",
+               "ALK_ALT_CO2"
+            ],
+            "GRID == \"CESM_x1\"": [
+               "PO4",
+               "NO3",
+               "SiO3",
+               "ALK",
+               "ALK_ALT_CO2"
+            ],
+            "GRID == \"CESM_x3\"": [
+               "PO4",
+               "NO3",
+               "SiO3",
+               "ALK",
+               "ALK_ALT_CO2"
+            ],
+            "default": "",
+            "not base_bio_on": ""
+         },
+         "longname": "Tracer names for tracers that are restored",
+         "subcategory": "20. tracer restoring",
+         "units": "non-numeric"
+      }
+   },
+   "tracer_modules": {
+      "abio_dic_on": {
+         "_append_to_config_keywords": true,
+         "datatype": "logical",
+         "default_value": {
+            "ABIO_DIC_ON == TRUE": ".true.",
+            "default": ".false."
+         },
+         "longname": "Control whether abiotic carbon tracer module is active",
+         "subcategory": "1. tracer modules",
+         "units": "unitless"
+      },
+      "base_bio_on": {
+         "_append_to_config_keywords": true,
+         "datatype": "logical",
+         "default_value": {
+            "BASE_BIO_ON == FALSE": ".false.",
+            "default": ".true."
+         },
+         "longname": "Control whether the base ecosystem tracer module is active",
+         "subcategory": "1. tracer modules",
+         "units": "unitless"
+      },
+      "ciso_on": {
+         "_append_to_config_keywords": true,
+         "datatype": "logical",
+         "default_value": ".false.",
+         "longname": "Control whether CISO tracer module is active",
+         "subcategory": "1. tracer modules",
+         "units": "unitless"
+      }
+   }
+}
