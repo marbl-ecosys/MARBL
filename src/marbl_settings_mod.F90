@@ -1548,26 +1548,6 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'Qp_fixed'
-      lname    = 'P/C ratio when using fixed P/C ratios'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%Qp_fixed
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-      write(sname, "(2A)") trim(prefix), 'Qn_fixed'
-      lname    = 'P/C ratio when using fixed N/C ratios'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%Qn_fixed
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
       write(sname, "(2A)") trim(prefix), 'SiOpt'
       lname    = 'Si threshold in uptake ratio computations'
       units    = 'nM'
@@ -1608,21 +1588,35 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'gQp_max'
-      lname    = 'initial P/C ratio for growth'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%gQp_max
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      if (lvariable_PtoC) then
+        write(sname, "(2A)") trim(prefix), 'gQp_max'
+        lname    = 'initial P/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQp_max
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'gQp_min'
-      lname    = 'minimum P/C ratio for growth'
+        write(sname, "(2A)") trim(prefix), 'gQp_min'
+        lname    = 'minimum P/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQp_min
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      endif
+
+      ! This is only used when lvariable_PtoC = .false., but settings_file_class always includes it
+      ! in the setting file because it doesn't (yet) have logic to check for false logical vars
+      write(sname, "(2A)") trim(prefix), 'Qp_fixed'
+      lname    = 'P/C ratio when using fixed P/C ratios'
       units    = 'unitless'
       datatype = 'real'
-      rptr     => autotroph_settings(n)%gQp_min
+      rptr     => autotroph_settings(n)%Qp_fixed
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1638,21 +1632,35 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'gQn_max'
-      lname    = 'initial N/C ratio for growth'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%gQn_max
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      if (lvariable_NtoC) then
+        write(sname, "(2A)") trim(prefix), 'gQn_max'
+        lname    = 'initial N/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQn_max
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'gQn_min'
-      lname    = 'minimum N/C ratio for growth'
+        write(sname, "(2A)") trim(prefix), 'gQn_min'
+        lname    = 'minimum N/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQn_min
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      endif
+
+      ! This is only used when lvariable_NtoC = .false., but settings_file_class always includes it
+      ! in the setting file because it doesn't (yet) have logic to check for false logical vars
+      write(sname, "(2A)") trim(prefix), 'Qn_fixed'
+      lname    = 'P/C ratio when using fixed N/C ratios'
       units    = 'unitless'
       datatype = 'real'
-      rptr     => autotroph_settings(n)%gQn_min
+      rptr     => autotroph_settings(n)%Qn_fixed
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))

@@ -107,14 +107,16 @@ module marbl_init_tracer_metadata_mod
         marbl_tracer_metadata(n)%tracer_module_name = 'base_bio'
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%N_ind
-        marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
-        marbl_tracer_metadata(n)%tracer_module_name = 'base_bio'
+        if (n > 0) then
+            marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
+            marbl_tracer_metadata(n)%tracer_module_name = 'base_bio'
+        endif
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
         if (n > 0) then
             marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
             marbl_tracer_metadata(n)%tracer_module_name = 'base_bio'
-          endif
+        endif
 
         n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
         marbl_tracer_metadata(n)%lfull_depth_tavg = lecovars_full_depth_tavg
@@ -263,11 +265,13 @@ module marbl_init_tracer_metadata_mod
        marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%N_ind
-       marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'N'
-       marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Nitrogen'
-       marbl_tracer_metadata(n)%units      = unit_system%conc_units
-       marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
-       marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
+       if (n.gt.0) then
+           marbl_tracer_metadata(n)%short_name = trim(autotroph_settings(auto_ind)%sname) // 'N'
+           marbl_tracer_metadata(n)%long_name  = trim(autotroph_settings(auto_ind)%lname) // ' Nitrogen'
+           marbl_tracer_metadata(n)%units      = unit_system%conc_units
+           marbl_tracer_metadata(n)%tend_units = unit_system%conc_tend_units
+           marbl_tracer_metadata(n)%flux_units = unit_system%conc_flux_units
+       endif
 
        n = marbl_tracer_indices%auto_inds(auto_ind)%P_ind
        if (n.gt.0) then

@@ -363,6 +363,7 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .true.
+      _append_to_config_keywords : true
    lvariable_NtoC :
       dependencies : base_bio_on
       longname : Control if NtoC ratios in autotrophs vary
@@ -370,6 +371,7 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .true.
+      _append_to_config_keywords : true
    ladjust_bury_coeff :
       dependencies : base_bio_on
       longname : Control if bury coefficients are adjusted (rather than constant)
@@ -1048,6 +1050,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 1.8e-3
                ((autotroph_sname)) == "diaz" : 2.0e-3
          gQp_max :
+            dependencies : lvariable_PtoC
             longname : Initial P/C ratio for growth
             subcategory : 10. autotrophs
             units : unitless
@@ -1058,6 +1061,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 1.1e-2
                ((autotroph_sname)) == "diaz" : 8.3e-3
          gQp_min :
+            dependencies : lvariable_PtoC
             longname : Minimum P/C ratio for growth
             subcategory : 10. autotrophs
             units : unitless
@@ -1078,6 +1082,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 0.8
                ((autotroph_sname)) == "diaz" : 0.8
          gQn_max :
+            dependencies : lvariable_NtoC
             longname : Initial N/C ratio for growth
             subcategory : 10. autotrophs
             units : unitless
@@ -1088,6 +1093,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 1.7e-1
                ((autotroph_sname)) == "diaz" : 1.7e-1
          gQn_min :
+            dependencies : lvariable_NtoC
             longname : Minimum N/C ratio for growth
             subcategory : 10. autotrophs
             units : unitless
