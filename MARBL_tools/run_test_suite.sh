@@ -77,7 +77,7 @@ cd ${MARBL_ROOT}/MARBL_tools
 (set -x ; ./MARBL_generate_settings_file.py)
 STATUS=$(check_return $?)
 print_status "MARBL_generate_settings_file.py" >> ${RESULTS_CACHE}
-for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco; do
+for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco latest+4p2z; do
   (set -x ; ./MARBL_generate_settings_file.py -f ../defaults/json/settings_${shortname}.json -o marbl_${shortname}.settings)
   STATUS=$(check_return $?)
   print_status "MARBL_generate_settings_file.py (${shortname})" >> ${RESULTS_CACHE}
@@ -141,7 +141,7 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "init.py ($(basename ${settingsfile}))" >> ${RESULTS_CACHE}
   done
   # Initialize MARBL with settings generated from every JSON file
-  for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco; do
+  for shortname in cesm2.0 cesm2.1 cesm2.1+cocco latest latest+cocco latest+4p2z; do
     if [ -f ../../../MARBL_tools/marbl_${shortname}.settings ]; then
       (set -x ; ./init.py -s ../../../MARBL_tools/marbl_${shortname}.settings)
       STATUS=$(check_return $?)
