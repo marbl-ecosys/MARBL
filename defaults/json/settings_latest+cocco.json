@@ -76,6 +76,7 @@
                   "((autotroph_sname)) == \"sp\"": 0.4,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_NtoC",
                "longname": "N threshold in uptake ratio computations",
                "subcategory": "10. autotrophs",
                "units": "unitless"
@@ -112,20 +113,8 @@
                   "((autotroph_sname)) == \"sp\"": 0.8,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_PtoC",
                "longname": "PO4 threshold in uptake ratio computations",
-               "subcategory": "10. autotrophs",
-               "units": "unitless"
-            },
-            "Qn_fixed": {
-               "datatype": "real",
-               "default_value": {
-                  "((autotroph_sname)) == \"cocco\"": "16.0/117",
-                  "((autotroph_sname)) == \"diat\"": "16.0/117",
-                  "((autotroph_sname)) == \"diaz\"": "0.32*(16.0/117)",
-                  "((autotroph_sname)) == \"sp\"": "16.0/117",
-                  "default": "1e34"
-               },
-               "longname": "N/C ratio when using fixed N/C ratios",
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },
@@ -240,6 +229,7 @@
                   "((autotroph_sname)) == \"sp\"": 0.17,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_NtoC",
                "longname": "Initial N/C ratio for growth",
                "subcategory": "10. autotrophs",
                "units": "unitless"
@@ -253,6 +243,7 @@
                   "((autotroph_sname)) == \"sp\"": 0.11,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_NtoC",
                "longname": "Minimum N/C ratio for growth",
                "subcategory": "10. autotrophs",
                "units": "unitless"
@@ -266,6 +257,7 @@
                   "((autotroph_sname)) == \"sp\"": 0.011,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_PtoC",
                "longname": "Initial P/C ratio for growth",
                "subcategory": "10. autotrophs",
                "units": "unitless"
@@ -279,6 +271,7 @@
                   "((autotroph_sname)) == \"sp\"": 0.0075,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_PtoC",
                "longname": "Minimum P/C ratio for growth",
                "subcategory": "10. autotrophs",
                "units": "unitless"
@@ -1345,6 +1338,7 @@
          "units": "unitless"
       },
       "lvariable_NtoC": {
+         "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": ".true.",
          "dependencies": "base_bio_on",
@@ -1353,6 +1347,7 @@
          "units": "unitless"
       },
       "lvariable_PtoC": {
+         "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": ".true.",
          "dependencies": "base_bio_on",

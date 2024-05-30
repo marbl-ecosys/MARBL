@@ -84,7 +84,6 @@ module marbl_interior_tendency_mod
   use marbl_settings_mod, only : unit_system_type
 
   use marbl_pft_mod, only : Qp_zoo
-  use marbl_pft_mod, only : Qn_zoo
 
   implicit none
   private
@@ -836,7 +835,7 @@ contains
       if (n > 0) then
         autotroph_local%N(auto_ind,:) = tracer_local(n,:)
       else
-        autotroph_local%N(auto_ind,:) = autotroph_settings(auto_ind)%Qn_fixed * autotroph_local%C(auto_ind,:)
+        autotroph_local%N(auto_ind,:) = Q * autotroph_local%C(auto_ind,:)
       end if
 
       n = marbl_tracer_indices%auto_inds(auto_ind)%Fe_ind
@@ -1305,8 +1304,8 @@ contains
               max((gQn(auto_ind,:) * WORK1/autotroph_settings(auto_ind)%NOpt), autotroph_settings(auto_ind)%gQn_min)
           endwhere
         else
-          Qn(auto_ind,:) = autotroph_settings(auto_ind)%Qn_fixed
-          gQn(auto_ind,:) = autotroph_settings(auto_ind)%Qn_fixed
+          Qn(auto_ind,:) = Q
+          gQn(auto_ind,:) = Q
         endif
 
         !------------------------------------------------------------------------
@@ -2292,7 +2291,7 @@ contains
                                     * Qn(auto_ind,k)
 
           remaining_N = (auto_graze(auto_ind,k) + auto_loss(auto_ind,k) + auto_agg(auto_ind,k)) * Qn(auto_ind,k) &
-                      - auto_graze_zootot(auto_ind,k) * Qn_zoo - remaining_N_pon(auto_ind,k)
+                      - auto_graze_zootot(auto_ind,k) * Q - remaining_N_pon(auto_ind,k)
 
           !-----------------------------------------------------------------------
           ! reduce sinking pon if remaining_N is negative
@@ -2398,7 +2397,7 @@ contains
 
       DOC_prod(:) = sum(zoo_loss_doc(:,:), dim=1) + sum(auto_loss_doc(:,:), dim=1) &
                   + sum(auto_graze_doc(:,:), dim=1) + sum(zoo_graze_doc(:,:), dim=1)
-      DON_prod(:) = Qn_zoo * (sum(zoo_loss_doc(:,:), dim=1) + sum(zoo_graze_doc(:,:), dim=1)) &
+      DON_prod(:) = Q * (sum(zoo_loss_doc(:,:), dim=1) + sum(zoo_graze_doc(:,:), dim=1)) &
                   + sum(remaining_N_don(:,:), dim=1)
       DOP_prod(:) = Qp_zoo * (sum(zoo_loss_doc(:,:), dim=1) + sum(zoo_graze_doc(:,:), dim=1)) &
                   + sum(remaining_P_dop(:,:), dim=1)
@@ -2776,7 +2775,7 @@ contains
      !  large detritus N
      !-----------------------------------------------------------------------
 
-     PON%prod(k) = Qn_zoo * (sum(zoo_loss_poc(:)) + sum(zoo_graze_poc(:))) + sum(remaining_N_pon(:))
+     PON%prod(k) = Q * (sum(zoo_loss_poc(:)) + sum(zoo_graze_poc(:))) + sum(remaining_N_pon(:))
 
      if (PON%prod(k) < c0) then
         DON_loss_N_bal = -PON%prod(k)
@@ -3887,7 +3886,7 @@ contains
 
         interior_tendencies(nh4_ind,k) = DON_remin(k) + DONr_remin(k) - sum(NH4_V(:,k)) - nitrif(k) &
                                        + ((c1 - PONremin_refract) * PON_remin(k)) + sum(remaining_N_din(:,k)) &
-                                       + Qn_zoo * (sum(zoo_loss_dic(:,k)) + sum(zoo_graze_dic(:,k)))
+                                       + Q * (sum(zoo_loss_dic(:,k)) + sum(zoo_graze_dic(:,k)))
 
         do auto_ind = 1, autotroph_cnt
           if (autotroph_settings(auto_ind)%Nfixer) then

@@ -999,16 +999,6 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 1.0/117
                ((autotroph_sname)) == "diat" : 1.0/117
                ((autotroph_sname)) == "diaz" : 0.32*(1.0/117)
-         Qn_fixed :
-            longname : N/C ratio when using fixed N/C ratios
-            subcategory : 10. autotrophs
-            units : unitless
-            datatype : real
-            default_value :
-               default : 1e34
-               ((autotroph_sname)) == "sp" : 16.0/117
-               ((autotroph_sname)) == "diat" : 16.0/117
-               ((autotroph_sname)) == "diaz" : 0.32*(16.0/117)
          SiOpt :
             longname : Si threshold in uptake ratio computations
             subcategory : 10. autotrophs
@@ -1072,6 +1062,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 8.3e-3
                ((autotroph_sname)) == "diaz" : 3.7e-3
          POpt :
+            dependencies : lvariable_PtoC
             longname : PO4 threshold in uptake ratio computations
             subcategory : 10. autotrophs
             units : unitless
@@ -1104,6 +1095,7 @@ PFT_derived_types :
                ((autotroph_sname)) == "diat" : 1.1e-1
                ((autotroph_sname)) == "diaz" : 1.4e-1
          NOpt :
+            dependencies : lvariable_NtoC
             longname : N threshold in uptake ratio computations
             subcategory : 10. autotrophs
             units : unitless

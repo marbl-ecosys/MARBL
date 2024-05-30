@@ -29,7 +29,6 @@ module marbl_pft_mod
 
     real(r8)                :: kFe, kCO2, kPO4, kDOP, kNO3, kNH4, kSiO3 ! nutrient uptake half-sat constants
     real(r8)                :: Qp_fixed                           ! P/C ratio for fixed P/C ratios
-    real(r8)                :: Qn_fixed                           ! N/C ratio for fixed N/C ratios
     real(r8)                :: gQfe_max, gQfe_min                 ! initial and minimum Fe/C ratio for growth
     real(r8)                :: gQp_max, gQp_min                   ! initial and minimum P/C ratio for growth
     real(r8)                :: gQn_max, gQn_min                   ! initial and minimum N/C ratio for growth
@@ -101,7 +100,6 @@ module marbl_pft_mod
 
   ! Public parameters
   real(r8), public, parameter :: Qp_zoo = c1 / 117.0_r8      ! P/C ratio (mmol/mmol) zoo
-  real(r8), public, parameter :: Qn_zoo = 16.0_r8 / 117.0_r8 ! N/C ratio (mmol/mmol) zoo
 
   ! grazing functions
   integer(int_kind), public, parameter :: grz_fnc_michaelis_menten = 1
@@ -138,7 +136,6 @@ contains
         self%kNH4            = 0.01_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kSiO3           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Qp_fixed        = Qp_zoo            ! only used for lvariable_PtoC=.false.
-        self%Qn_fixed        = Qn_zoo            ! only used for lvariable_NtoC=.false.
         self%SiOpt           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_max        = 30.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_min        = 2.5e-6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -179,7 +176,6 @@ contains
         self%kNH4            = 0.05_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kSiO3           = 0.7_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Qp_fixed        =  Qp_zoo           ! only used for lvariable_PtoC=.false.
-        self%Qn_fixed        =  Qn_zoo           ! only used for lvariable_NtoC=.false.
         self%SiOpt           = 10.0_r8           ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_max        = 30.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_min        = 2.5e-6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -219,7 +215,6 @@ contains
         self%kNH4            = 0.2_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%kSiO3           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%Qp_fixed        = 0.32_r8 * Qp_zoo  ! only used for lvariable_PtoC=.false.
-        self%Qn_fixed        = Qn_zoo            ! only used for lvariable_ntoC=.false.
         self%SiOpt           = 0.0_r8            ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_max        = 60.0e-6_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
         self%gQfe_min        = 2.5e-6_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE in marbl_settings_mod
@@ -259,7 +254,6 @@ contains
         self%kNH4            = UnsetValue
         self%kSiO3           = UnsetValue
         self%Qp_fixed        = UnsetValue
-        self%Qn_fixed        = UnsetValue
         self%SiOpt           = UnsetValue
         self%gQfe_max        = UnsetValue
         self%gQfe_min        = UnsetValue

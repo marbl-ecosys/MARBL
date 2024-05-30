@@ -76,6 +76,7 @@
                   "((autotroph_sname)) == \"sp\"": 0.4,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_NtoC",
                "longname": "N threshold in uptake ratio computations",
                "subcategory": "10. autotrophs",
                "units": "unitless"
@@ -110,19 +111,8 @@
                   "((autotroph_sname)) == \"sp\"": 0.8,
                   "default": "1e34"
                },
+               "dependencies": "lvariable_PtoC",
                "longname": "PO4 threshold in uptake ratio computations",
-               "subcategory": "10. autotrophs",
-               "units": "unitless"
-            },
-            "Qn_fixed": {
-               "datatype": "real",
-               "default_value": {
-                  "((autotroph_sname)) == \"diat\"": "16.0/117",
-                  "((autotroph_sname)) == \"diaz\"": "0.32*(16.0/117)",
-                  "((autotroph_sname)) == \"sp\"": "16.0/117",
-                  "default": "1e34"
-               },
-               "longname": "N/C ratio when using fixed N/C ratios",
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },

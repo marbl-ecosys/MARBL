@@ -1608,6 +1608,16 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+        write(sname, "(2A)") trim(prefix), 'POpt'
+        lname    = 'PO4 threshold in uptake ratio computations'
+        units    = 'nM'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%POpt
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
       endif
 
       ! This is only used when lvariable_PtoC = .false., but settings_file_class always includes it
@@ -1617,16 +1627,6 @@ end subroutine marbl_settings_set_defaults_tracer_modules
       units    = 'unitless'
       datatype = 'real'
       rptr     => autotroph_settings(n)%Qp_fixed
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-      write(sname, "(2A)") trim(prefix), 'POpt'
-      lname    = 'PO4 threshold in uptake ratio computations'
-      units    = 'nM'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%POpt
       call this%add_var(sname, lname, units, datatype, category,     &
                         marbl_status_log, rptr=rptr,                 &
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
@@ -1652,29 +1652,17 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                           marbl_status_log, rptr=rptr,                 &
                           nondefault_required=(PFT_defaults .eq. 'user-specified'))
         call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+        write(sname, "(2A)") trim(prefix), 'NOpt'
+        lname    = 'N threshold in uptake ratio computations'
+        units    = 'nM'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%NOpt
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
       endif
-
-      ! This is only used when lvariable_NtoC = .false., but settings_file_class always includes it
-      ! in the setting file because it doesn't (yet) have logic to check for false logical vars
-      write(sname, "(2A)") trim(prefix), 'Qn_fixed'
-      lname    = 'P/C ratio when using fixed N/C ratios'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%Qn_fixed
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
-
-      write(sname, "(2A)") trim(prefix), 'NOpt'
-      lname    = 'N threshold in uptake ratio computations'
-      units    = 'nM'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%NOpt
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       write(sname, "(2A)") trim(prefix), 'alphaPI_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'

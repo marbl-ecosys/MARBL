@@ -4381,7 +4381,7 @@ contains
        denitrif, sed_denitrif, autotroph_derived_terms, interior_tendencies, &
        marbl_tracer_indices, unit_system, marbl_diags, marbl_status_log)
 
-    use marbl_pft_mod, only : Qn_zoo
+    use marbl_settings_mod, only : Q
     use marbl_settings_mod, only : lvariable_NtoC
     use marbl_settings_mod, only : Jint_Ntot_thres
 
@@ -4421,7 +4421,7 @@ contains
     ! vertical integrals
     work = interior_tendencies(no3_ind,:) + interior_tendencies(nh4_ind,:) +                &
            interior_tendencies(don_ind,:) + interior_tendencies(donr_ind,:) +               &
-           Qn_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
+           Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1) +  &
            denitrif(:) + sed_denitrif(:)
 
     if (lvariable_NtoC) then
@@ -4472,7 +4472,7 @@ contains
        call marbl_status_log%log_error(log_message, subname, ElemInd=1)
        ! zooN
        call marbl_diagnostics_share_compute_vertical_integrals( &
-            Qn_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1), &
+            Q * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind,:), dim=1), &
             delta_z, kmt, unit_system, full_depth_integral=work(1))
        write(log_message,"(A,E11.3e3)") 'integral(zooN) = ', work(1)
        call marbl_status_log%log_error(log_message, subname, ElemInd=1)
