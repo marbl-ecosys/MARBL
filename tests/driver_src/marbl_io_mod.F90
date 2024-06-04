@@ -568,8 +568,8 @@ contains
         tracer_name_file = 'diazC'
         scale_factor = 16._r8 / 112._r8
       case('coccoN')
-        tracer_name_file = 'coccoC'
-        scale_factor = 16._r8 / 112._r8
+        tracer_name_file = 'spC' ! no coccoC to scale, use coccoC = 0.07*spC
+        scale_factor = 0.07_r8 * (16._r8 / 112._r8)
       case('coccoChl')
         tracer_name_file = 'spChl'
         scale_factor = 0.07_r8
