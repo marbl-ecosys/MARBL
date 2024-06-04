@@ -1316,14 +1316,6 @@ contains
         !------------------------------------------------------------------------
         if (lvariable_PtoC) then
           Qp(auto_ind,:) = auto_P(auto_ind,:) / (auto_C(auto_ind,:) + epsC)
-
-          !!-----------------------------------------------------------------------
-          !!-- Calculate Qp for new growth based on Galbraith and Martiny (2015), with min. N/P
-          !! - 14= 0.00976801, 14.5 = 0.00944239 15= 0.00911677 15.5=0.00882272 16= 0.00854701
-          !! - std intercept 6.0 = 166.66maxCP, 5.26=190, 4.0 = 250, 3.0 = 333.33 (commented out)
-          !!-----------------------------------------------------------------------
-          !gQp(auto_ind,:) = min((((PquotaSlope * PO4_loc(:)) + PquotaIntercept) * 0.001_r8), PquotaMinNP)
-
           gQp(auto_ind,:) = autotroph_settings(auto_ind)%gQp_max
 
           where ((PO4_loc(:) + DOP_loc(:)) < autotroph_settings(auto_ind)%POpt)
@@ -1331,11 +1323,15 @@ contains
               max(gQp(auto_ind,:) * (PO4_loc(:) + DOP_loc(:)) / autotroph_settings(auto_ind)%POpt, &
               autotroph_settings(auto_ind)%gQp_min)
           endwhere
-          where (WORK1 < autotroph_settings(auto_ind)%Nopt)
-            gQp(auto_ind,:) = &
-              max(gQp(auto_ind,:) * WORK1 / autotroph_settings(auto_ind)%NOpt, &
-                autotroph_settings(auto_ind)%gQp_min * 0.55_r8)
-          endwhere
+
+          ! Apply threshold if using variable N:C
+          if (lvariable_NtoC) then
+            where (WORK1 < autotroph_settings(auto_ind)%Nopt)
+              gQp(auto_ind,:) = &
+                max(gQp(auto_ind,:) * WORK1 / autotroph_settings(auto_ind)%NOpt, &
+                  autotroph_settings(auto_ind)%gQp_min * 0.55_r8)
+            endwhere
+          endif
 
         else
           Qp(auto_ind,:) = autotroph_settings(auto_ind)%Qp_fixed
@@ -3024,7 +3020,7 @@ contains
      if (k <= column_kmt) then
 
         dzr_loc    = c1 / dz_loc
-        dzr_mod = ((dz_loc * 0.01_r8)**(-0.343_r8))
+        dzr_mod = ((dz_loc * unit_system%len2m)**(-0.343_r8))
 
         poc_diss   = POC%diss
         sio2_diss  = P_SiO2%diss
@@ -3205,6 +3201,16 @@ contains
                 (POC%sflux_in(k) + POC%hflux_in(k)))
         endif
 
+        !-----------------------------------------------------------------------
+        ! add term for desorption of iron from sinking particles
+        !   dzr_mod increases slowly relative to dzr_loc
+        !   it accounts for the increasing sinking speed of particles with depth
+        !      less desorption with depth (as mean sinking speed increases)
+        !-----------------------------------------------------------------------
+
+        P_iron%remin(k) = P_iron%remin(k) +                &
+             (P_iron%sflux_in(k) * parm_Fe_desorption_rate0 * dzr_mod)
+
         P_iron%sflux_out(k) = P_iron%sflux_in(k) + dz_loc * &
              ((c1 - P_iron%gamma) * P_iron%prod(k) - P_iron%remin(k))
 
@@ -3217,17 +3223,6 @@ contains
         !-----------------------------------------------------------------------
         !  Compute iron release from dust remin/dissolution and other Fe sources
         !-----------------------------------------------------------------------
-
-        !-----------------------------------------------------------------------
-        ! add term for desorption of iron from sinking particles
-        !   dzr_mod increases slowly relative to dzr_loc
-        !   it accounts for the increasing sinking speed of particles with depth
-        !      less desorption with depth (as mean sinking speed increases)
-        !-----------------------------------------------------------------------
-
-        P_iron%remin(k) = P_iron%remin(k) +                &
-             (P_iron%sflux_in(k) * parm_Fe_desorption_rate0 * dzr_mod)
-
 
         P_iron%remin(k) = P_iron%remin(k)   &
              + (dust%remin(k) * dust_to_Fe) &
@@ -3399,6 +3394,7 @@ contains
      P_iron%sed_loss(k)          = c0
      dust%sed_loss(k)            = c0
      denitrif_C_N(k)             = 0.9375_r8
+     Lig_prod(k)                 = c0
 
      if (k == column_kmt) then
 
@@ -3594,7 +3590,7 @@ contains
     real(r8),                      intent(in)  :: Lig_scavenge(km)
     real(r8),                      intent(in)  :: photoFe(autotroph_cnt,km)
     type(unit_system_type),        intent(in)  :: unit_system
-    real(r8),                      intent(out) :: Lig_prod(km)
+    real(r8),                      intent(inout) :: Lig_prod(km)
     real(r8),                      intent(out) :: Lig_photochem(km)
     real(r8),                      intent(out) :: Lig_deg(km)
     real(r8),                      intent(out) :: Lig_loss(km)

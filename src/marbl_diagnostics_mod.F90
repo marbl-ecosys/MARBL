@@ -4681,12 +4681,13 @@ contains
     ! vertical integrals
     work = interior_tendencies(fe_ind, :)  &
            + sum(interior_tendencies(marbl_tracer_indices%auto_inds(:)%Fe_ind, :),dim=1) &
-           + (Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1))
+           + (Qfe_zoo * sum(interior_tendencies(marbl_tracer_indices%zoo_inds(:)%C_ind, :),dim=1)) &
+           - (dust%remin * dust_to_Fe)
 
 
     call marbl_diagnostics_share_compute_vertical_integrals(work, delta_z, kmt, unit_system, &
       full_depth_integral=diags(ind%Jint_Fetot)%field_2d(1),                     &
-      integrated_terms = P_iron%sed_loss - fesedflux - feRedsedflux - feventflux - (dust%remin * dust_to_Fe))
+      integrated_terms = P_iron%sed_loss - fesedflux - feRedsedflux - feventflux)
 
 
    if (abs(diags(ind%Jint_Fetot)%field_2d(1)) .gt. Jint_Fetot_thres) then
@@ -4694,7 +4695,7 @@ contains
            'abs(Jint_Fetot)=', abs(diags(ind%Jint_Fetot)%field_2d(1)), &
             ' exceeds Jint_Fetot_thres=', Jint_Fetot_thres
       call marbl_status_log%log_error(log_message, subname, ElemInd=1)
-     return
+      return
    end if
 
     end associate
