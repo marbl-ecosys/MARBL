@@ -10,17 +10,21 @@ module marbl_glo_avg_mod
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_CaCO3_bury = 0
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_POC_bury = 0
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_POP_bury = 0
+  !integer (int_kind) :: glo_avg_field_ind_interior_tendency_PON_bury = 0
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_bSi_bury = 0
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff = 0
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff = 0
+  !integer (int_kind) :: glo_avg_field_ind_interior_tendency_d_PON_bury_d_bury_coeff = 0
   integer (int_kind) :: glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff = 0
 
   integer (int_kind) :: glo_avg_field_ind_surface_flux_C_input = 0
   integer (int_kind) :: glo_avg_field_ind_surface_flux_P_input = 0
+  !integer (int_kind) :: glo_avg_field_ind_surface_flux_N_input = 0
   integer (int_kind) :: glo_avg_field_ind_surface_flux_Si_input = 0
 
   integer (int_kind) :: glo_scalar_ind_interior_tendency_POC_bury_coeff = 0
   integer (int_kind) :: glo_scalar_ind_interior_tendency_POP_bury_coeff = 0
+  !integer (int_kind) :: glo_scalar_ind_interior_tendency_PON_bury_coeff = 0
   integer (int_kind) :: glo_scalar_ind_interior_tendency_bSi_bury_coeff = 0
 
 contains
@@ -55,6 +59,9 @@ contains
        glo_avg_field_cnt_interior_tendency = glo_avg_field_cnt_interior_tendency + 1
        glo_avg_field_ind_interior_tendency_POP_bury = glo_avg_field_cnt_interior_tendency
 
+!       glo_avg_field_cnt_interior_tendency = glo_avg_field_cnt_interior_tendency + 1
+!       glo_avg_field_ind_interior_tendency_PON_bury = glo_avg_field_cnt_interior_tendency
+
        glo_avg_field_cnt_interior_tendency = glo_avg_field_cnt_interior_tendency + 1
        glo_avg_field_ind_interior_tendency_bSi_bury = glo_avg_field_cnt_interior_tendency
 
@@ -63,6 +70,9 @@ contains
 
        glo_avg_field_cnt_interior_tendency = glo_avg_field_cnt_interior_tendency + 1
        glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff = glo_avg_field_cnt_interior_tendency
+
+!       glo_avg_field_cnt_interior_tendency = glo_avg_field_cnt_interior_tendency + 1
+!       glo_avg_field_ind_interior_tendency_d_PON_bury_d_bury_coeff = glo_avg_field_cnt_interior_tendency
 
        glo_avg_field_cnt_interior_tendency = glo_avg_field_cnt_interior_tendency + 1
        glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff = glo_avg_field_cnt_interior_tendency
@@ -74,6 +84,9 @@ contains
        glo_avg_field_cnt_surface_flux = glo_avg_field_cnt_surface_flux + 1
        glo_avg_field_ind_surface_flux_P_input = glo_avg_field_cnt_surface_flux
 
+!       glo_avg_field_cnt_surface_flux = glo_avg_field_cnt_surface_flux + 1
+!       glo_avg_field_ind_surface_flux_N_input = glo_avg_field_cnt_surface_flux
+
        glo_avg_field_cnt_surface_flux = glo_avg_field_cnt_surface_flux + 1
        glo_avg_field_ind_surface_flux_Si_input = glo_avg_field_cnt_surface_flux
 
@@ -83,6 +96,9 @@ contains
 
        glo_scalar_cnt_interior_tendency = glo_scalar_cnt_interior_tendency + 1
        glo_scalar_ind_interior_tendency_POP_bury_coeff = glo_scalar_cnt_interior_tendency
+
+!       glo_scalar_cnt_interior_tendency = glo_scalar_cnt_interior_tendency + 1
+!       glo_scalar_ind_interior_tendency_PON_bury_coeff = glo_scalar_cnt_interior_tendency
 
        glo_scalar_cnt_interior_tendency = glo_scalar_cnt_interior_tendency + 1
        glo_scalar_ind_interior_tendency_bSi_bury_coeff = glo_scalar_cnt_interior_tendency
@@ -101,6 +117,7 @@ contains
     use marbl_interface_public_types, only : marbl_running_mean_0d_type
     use marbl_settings_mod, only : parm_init_POC_bury_coeff
     use marbl_settings_mod, only : parm_init_POP_bury_coeff
+!    use marbl_settings_mod, only : parm_init_PON_bury_coeff
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_settings_mod, only : bury_coeff_rmean_timescale_years
     use marbl_settings_mod, only : ladjust_bury_coeff
@@ -119,6 +136,7 @@ contains
     real (r8) :: rmean_CaCO3_bury_integral
     real (r8) :: rmean_C_input_integral
     real (r8) :: rmean_P_input_integral
+!    real (r8) :: rmean_N_input_integral
     real (r8) :: rmean_Si_input_integral
 
     real (r8) :: rmean_POC_bury_integral
@@ -126,6 +144,9 @@ contains
 
     real (r8) :: rmean_POP_bury_integral
     real (r8) :: rmean_d_POP_bury_d_bury_coeff_integral
+
+!    real (r8) :: rmean_PON_bury_integral
+!    real (r8) :: rmean_d_PON_bury_d_bury_coeff_integral
 
     real (r8) :: rmean_bSi_bury_integral
     real (r8) :: rmean_d_bSi_bury_d_bury_coeff_integral
@@ -157,6 +178,7 @@ contains
        rmean_CaCO3_bury_integral     = 1.62e-4_r8 ! matches rmean_ALK_nonN_input_integral
        rmean_C_input_integral        = 2.69e-4_r8 ! GNEWS2000 value on gx1v6 grid [nmol C/cm^2/s]
        rmean_P_input_integral        = 9.66e-7_r8 ! GNEWS2000 value on gx1v6 grid [nmol P/cm^2/s]
+!       rmean_N_input_integral        = 9.66e-7_r8 ! Unknown, check this
        rmean_Si_input_integral       = 4.10e-5_r8 ! GNEWS2000 value on gx1v6 grid [nmol Si/cm^2/s]
 
        rmean_POC_bury_integral = (rmean_C_input_integral - rmean_CaCO3_bury_integral)
@@ -164,6 +186,9 @@ contains
 
        rmean_POP_bury_integral = rmean_P_input_integral
        rmean_d_POP_bury_d_bury_coeff_integral = rmean_POP_bury_integral / parm_init_POP_bury_coeff
+
+!       rmean_PON_bury_integral = rmean_N_input_integral
+!       rmean_d_PON_bury_d_bury_coeff_integral = rmean_PON_bury_integral / parm_init_PON_bury_coeff
 
        rmean_bSi_bury_integral = rmean_Si_input_integral
        rmean_d_bSi_bury_d_bury_coeff_integral = rmean_bSi_bury_integral / parm_init_bSi_bury_coeff
@@ -181,6 +206,10 @@ contains
        glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_POP_bury'
        glo_avg_rmean_interior(glo_ind)%init_val = rmean_POP_bury_integral
 
+!       glo_ind = glo_avg_field_ind_interior_tendency_PON_bury
+!       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_PON_bury'
+!       glo_avg_rmean_interior(glo_ind)%init_val = rmean_PON_bury_integral
+
        glo_ind = glo_avg_field_ind_interior_tendency_bSi_bury
        glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_bSi_bury'
        glo_avg_rmean_interior(glo_ind)%init_val = rmean_bSi_bury_integral
@@ -192,6 +221,10 @@ contains
        glo_ind = glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff
        glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_d_POP_bury_d_bury_coeff'
        glo_avg_rmean_interior(glo_ind)%init_val = rmean_d_POP_bury_d_bury_coeff_integral
+
+!       glo_ind = glo_avg_field_ind_interior_tendency_d_PON_bury_d_bury_coeff
+!       glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_d_PON_bury_d_bury_coeff'
+!       glo_avg_rmean_interior(glo_ind)%init_val = rmean_d_PON_bury_d_bury_coeff_integral
 
        glo_ind = glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff
        glo_avg_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_avg_d_bSi_bury_d_bury_coeff'
@@ -206,6 +239,10 @@ contains
        glo_avg_rmean_surface(glo_ind)%sname    = 'MARBL_rmean_glo_avg_P_input'
        glo_avg_rmean_surface(glo_ind)%init_val = rmean_P_input_integral
 
+!       glo_ind = glo_avg_field_ind_surface_flux_N_input
+!       glo_avg_rmean_surface(glo_ind)%sname    = 'MARBL_rmean_glo_avg_N_input'
+!       glo_avg_rmean_surface(glo_ind)%init_val = rmean_N_input_integral
+
        glo_ind = glo_avg_field_ind_surface_flux_Si_input
        glo_avg_rmean_surface(glo_ind)%sname    = 'MARBL_rmean_glo_avg_Si_input'
        glo_avg_rmean_surface(glo_ind)%init_val = rmean_Si_input_integral
@@ -218,6 +255,10 @@ contains
        glo_ind = glo_scalar_ind_interior_tendency_POP_bury_coeff
        glo_scalar_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_scalar_POP_bury_coeff'
        glo_scalar_rmean_interior(glo_ind)%init_val = parm_init_POP_bury_coeff
+
+!       glo_ind = glo_scalar_ind_interior_tendency_PON_bury_coeff
+!       glo_scalar_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_scalar_PON_bury_coeff'
+!       glo_scalar_rmean_interior(glo_ind)%init_val = parm_init_PON_bury_coeff
 
        glo_ind = glo_scalar_ind_interior_tendency_bSi_bury_coeff
        glo_scalar_rmean_interior(glo_ind)%sname    = 'MARBL_rmean_glo_scalar_bSi_bury_coeff'

@@ -54,6 +54,33 @@
                "subcategory": "10. autotrophs",
                "units": "eV"
             },
+            "FeOpt": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.0018,
+                  "((autotroph_sname)) == \"diat\"": 0.0018,
+                  "((autotroph_sname)) == \"diaz\"": 0.002,
+                  "((autotroph_sname)) == \"sp\"": 0.0018,
+                  "default": "1e34"
+               },
+               "longname": "Fe threshold in uptake ratio computations",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "NOpt": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.4,
+                  "((autotroph_sname)) == \"diat\"": 0.4,
+                  "((autotroph_sname)) == \"diaz\"": 0.4,
+                  "((autotroph_sname)) == \"sp\"": 0.4,
+                  "default": "1e34"
+               },
+               "dependencies": "lvariable_NtoC",
+               "longname": "N threshold in uptake ratio computations",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
             "Nfixer": {
                "datatype": "logical",
                "default_value": {
@@ -77,6 +104,20 @@
                "subcategory": "10. autotrophs",
                "units": "1/day"
             },
+            "POpt": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.8,
+                  "((autotroph_sname)) == \"diat\"": 0.8,
+                  "((autotroph_sname)) == \"diaz\"": 0.8,
+                  "((autotroph_sname)) == \"sp\"": 0.8,
+                  "default": "1e34"
+               },
+               "dependencies": "lvariable_PtoC",
+               "longname": "PO4 threshold in uptake ratio computations",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
             "Qp_fixed": {
                "datatype": "real",
                "default_value": {
@@ -87,6 +128,19 @@
                   "default": "1e34"
                },
                "longname": "P/C ratio when using fixed P/C ratios",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "SiOpt": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.0,
+                  "((autotroph_sname)) == \"diat\"": 10.0,
+                  "((autotroph_sname)) == \"diaz\"": 0.0,
+                  "((autotroph_sname)) == \"sp\"": 0.0,
+                  "default": "1e34"
+               },
+               "longname": "Si threshold in uptake ratio computations",
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },
@@ -140,7 +194,7 @@
                "subcategory": "10. autotrophs",
                "units": "non-numeric"
             },
-            "gQfe_0": {
+            "gQfe_max": {
                "datatype": "real",
                "default_value": {
                   "((autotroph_sname)) == \"cocco\"": "30e-6",
@@ -163,6 +217,62 @@
                   "default": "1e34"
                },
                "longname": "Minimum Fe/C ratio for growth",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "gQn_max": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.17,
+                  "((autotroph_sname)) == \"diat\"": 0.17,
+                  "((autotroph_sname)) == \"diaz\"": 0.17,
+                  "((autotroph_sname)) == \"sp\"": 0.17,
+                  "default": "1e34"
+               },
+               "dependencies": "lvariable_NtoC",
+               "longname": "Initial N/C ratio for growth",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "gQn_min": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.11,
+                  "((autotroph_sname)) == \"diat\"": 0.11,
+                  "((autotroph_sname)) == \"diaz\"": 0.14,
+                  "((autotroph_sname)) == \"sp\"": 0.11,
+                  "default": "1e34"
+               },
+               "dependencies": "lvariable_NtoC",
+               "longname": "Minimum N/C ratio for growth",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "gQp_max": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.011,
+                  "((autotroph_sname)) == \"diat\"": 0.011,
+                  "((autotroph_sname)) == \"diaz\"": 0.0083,
+                  "((autotroph_sname)) == \"sp\"": 0.011,
+                  "default": "1e34"
+               },
+               "dependencies": "lvariable_PtoC",
+               "longname": "Initial P/C ratio for growth",
+               "subcategory": "10. autotrophs",
+               "units": "unitless"
+            },
+            "gQp_min": {
+               "datatype": "real",
+               "default_value": {
+                  "((autotroph_sname)) == \"cocco\"": 0.0083,
+                  "((autotroph_sname)) == \"diat\"": 0.0083,
+                  "((autotroph_sname)) == \"diaz\"": 0.0037,
+                  "((autotroph_sname)) == \"sp\"": 0.0075,
+                  "default": "1e34"
+               },
+               "dependencies": "lvariable_PtoC",
+               "longname": "Minimum P/C ratio for growth",
                "subcategory": "10. autotrophs",
                "units": "unitless"
             },
@@ -753,6 +863,14 @@
          "long_name": "((autotroph_lname)) Iron",
          "units": "mmol/m^3"
       },
+      "((autotroph_sname))N": {
+         "dependencies": {
+            "base_bio_on": ".true.",
+            "lvariable_NtoC": ".true."
+         },
+         "long_name": "((autotroph_lname)) Nitrogen",
+         "units": "mmol/m^3"
+      },
       "((autotroph_sname))P": {
          "dependencies": {
             "base_bio_on": ".true.",
@@ -1219,7 +1337,17 @@
          "subcategory": "3. config flags",
          "units": "unitless"
       },
+      "lvariable_NtoC": {
+         "_append_to_config_keywords": true,
+         "datatype": "logical",
+         "default_value": ".true.",
+         "dependencies": "base_bio_on",
+         "longname": "Control if NtoC ratios in autotrophs vary",
+         "subcategory": "3. config flags",
+         "units": "unitless"
+      },
       "lvariable_PtoC": {
+         "_append_to_config_keywords": true,
          "datatype": "logical",
          "default_value": ".true.",
          "dependencies": "base_bio_on",

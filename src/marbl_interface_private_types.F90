@@ -37,6 +37,8 @@ module marbl_interface_private_types
     real(r8), allocatable :: QCaCO3(:,:)          ! current CaCO3/C ratio (mmol CaCO3/mmol C)
     real(r8), allocatable :: Qp(:,:)              ! current P/C ratio (mmol P/mmol C)
     real(r8), allocatable :: gQp(:,:)             ! P/C for growth
+    real(r8), allocatable :: Qn(:,:)              ! Current N/C ratio (mmol N/mmol C)
+    real(r8), allocatable :: gQn(:,:)             ! N/C for growth
     real(r8), allocatable :: Qfe(:,:)             ! current Fe/C ratio (mmol Fe/mmol C)
     real(r8), allocatable :: gQfe(:,:)            ! fe/C for growth
     real(r8), allocatable :: Qsi(:,:)             ! current Si/C ratio (mmol Si/mmol C)
@@ -79,6 +81,13 @@ module marbl_interface_private_types
     real(r8), allocatable :: remaining_P_dop(:,:) ! remaining_P from grazing routed to DOP pool
     real(r8), allocatable :: remaining_P_pop(:,:) ! remaining_P from grazing routed to POP pool
     real(r8), allocatable :: remaining_P_dip(:,:) ! remaining_P from grazing routed to remin
+    real(r8), allocatable :: remaining_N_don(:,:) ! remaining_N from grazing routed to DON pool
+    real(r8), allocatable :: remaining_N_pon(:,:) ! remaining_N from grazing routed to PON pool
+    real(r8), allocatable :: remaining_N_din(:,:) ! remaining_N from grazing routed to remin
+    real(r8), allocatable :: remaining_Fe_dfe(:,:) ! remaining_Fe from grazing routed to remin
+    real(r8), allocatable :: remaining_Fe_pfe(:,:) ! remaining_Fe from grazing routed to sinking particulate
+
+
   contains
     procedure, public :: construct => autotroph_derived_terms_constructor
     procedure, public :: destruct => autotroph_derived_terms_destructor
@@ -91,6 +100,7 @@ module marbl_interface_private_types
     real(r8), allocatable :: Chl(:,:)     ! local copy of model autotroph Chl
     real(r8), allocatable :: C(:,:)       ! local copy of model autotroph C
     real(r8), allocatable :: P(:,:)       ! local copy of model autotroph P
+    real(r8), allocatable :: N(:,:)       ! local copy of model autotroph N
     real(r8), allocatable :: Fe(:,:)      ! local copy of model autotroph Fe
     real(r8), allocatable :: Si(:,:)      ! local copy of model autotroph Si
     real(r8), allocatable :: CaCO3(:,:)   ! local copy of model autotroph CaCO3
@@ -228,6 +238,7 @@ module marbl_interface_private_types
      ! units differ depending for cgs and mks
      type(column_sinking_particle_type) :: POC              ! base units = nmol or mmol C
      type(column_sinking_particle_type) :: POP              ! base units = nmol or mmol P
+     type(column_sinking_particle_type) :: PON              ! base units = nmol or mmol N
      type(column_sinking_particle_type) :: P_CaCO3          ! base units = nmol or mmol CaCO3
      type(column_sinking_particle_type) :: P_CaCO3_ALT_CO2  ! base units = nmol or mmol CaCO3
      type(column_sinking_particle_type) :: P_SiO2           ! base units = nmol or mmol SiO2
@@ -244,6 +255,7 @@ module marbl_interface_private_types
 
      real(r8)              :: POC_bury_coeff
      real(r8)              :: POP_bury_coeff
+     real(r8)              :: PON_bury_coeff
      real(r8)              :: bSi_bury_coeff
    contains
      procedure, public :: construct => marbl_particulate_share_constructor
@@ -277,6 +289,7 @@ module marbl_interface_private_types
      real(r8), allocatable :: DON_prod(:)         ! production of DON
      real(r8), allocatable :: DON_remin(:)        ! remineralization of DON
      real(r8), allocatable :: DONr_remin(:)       ! remineralization of DONr
+     real(r8), allocatable :: DON_loss_N_bal(:)   ! DON loss, due to N budget balancing
      real(r8), allocatable :: DOP_prod(:)         ! production of DOP
      real(r8), allocatable :: DOP_remin(:)        ! remineralization of DOP
      real(r8), allocatable :: DOPr_remin(:)       ! remineralization of DOPr
@@ -305,6 +318,7 @@ module marbl_interface_private_types
      integer (KIND=int_kind) :: Chl_ind     = 0  ! tracer indices for Chl content
      integer (KIND=int_kind) :: C_ind       = 0  ! tracer indices for C content
      integer (KIND=int_kind) :: P_ind       = 0  ! tracer indices for P content
+     integer (KIND=int_kind) :: N_ind       = 0  ! tracer indices for N content
      integer (KIND=int_kind) :: Fe_ind      = 0  ! tracer indices for Fe content
      integer (KIND=int_kind) :: Si_ind      = 0  ! tracer indices for Si  content
      integer (KIND=int_kind) :: CaCO3_ind   = 0  ! tracer indices for CaCO3 content
@@ -416,6 +430,8 @@ module marbl_interface_private_types
      integer(int_kind) :: salinity_id    = 0
      integer(int_kind) :: pressure_id    = 0
      integer(int_kind) :: fesedflux_id   = 0
+     integer(int_kind) :: feRedsedflux_id   = 0
+     integer(int_kind) :: feventflux_id   = 0
      integer(int_kind) :: o2_consumption_scalef_id = 0
      integer(int_kind) :: p_remin_scalef_id = 0
 
@@ -634,6 +650,7 @@ module marbl_interface_private_types
     integer(int_kind) :: DON_prod
     integer(int_kind) :: DON_remin
     integer(int_kind) :: DONr_remin
+    integer(int_kind) :: DON_loss_N_bal
     integer(int_kind) :: DOP_prod
     integer(int_kind) :: DOP_remin
     integer(int_kind) :: DOPr_remin
@@ -647,10 +664,13 @@ module marbl_interface_private_types
     integer(int_kind) :: Lig_photochem
     integer(int_kind) :: Lig_deg
     integer(int_kind) :: fesedflux
+    integer(int_kind) :: feRedsedflux
+    integer(int_kind) :: feventflux
 
     ! Particulate 2D diags
     integer(int_kind) :: POC_FLUX_at_ref_depth
     integer(int_kind) :: POP_FLUX_at_ref_depth
+    integer(int_kind) :: PON_FLUX_at_ref_depth
     integer(int_kind) :: CaCO3_FLUX_at_ref_depth
     integer(int_kind) :: SiO2_FLUX_at_ref_depth
     integer(int_kind) :: P_iron_FLUX_at_ref_depth
@@ -677,6 +697,8 @@ module marbl_interface_private_types
     integer(int_kind) :: POP_PROD
     integer(int_kind) :: POP_REMIN_DOPr
     integer(int_kind) :: POP_REMIN_PO4
+    integer(int_kind) :: PON_FLUX_IN
+    integer(int_kind) :: PON_PROD
     integer(int_kind) :: PON_REMIN_DONr
     integer(int_kind) :: PON_REMIN_NH4
     integer(int_kind) :: CaCO3_FLUX_IN
@@ -696,6 +718,8 @@ module marbl_interface_private_types
 
     ! Autotroph 3D diags
     integer(int_kind), allocatable :: Qp(:)
+    integer(int_kind), allocatable :: Qn(:)
+    integer(int_kind), allocatable :: Qfe(:)
     integer(int_kind), allocatable :: photoC(:)
     integer(int_kind), allocatable :: photoC_NO3(:)
     integer(int_kind), allocatable :: photoFe(:)
@@ -890,6 +914,7 @@ contains
     ! Now allocate memory for the column_sinking_particles_type components
     call this%POC%construct             (num_levels)
     call this%POP%construct             (num_levels)
+    call this%PON%construct             (num_levels)
     call this%P_CaCO3%construct         (num_levels)
     call this%P_CaCO3_ALT_CO2%construct (num_levels)
     call this%P_SiO2%construct          (num_levels)
@@ -915,6 +940,7 @@ contains
      ! Now allocate memory for the column_sinking_particles_type components
      call this%POC%destruct()
      call this%POP%destruct()
+     call this%PON%destruct()
      call this%P_CaCO3%destruct()
      call this%P_CaCO3_ALT_CO2%destruct()
      call this%P_SiO2%destruct()
@@ -975,6 +1001,7 @@ contains
       allocate(this%DON_prod(num_levels))
       allocate(this%DON_remin(num_levels))
       allocate(this%DONr_remin(num_levels))
+      allocate(this%DON_loss_N_bal(num_levels))
       allocate(this%DOP_prod(num_levels))
       allocate(this%DOP_remin(num_levels))
       allocate(this%DOPr_remin(num_levels))
@@ -994,6 +1021,7 @@ contains
        deallocate(this%DON_prod)
        deallocate(this%DON_remin)
        deallocate(this%DONr_remin)
+       deallocate(this%DON_loss_N_bal)
        deallocate(this%DOP_prod)
        deallocate(this%DOP_remin)
        deallocate(this%DOPr_remin)
@@ -1074,6 +1102,8 @@ contains
     allocate(self%QCaCO3(autotroph_cnt, km))
     allocate(self%Qp(autotroph_cnt, km))
     allocate(self%gQp(autotroph_cnt, km))
+    allocate(self%Qn(autotroph_cnt, km))
+    allocate(self%gQn(autotroph_cnt, km))
     allocate(self%Qfe(autotroph_cnt, km))
     allocate(self%gQfe(autotroph_cnt, km))
     allocate(self%Qsi(autotroph_cnt, km))
@@ -1116,6 +1146,11 @@ contains
     allocate(self%remaining_P_dop(autotroph_cnt, km))
     allocate(self%remaining_P_pop(autotroph_cnt, km))
     allocate(self%remaining_P_dip(autotroph_cnt, km))
+    allocate(self%remaining_N_don(autotroph_cnt, km))
+    allocate(self%remaining_N_pon(autotroph_cnt, km))
+    allocate(self%remaining_N_din(autotroph_cnt, km))
+    allocate(self%remaining_Fe_dfe(autotroph_cnt, km))
+    allocate(self%remaining_Fe_pfe(autotroph_cnt, km))
 
   end subroutine autotroph_derived_terms_constructor
 
@@ -1129,6 +1164,8 @@ contains
     deallocate(self%QCaCO3)
     deallocate(self%Qp)
     deallocate(self%gQp)
+    deallocate(self%Qn)
+    deallocate(self%gQn)
     deallocate(self%Qfe)
     deallocate(self%gQfe)
     deallocate(self%Qsi)
@@ -1171,6 +1208,11 @@ contains
     deallocate(self%remaining_P_dop)
     deallocate(self%remaining_P_pop)
     deallocate(self%remaining_P_dip)
+    deallocate(self%remaining_N_don)
+    deallocate(self%remaining_N_pon)
+    deallocate(self%remaining_N_din)
+    deallocate(self%remaining_Fe_dfe)
+    deallocate(self%remaining_Fe_pfe)
 
   end subroutine autotroph_derived_terms_destructor
 
@@ -1186,6 +1228,7 @@ contains
     allocate(self%Chl(autotroph_cnt, km))
     allocate(self%C(autotroph_cnt, km))
     allocate(self%P(autotroph_cnt, km))
+    allocate(self%N(autotroph_cnt, km))
     allocate(self%Fe(autotroph_cnt, km))
     allocate(self%Si(autotroph_cnt, km))
     allocate(self%CaCO3(autotroph_cnt, km))
@@ -1212,6 +1255,7 @@ contains
     deallocate(self%Chl)
     deallocate(self%C)
     deallocate(self%P)
+    deallocate(self%N)
     deallocate(self%Fe)
     deallocate(self%Si)
     deallocate(self%CaCO3)
@@ -1427,8 +1471,9 @@ contains
 
   !*****************************************************************************
 
-  subroutine tracer_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, &
-                                      autotroph_settings, zooplankton_settings, marbl_status_log)
+  subroutine tracer_index_constructor(this, base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC,  &
+                                      lvariable_NtoC, autotroph_settings, zooplankton_settings, &
+                                      marbl_status_log)
 
     ! This subroutine sets the tracer indices for the non-autotroph tracers. To
     ! know where to start the indexing for the autotroph tracers, it increments
@@ -1443,6 +1488,7 @@ contains
     logical,                         intent(in)    :: abio_dic_on
     logical,                         intent(in)    :: ciso_on
     logical,                         intent(in)    :: lvariable_PtoC
+    logical,                         intent(in)    :: lvariable_NtoC
     type(autotroph_settings_type),   intent(in)    :: autotroph_settings(:)
     type(zooplankton_settings_type), intent(in)    :: zooplankton_settings(:)
     type(marbl_log_type),            intent(inout) :: marbl_status_log
@@ -1493,6 +1539,11 @@ contains
         if (lvariable_PtoC) then
           write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "P"
           call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%P_ind, marbl_status_log)
+        end if
+
+        if (lvariable_NtoC) then
+          write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "N"
+          call this%add_tracer_index(ind_name, 'base_bio', this%auto_inds(n)%N_ind, marbl_status_log)
         end if
 
         write(ind_name, "(2A)") trim(autotroph_settings(n)%sname), "Fe"
@@ -1851,6 +1902,14 @@ contains
         forcing_cnt = forcing_cnt + 1
         this%fesedflux_id = forcing_cnt
 
+        ! Iron Red Sediment Flux
+        forcing_cnt = forcing_cnt + 1
+        this%feRedsedflux_id = forcing_cnt
+
+        ! Iron Vent Sediment Flux
+        forcing_cnt = forcing_cnt + 1
+        this%feventflux_id = forcing_cnt
+
         ! O2 Consumption Scale Factor
         if (lo2_consumption_scalef) then
           forcing_cnt = forcing_cnt + 1
@@ -2001,6 +2060,7 @@ contains
         deallocate(this%x_graze_zoo_zint)
         deallocate(this%x_graze_zoo_zint_100m)
         deallocate(this%Qp)
+        deallocate(this%Qn)
         deallocate(this%photoC)
         deallocate(this%photoC_NO3)
         deallocate(this%photoFe)

@@ -355,6 +355,15 @@ general_parms :
       units : unitless
       datatype : logical
       default_value : .true.
+      _append_to_config_keywords : true
+   lvariable_NtoC :
+      dependencies : base_bio_on
+      longname : Control if NtoC ratios in autotrophs vary
+      subcategory : 3. config flags
+      units : unitless
+      datatype : logical
+      default_value : .false.
+      _append_to_config_keywords : true
    ladjust_bury_coeff :
       dependencies : base_bio_on
       longname : Control if bury coefficients are adjusted (rather than constant)
@@ -977,7 +986,17 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 1.0/117
                ((autotroph_sname)) == "diat" : 1.0/117
                ((autotroph_sname)) == "diaz" : 0.32*(1.0/117)
-         gQfe_0 :
+         SiOpt :
+            longname : Si threshold in uptake ratio computations
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0.0
+               ((autotroph_sname)) == "diat" : 10.0
+               ((autotroph_sname)) == "diaz" : 0.0
+         gQfe_max :
             longname : Initial Fe/C ratio for growth
             subcategory : 10. autotrophs
             units : unitless
@@ -997,6 +1016,60 @@ PFT_derived_types :
                ((autotroph_sname)) == "sp" : 2.7e-6
                ((autotroph_sname)) == "diat" : 2.7e-6
                ((autotroph_sname)) == "diaz" : 5.4e-6
+         FeOpt :
+            longname : Fe threshold in uptake ratio computations
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 1.8e-3
+               ((autotroph_sname)) == "diat" : 1.8e-3
+               ((autotroph_sname)) == "diaz" : 2.0e-3
+         gQp_max :
+            dependencies : lvariable_PtoC
+            longname : Initial P/C ratio for growth
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 1.1e-2
+               ((autotroph_sname)) == "diat" : 1.1e-2
+               ((autotroph_sname)) == "diaz" : 8.3e-3
+         gQp_min :
+            dependencies : lvariable_PtoC
+            longname : Minimum P/C ratio for growth
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 7.5e-3
+               ((autotroph_sname)) == "diat" : 8.3e-3
+               ((autotroph_sname)) == "diaz" : 3.7e-3
+         POpt :
+            dependencies : lvariable_PtoC
+            longname : PO4 threshold in uptake ratio computations
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0.8
+               ((autotroph_sname)) == "diat" : 0.8
+               ((autotroph_sname)) == "diaz" : 0.8
+         NOpt :
+            dependencies : lvariable_NtoC
+            longname : N threshold in uptake ratio computations
+            subcategory : 10. autotrophs
+            units : unitless
+            datatype : real
+            default_value :
+               default : 1e34
+               ((autotroph_sname)) == "sp" : 0.4
+               ((autotroph_sname)) == "diat" : 0.4
+               ((autotroph_sname)) == "diaz" : 0.4
          alphaPI_per_day :
             longname : Initial slope of P_I curve (GD98)
             subcategory : 10. autotrophs

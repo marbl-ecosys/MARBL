@@ -162,6 +162,7 @@ contains
                                 marbl_status_log)
 
     use marbl_settings_mod, only : lvariable_PtoC
+    use marbl_settings_mod, only : lvariable_NtoC
     use marbl_settings_mod, only : autotroph_settings
     use marbl_settings_mod, only : zooplankton_settings
     use marbl_settings_mod, only : tracer_restore_vars
@@ -189,7 +190,7 @@ contains
 
     ! Construct tracer indices
     allocate(tracer_indices)
-    call tracer_indices%construct(base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, &
+    call tracer_indices%construct(base_bio_on, abio_dic_on, ciso_on, lvariable_PtoC, lvariable_NtoC, &
                                   autotroph_settings, zooplankton_settings, marbl_status_log)
     if (marbl_status_log%labort_marbl) then
       call marbl_status_log%log_error_trace("tracer_indices%construct", subname)
@@ -280,6 +281,7 @@ contains
     use marbl_settings_mod, only : ladjust_bury_coeff
     use marbl_settings_mod, only : parm_init_POC_bury_coeff
     use marbl_settings_mod, only : parm_init_POP_bury_coeff
+!    use marbl_settings_mod, only : parm_init_PON_bury_coeff
     use marbl_settings_mod, only : parm_init_bSi_bury_coeff
     use marbl_interface_private_types, only : marbl_particulate_share_type
 
@@ -300,6 +302,7 @@ contains
        if (init_bury_coeff_opt == 'settings_file') then
           marbl_particulate_share%POC_bury_coeff = parm_init_POC_bury_coeff
           marbl_particulate_share%POP_bury_coeff = parm_init_POP_bury_coeff
+!          marbl_particulate_share%PON_bury_coeff = parm_init_PON_bury_coeff
           marbl_particulate_share%bSi_bury_coeff = parm_init_bSi_bury_coeff
        else
           call marbl_status_log%log_error("ladjust_bury_coeff=.false., init_bury_coeff_opt='GCM' not implemented", subname)
@@ -629,7 +632,9 @@ contains
       interior_tendency_forcings(:)%metadata%varname = ''
 
       ! Surface fluxes that influence interior forcing
+
       do id=1,size(interior_tendency_forcings)
+
         found = .false.
         ! Dust Flux
         if (id .eq. ind%dustflux_id) then
@@ -684,6 +689,22 @@ contains
           found = .true.
           interior_tendency_forcings(id)%metadata%varname     = 'Iron Sediment Flux'
           interior_tendency_forcings(id)%metadata%field_units = trim(unit_system%conc_flux_units)
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
+        end if
+
+        ! Iron Red Sediment Flux
+        if (id .eq. ind%feRedsedflux_id) then
+          found = .true.
+          interior_tendency_forcings(id)%metadata%varname     = 'Iron Red Sediment Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
+          call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
+        end if
+
+        ! Iron Vent Flux
+        if (id .eq. ind%feventflux_id) then
+          found = .true.
+          interior_tendency_forcings(id)%metadata%varname     = 'Iron Vent Flux'
+          interior_tendency_forcings(id)%metadata%field_units = 'nmol/cm^2/s'
           call interior_tendency_forcings(id)%set_rank(num_elements, 1, marbl_status_log, dim1 = num_levels)
         end if
 

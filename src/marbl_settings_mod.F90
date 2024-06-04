@@ -123,19 +123,19 @@ module marbl_settings_mod
 
   real(r8), parameter :: &
        Q_10      =   1.7_r8,                                 & ! factor for temperature dependence (non-dim)
-       parm_Red_D_C_P  = 117.0_r8,                           & ! carbon:phosphorus
+       parm_Red_D_C_P  = 112.0_r8,                           & ! carbon:phosphorus
        parm_Red_D_N_P  =  16.0_r8,                           & ! nitrogen:phosphorus
-       parm_Red_D_O2_P = 170.0_r8,                           & ! oxygen:phosphorus
-       parm_Remin_D_O2_P = 138.0_r8,                         & ! oxygen:phosphorus
+       parm_Remin_D_O2_P = 112.0_r8,                         & ! oxygen:phosphorus
+       parm_Red_D_O2_P = (parm_Remin_D_O2_P + 32.0_r8),      & ! oxygen:phosphorus
        parm_Red_P_C_P  = parm_Red_D_C_P,                     & ! carbon:phosphorus
        parm_Red_D_C_N  = parm_Red_D_C_P/parm_Red_D_N_P,      & ! carbon:nitrogen
        parm_Red_P_C_N  = parm_Red_D_C_N,                     & ! carbon:nitrogen
-       parm_Red_D_C_O2 = parm_Red_D_C_P/parm_Red_D_O2_P,     & ! carbon:oxygen
-       parm_Remin_D_C_O2 = parm_Red_D_C_P/parm_Remin_D_O2_P, & ! carbon:oxygen
-       parm_Red_P_C_O2 = parm_Red_D_C_O2,                    & ! carbon:oxygen
+       parm_Red_D_C_O2 = parm_Red_D_C_P/parm_Red_D_O2_P,     & ! carbon:oxygen **
+       parm_Remin_D_C_O2 = parm_Red_D_C_P/parm_Remin_D_O2_P, & ! carbon:oxygen **
+       parm_Red_P_C_O2 = parm_Red_D_C_O2,                    & ! carbon:oxygen **
        parm_Red_Fe_C   = 3.0e-6_r8,                          & ! iron:carbon
-       parm_Red_D_C_O2_diaz = parm_Red_D_C_P/150.0_r8          ! carbon:oxygen
-                                                               ! for diazotrophs
+       parm_Red_D_C_O2_diaz = parm_Red_D_C_P/(parm_Remin_D_O2_P + 2.0_r8)! carbon:oxygen **
+                                                           ! for diazotrophs
 
   ! parameters related to Iron binding ligands
   integer (int_kind), parameter :: Lig_cnt = 1 ! valid values are 1 or 2
@@ -147,12 +147,13 @@ module marbl_settings_mod
       caco3_poc_min         = 0.40_r8,  & ! minimum proportionality between
                                           !   QCaCO3 and grazing losses to POC
                                           !   (mmol C/mmol CaCO3)
-      spc_poc_fac           = 0.13_r8,  & ! small phyto grazing factor (1/mmolC)
-      f_graze_sp_poc_lim    = 0.36_r8,  &
+      spc_poc_fac           = 0.04_r8,  & ! small phyto grazing factor (1/mmolC)
+      f_graze_sp_poc_lim    = 0.33_r8,  &
       f_photosp_CaCO3       = 0.40_r8,  & ! proportionality between small phyto
+
                                           !    production and CaCO3 production
-      f_graze_si_remin      = 0.50_r8,  & ! fraction of diatom Si grazing which is remin
-      f_toDON               = 0.70_r8,  & ! fraction DON relative to DOC
+      f_graze_si_remin      = 0.22_r8,  & ! fraction of diatom Si grazing which is remin
+      f_toDON               = 0.05_r8,  & ! fraction of reamining_N to DON
       f_toDOP               = 0.15_r8     ! fraction of remaining_P to DOP
 
   ! fixed ratios
@@ -160,14 +161,8 @@ module marbl_settings_mod
 
   ! SET parameters and RATIOS for N/C, P/C, SiO3/C, Fe/C, etc...
   real(r8), parameter :: &
-      Q             = 16.0_r8 / 117.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
-      Qfe_zoo       = 3.0e-6_r8,          & ! zooplankton Fe/C ratio
-      ! parameters in GalbraithMartiny Pquota Model
-      PquotaSlope     = 7.0_r8,        &
-      PquotaIntercept = 5.571_r8,      &
-      PquotaMinNP     = 0.00854701_r8, &
-      ! carbon:nitrogen ratio for denitrification
-      denitrif_C_N  = parm_Red_D_C_P/136.0_r8
+      Q             = 16.0_r8 / 112.0_r8, & ! N/C ratio (mmol/mmol) of phyto & zoo
+      Qfe_zoo       = 6.0e-6_r8           ! zooplankton Fe/C ratio
 
   ! loss term threshold parameters, chl:c ratios
   real(r8), parameter :: &
@@ -248,6 +243,7 @@ module marbl_settings_mod
   logical(log_kind), target :: lflux_gas_co2                  ! controls which portion of code are executed useful for debugging
   logical(log_kind), target :: lcompute_nhx_surface_emis      ! control if NHx emissions are computed
   logical(log_kind), target :: lvariable_PtoC                 ! control if PtoC ratios in autotroph_settings vary
+  logical(log_kind), target :: lvariable_NtoC                 ! control if NtoC ratios in autotroph_settings vary
   logical(log_kind), target :: ladjust_bury_coeff             ! control if bury coefficients are adjusted (rather than constant)
                                                               !   bury coefficients (POC_bury_coeff, POP_bury_coeff, bSi_bury_coeff)
                                                               !   reside in marbl_particulate_share_type; when ladjust_bury_coeff is
@@ -274,8 +270,8 @@ module marbl_settings_mod
        gQsi_0,                     & ! initial Si/C ratio for growth
        gQsi_max,                   & ! max Si/C ratio for growth
        gQsi_min,                   & ! min Si/C ratio for growth
-       gQ_Fe_kFe_thres,            & ! Fe:kFe ratio threshold in uptake ratio computations
        gQ_Si_kSi_thres,            & ! Si:kSi ratio threshold in uptake ratio computations
+       gQ_Fe_kFe_thres,            & ! Fe:kFe ratio threshold in uptake ratio computations
        parm_Fe_bioavail,           & ! fraction of Fe flux that is bioavailable
        parm_o2_min,                & ! min O2 needed for prod & consump. (nmol/cm^3)
        parm_o2_min_delta,          & ! width of min O2 range (nmol/cm^3)
@@ -283,8 +279,9 @@ module marbl_settings_mod
        parm_kappa_nitrif,          & ! nitrification inverse time constant (1/sec) (derived from parm_kappa_nitrif_per_day)
        parm_nitrif_par_lim,        & ! PAR limit for nitrif. (W/m^2)
        parm_labile_ratio,          & ! fraction of loss to DOC that routed directly to DIC (non-dimensional)
-       parm_init_POC_bury_coeff,   & ! initial scale factor for burial of POC, PON
+       parm_init_POC_bury_coeff,   & ! initial scale factor for burial of POC
        parm_init_POP_bury_coeff,   & ! initial scale factor for burial of POP
+!       parm_init_PON_bury_coeff,   & ! initial scale factor for burial of PON
        parm_init_bSi_bury_coeff,   & ! initial scale factor burial of bSi
        parm_Fe_scavenge_rate0,     & ! scavenging base rate for Fe (cm^2/ng s/yr)
        parm_Lig_scavenge_rate0,    & ! scavenging base rate for bound ligand (cm^2/ng s/yr)
@@ -422,6 +419,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     lflux_gas_co2                 = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lcompute_nhx_surface_emis     = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lvariable_PtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    lvariable_NtoC                = .true.          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     init_bury_coeff_opt           = 'settings_file' ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     ladjust_bury_coeff            = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     lo2_consumption_scalef        = .false.         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -430,11 +428,11 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     particulate_flux_ref_depth    = 100._r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     bftt_dz_sum_thres             = 1.0e-14_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     Jint_Ctot_thres_molpm2pyr     = 1.0e-9_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    gQsi_0                        = 0.137_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    gQsi_max                      = 0.822_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    gQsi_min                      = 0.0457_r8       ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
-    gQ_Fe_kFe_thres               = 10.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_0                        = 0.133_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_max                      = 0.73315_r8      ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQsi_min                      = 0.044433_r8     ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     gQ_Si_kSi_thres               = 6.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+    gQ_Fe_kFe_thres               = 10.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_bioavail              = 1.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min                   = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_o2_min_delta             = 5.0_r8          ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -443,6 +441,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     parm_labile_ratio             = 0.94_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_init_POC_bury_coeff      = 2.54_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_init_POP_bury_coeff      = 0.36_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
+!    parm_init_PON_bury_coeff      = 2.54_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_init_bSi_bury_coeff      = 1.53_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Fe_scavenge_rate0        = 22.0_r8         ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
     parm_Lig_scavenge_rate0       = 0.015_r8        ! CESM USERS - DO NOT CHANGE HERE! POP calls put_setting() for this var, see CESM NOTE above
@@ -777,6 +776,15 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                           marbl_status_log, lptr=lptr)
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+      sname     = 'lvariable_NtoC'
+      lname     = 'control if NtoC ratios in autotrophs vary'
+      units     = 'unitless'
+      datatype  = 'logical'
+      lptr      => lvariable_NtoC
+      call this%add_var(sname, lname, units, datatype, category,       &
+                          marbl_status_log, lptr=lptr)
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
       sname     = 'ladjust_bury_coeff'
       lname     = 'Adjust the bury coefficient to maintain equilibrium'
       units     = 'unitless'
@@ -948,7 +956,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
       sname     = 'parm_init_POC_bury_coeff'
-      lname     = 'initial scale factor for burial of POC, PON'
+      lname     = 'initial scale factor for burial of POC'
       units     = 'unitless'
       datatype  = 'real'
       rptr      => parm_init_POC_bury_coeff
@@ -1540,6 +1548,80 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
+      write(sname, "(2A)") trim(prefix), 'SiOpt'
+      lname    = 'Si threshold in uptake ratio computations'
+      units    = 'nM'
+      datatype = 'real'
+      rptr     => autotroph_settings(n)%SiOpt
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      write(sname, "(2A)") trim(prefix), 'gQfe_max'
+      lname    = 'initial Fe/C ratio for growth'
+      units    = 'unitless'
+      datatype = 'real'
+      rptr     => autotroph_settings(n)%gQfe_max
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      write(sname, "(2A)") trim(prefix), 'gQfe_min'
+      lname    = 'minimum Fe/C ratio for growth'
+      units    = 'unitless'
+      datatype = 'real'
+      rptr     => autotroph_settings(n)%gQfe_min
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      write(sname, "(2A)") trim(prefix), 'FeOpt'
+      lname    = 'Fe threshold in uptake ratio computations'
+      units    = 'nM'
+      datatype = 'real'
+      rptr     => autotroph_settings(n)%FeOpt
+      call this%add_var(sname, lname, units, datatype, category,     &
+                        marbl_status_log, rptr=rptr,                 &
+                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
+      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+      if (lvariable_PtoC) then
+        write(sname, "(2A)") trim(prefix), 'gQp_max'
+        lname    = 'initial P/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQp_max
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+        write(sname, "(2A)") trim(prefix), 'gQp_min'
+        lname    = 'minimum P/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQp_min
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+        write(sname, "(2A)") trim(prefix), 'POpt'
+        lname    = 'PO4 threshold in uptake ratio computations'
+        units    = 'nM'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%POpt
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      endif
+
+      ! This is only used when lvariable_PtoC = .false., but settings_file_class always includes it
+      ! in the setting file because it doesn't (yet) have logic to check for false logical vars
       write(sname, "(2A)") trim(prefix), 'Qp_fixed'
       lname    = 'P/C ratio when using fixed P/C ratios'
       units    = 'unitless'
@@ -1550,25 +1632,37 @@ end subroutine marbl_settings_set_defaults_tracer_modules
                         nondefault_required=(PFT_defaults .eq. 'user-specified'))
       call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'gQfe_0'
-      lname    = 'initial Fe/C ratio for growth'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%gQFe_0
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      if (lvariable_NtoC) then
+        write(sname, "(2A)") trim(prefix), 'gQn_max'
+        lname    = 'initial N/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQn_max
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
 
-      write(sname, "(2A)") trim(prefix), 'gQfe_min'
-      lname    = 'minimum Fe/C ratio for growth'
-      units    = 'unitless'
-      datatype = 'real'
-      rptr     => autotroph_settings(n)%gQFe_min
-      call this%add_var(sname, lname, units, datatype, category,     &
-                        marbl_status_log, rptr=rptr,                 &
-                        nondefault_required=(PFT_defaults .eq. 'user-specified'))
-      call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+        write(sname, "(2A)") trim(prefix), 'gQn_min'
+        lname    = 'minimum N/C ratio for growth'
+        units    = 'unitless'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%gQn_min
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+
+        write(sname, "(2A)") trim(prefix), 'NOpt'
+        lname    = 'N threshold in uptake ratio computations'
+        units    = 'nM'
+        datatype = 'real'
+        rptr     => autotroph_settings(n)%NOpt
+        call this%add_var(sname, lname, units, datatype, category,     &
+                          marbl_status_log, rptr=rptr,                 &
+                          nondefault_required=(PFT_defaults .eq. 'user-specified'))
+        call check_and_log_add_var_error(marbl_status_log, sname, subname, labort_marbl_loc)
+      endif
 
       write(sname, "(2A)") trim(prefix), 'alphaPI_per_day'
       lname    = 'Initial slope of P_I curve (GD98)'
@@ -2006,7 +2100,7 @@ end subroutine marbl_settings_set_defaults_tracer_modules
     call print_single_derived_parm('Jint_Ctot_thres_molpm2pyr', 'Jint_Ctot_thres', &
          Jint_Ctot_thres, subname, marbl_status_log)
 
-    Jint_Ntot_thres = Q * Jint_Ctot_thres
+    Jint_Ntot_thres = (c1/parm_Red_D_C_N) * Jint_Ctot_thres
     call print_single_derived_parm('Jint_Ctot_thres', 'Jint_Ntot_thres', &
          Jint_Ntot_thres, subname, marbl_status_log)
 
@@ -2254,10 +2348,10 @@ end subroutine marbl_settings_set_defaults_tracer_modules
 
       ! Set module variables that used to be fortran parameters
       xkw_coeff     = 6.97e-9_r8   ! 0.251 cm/hr s^2/m^2 in s / cm
-      thres_z1_auto =  80.0e2_r8   ! cm
-      thres_z2_auto = 120.0e2_r8   ! cm
-      thres_z1_zoo  = 110.0e2_r8   ! cm
-      thres_z2_zoo  = 150.0e2_r8   ! cm
+      thres_z1_auto =  50.0e2_r8   ! cm
+      thres_z2_auto = 100.0e2_r8   ! cm
+      thres_z1_zoo  =  40.0e2_r8   ! cm
+      thres_z2_zoo  =  80.0e2_r8   ! cm
       rho_sw        =   1.026_r8   ! g / cm^3
       dust_Fe_scavenge_scale  = 1.0e9_r8  ! ng / g
 
@@ -2288,10 +2382,10 @@ end subroutine marbl_settings_set_defaults_tracer_modules
 
       ! Set module variables that used to be fortran parameters
       xkw_coeff     = 6.97e-7_r8   ! 0.251 cm/hr s^2/m^2 in s / m
-      thres_z1_auto =     80._r8   ! m
-      thres_z2_auto =    120._r8   ! m
-      thres_z1_zoo  =    110._r8   ! m
-      thres_z2_zoo  =    150._r8   ! m
+      thres_z1_auto =     50._r8   ! m
+      thres_z2_auto =    100._r8   ! m
+      thres_z1_zoo  =     40._r8   ! m
+      thres_z2_zoo  =     80._r8   ! m
       rho_sw        =  1026.0_r8   ! kg / m^3
       dust_Fe_scavenge_scale  = 1.0e6_r8  ! mg / kg
 
@@ -3208,3 +3302,4 @@ end subroutine marbl_settings_set_defaults_tracer_modules
   !*****************************************************************************
 
 end module marbl_settings_mod
+

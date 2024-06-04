@@ -485,6 +485,12 @@ contains
           forcing_fields_out(n)%field_0d(col_id) = -5.8_r8
         end if
         cycle
+      else if (trim(varname) == 'iron_redsed_flux') then
+        forcing_fields_out(n)%field_1d(col_id,:) = 0._r8
+        cycle
+      else if (trim(varname) == 'iron_vent_flux') then
+        forcing_fields_out(n)%field_1d(col_id,:) = 0._r8
+        cycle
       end if
 
       ! Get netcdf varid
@@ -552,6 +558,18 @@ contains
       return
     end if
     select case (trim(tracer_name))
+      case('spN')
+        tracer_name_file = 'spC'
+        scale_factor = 16._r8 / 112._r8
+      case('diatN')
+        tracer_name_file = 'diatC'
+        scale_factor = 16._r8 / 112._r8
+      case('diazN')
+        tracer_name_file = 'diazC'
+        scale_factor = 16._r8 / 112._r8
+      case('coccoN')
+        tracer_name_file = 'spC' ! no coccoC to scale, use coccoC = 0.07*spC
+        scale_factor = 0.07_r8 * (16._r8 / 112._r8)
       case('coccoChl')
         tracer_name_file = 'spChl'
         scale_factor = 0.07_r8
@@ -1314,6 +1332,18 @@ contains
         rank = 1
       case('Iron Sediment Flux')
         varname = 'iron_sed_flux'
+        rank = 1
+        if (trim(unit_system_opt) == 'mks') &
+          ! convert from nmol/cm^2/s -> mmol/m^2/s
+          conv_factor = 0.01_r8
+      case('Iron Red Sediment Flux')
+        varname = 'iron_redsed_flux'
+        rank = 1
+        if (trim(unit_system_opt) == 'mks') &
+          ! convert from nmol/cm^2/s -> mmol/m^2/s
+          conv_factor = 0.01_r8
+      case('Iron Vent Flux')
+        varname = 'iron_vent_flux'
         rank = 1
         if (trim(unit_system_opt) == 'mks') &
           ! convert from nmol/cm^2/s -> mmol/m^2/s
