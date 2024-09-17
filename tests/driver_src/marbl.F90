@@ -410,7 +410,6 @@ Program marbl
                ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
           call driver_status_log%log_noerror(log_message, subname)
         end do
-
         call marbl_instances(1)%shutdown()
       end if
 
@@ -436,6 +435,66 @@ Program marbl
         if (cnt.eq.0) then
           call driver_status_log%log_noerror('No tracers to restore!', subname)
         end if
+        call marbl_instances(1)%shutdown()
+      end if
+
+    ! -- bury_coeff test -- !
+    case ('bury_coeff')
+      call verify_single_instance(num_inst, trim(testname))
+      lprint_marbl_log = .false.
+      call marbl_init_test(marbl_instances(1), unit_system_opt, lshutdown = .false., lhas_global_ops=.true.)
+      if (.not. marbl_instances(1)%StatusLog%labort_marbl) then
+        ! Log requested surface forcing fields
+        call driver_status_log%log_header('Requested surface forcing fields', subname)
+        do n=1,size(marbl_instances(1)%surface_flux_forcings)
+          write(log_message, "(I0, 5A)") n, '. ', &
+                trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%varname), &
+                ' (units: ', trim(marbl_instances(1)%surface_flux_forcings(n)%metadata%field_units),')'
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+
+        ! Log requested interior forcing fields
+        call driver_status_log%log_header('Requested interior forcing fields', subname)
+        ! Provide message if no itnerior tendency forcings are requested
+        if (size(marbl_instances(1)%interior_tendency_forcings) == 0) &
+          call driver_status_log%log_noerror('No forcing fields requested for interior_tendency_compute()!', subname)
+        do n=1,size(marbl_instances(1)%interior_tendency_forcings)
+          write(log_message, "(I0, 5A)") n, '. ', &
+               trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%varname), &
+               ' (units: ', trim(marbl_instances(1)%interior_tendency_forcings(n)%metadata%field_units),')'
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+
+        ! Print info about burial coefficient vars as well
+        call driver_status_log%log_header('Size of arrays for running means', subname)
+        write(log_message, "(A, I0)") "size(glo_avg_rmean_interior_tendency): ", &
+                                      size(marbl_instances(1)%glo_avg_rmean_interior_tendency)
+        call driver_status_log%log_noerror(log_message, subname)
+        do n=1,size(marbl_instances(1)%glo_avg_rmean_interior_tendency)
+          write(log_message, "(2A)") "  -- ", trim(marbl_instances(1)%glo_avg_rmean_interior_tendency(n)%sname)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+        write(log_message, "(A, I0)") "size(glo_avg_rmean_surface_flux): ", &
+                                      size(marbl_instances(1)%glo_avg_rmean_surface_flux)
+        call driver_status_log%log_noerror(log_message, subname)
+        do n=1,size(marbl_instances(1)%glo_avg_rmean_surface_flux)
+          write(log_message, "(2A)") "  -- ", trim(marbl_instances(1)%glo_avg_rmean_surface_flux(n)%sname)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+        write(log_message, "(A, I0)") "size(glo_scalar_rmean_interior_tendency): ", &
+                                      size(marbl_instances(1)%glo_scalar_rmean_interior_tendency)
+        call driver_status_log%log_noerror(log_message, subname)
+        do n=1,size(marbl_instances(1)%glo_scalar_rmean_interior_tendency)
+          write(log_message, "(2A)") "  -- ", trim(marbl_instances(1)%glo_scalar_rmean_interior_tendency(n)%sname)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
+        write(log_message, "(A, I0)") "size(glo_scalar_rmean_surface_flux): ", &
+                                      size(marbl_instances(1)%glo_scalar_rmean_surface_flux)
+        call driver_status_log%log_noerror(log_message, subname)
+        do n=1,size(marbl_instances(1)%glo_scalar_rmean_surface_flux)
+          write(log_message, "(2A)") "  -- ", trim(marbl_instances(1)%glo_scalar_rmean_surface_flux(n)%sname)
+          call driver_status_log%log_noerror(log_message, subname)
+        end do
         call marbl_instances(1)%shutdown()
       end if
 
