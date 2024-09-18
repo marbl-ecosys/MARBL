@@ -236,7 +236,7 @@ DUST_FLUX :
    longname : Atmospheric Dust Flux
    units : g/cm^2/s
    vertical_grid : none
-   frequency : never
+   frequency : medium
    operator : average
    diag_mode : minimal
 NOx_FLUX :
@@ -839,7 +839,7 @@ dustToSed :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : minimal
 pfeToSed :
    dependencies :
       base_bio_on : .true.
@@ -848,7 +848,7 @@ pfeToSed :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : minimal
 CaCO3_form_zint :
    dependencies :
       base_bio_on : .true.
@@ -1393,7 +1393,7 @@ POC_FLUX_IN :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : minimal
 POC_sFLUX_IN :
    dependencies :
       base_bio_on : .true.
