@@ -325,6 +325,8 @@ contains
        !-----------------------------------------------------------------------
        !   discrimination factors of carbone chemistry based on
        !   Zhang et al, 1995, Geochim. et Cosmochim. Acta, 59 (1), 107-114
+       !   Note: there is a discrepancy between the figure caption and the abstract of the paper, 
+       !   the typo is in the abstract, no negative 0.0049
        !
        !   eps = permil fractionation and alpha is the fractionation factor
        !   with eps =(alpha - 1) *1000
@@ -332,7 +334,7 @@ contains
        !   Fractionation is twice as large for 14C compared to 13C
        !-----------------------------------------------------------------------
 
-       eps_aq_g(k)   = -0.0049_r8 * temperature(k) - 1.31_r8
+       eps_aq_g(k)   = 0.0049_r8 * temperature(k) - 1.31_r8
        eps_dic_g(k)  = 0.014_r8  * temperature(k) * frac_co3(k) - 0.105_r8 * temperature(k) + 10.53_r8
 
        alpha_aq_g(k)  = c1 + eps_aq_g(k)  / c1000
@@ -833,7 +835,7 @@ contains
              ! convert pgC to molC : ! Mc = 12 g / mol ! Mc = 12 e12 pg / mol
              !----------------------------------------------------------------------------------------
              !   cell_active_C_uptake(auto_ind) = 0.0_r9       ! ratio of active carbon uptake to carbon fixation
-             !   cell_surf(auto_ind)            = 3.886e-9_r8    ! surface areas of cells ( m2 )
+             !   cell_surf(auto_ind)            = 3886.0_r8    ! surface areas of cells ( m2 )
              !   cell_carb_cont(auto_ind)       = 1.68e-10_r8  ! cell carbon content ( mol C cell-1 )
              !   cell_radius(auto_ind)          =              ! cell radius ( um )
              !   cell_permea(auto_ind)          = 1.1e-5_r8    ! cell wall permeability to CO2(aq) (m/s)
