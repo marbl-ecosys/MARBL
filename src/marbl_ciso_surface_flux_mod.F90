@@ -152,7 +152,7 @@ contains
     !     individal discrimination factor of each species with respect to
     !     gaseous CO2, temperature dependent, based on Zhang et al. 1995
     !-----------------------------------------------------------------------
-    eps_aq_g_surf(:)   = -0.0049_r8 * sst(:) - 1.31_r8
+    eps_aq_g_surf(:)   = 0.0049_r8 * sst(:) - 1.31_r8
 
     !-----------------------------------------------------------------------
     !     compute the equilibrium discrimination factor between dic and
