@@ -77,16 +77,16 @@ contains
 
     real (r8), dimension(num_elements) :: &
          eps_aq_g_surf,                   & ! equilibrium fractionation (CO2_gaseous <-> CO2_aq)
-         alpha_aq_g_surf,                 & ! alpha_xxx_g_surf => eps = ( alpa -1 ) * 1000
+         alpha_aq_g_surf,                 & ! alpha_xxx_g_surf => eps = ( alpha -1 ) * 1000
          eps_dic_g_surf,                  & ! equilibrium fractionation between total DIC and gaseous CO2
-         alpha_dic_g_surf,                & ! alpha_xxx_g_surf => eps = ( alpa -1 ) * 1000
+         alpha_dic_g_surf,                & ! alpha_xxx_g_surf => eps = ( alpha -1 ) * 1000
          frac_co3,                        & ! carbonate fraction fCO3 = [CO3--]/DIC
          alpha_aq_g_surf_14c,             & ! for 14C, with fractionation being twice as large for 14C than for 13C
          alpha_dic_g_surf_14c               ! for 14C, with fractionation being twice as large for 14C than for 13C
 
     ! local parameters for 13C, Zhang et al, 1995, Geochim. et Cosmochim. Acta, 59 (1), 107-114
     real(r8) ::            &
-         alpha_k,          & ! eps = ( alpa -1 ) * 1000
+         alpha_k,          & ! eps = ( alpha -1 ) * 1000
          alpha_k_14c         ! for 14C, with fractionation being twice as large for 14C than for 13C
 
     ! kinetic fraction during gas transfer (per mil) (air-sea CO2 exchange)
@@ -150,7 +150,7 @@ contains
 
     !-----------------------------------------------------------------------
     !     individal discrimination factor of each species with respect to
-    !     gaseous CO2, temperature dependent, based on Zhang et al. 95
+    !     gaseous CO2, temperature dependent, based on Zhang et al. 1995
     !-----------------------------------------------------------------------
     eps_aq_g_surf(:)   = 0.0049_r8 * sst(:) - 1.31_r8
 
