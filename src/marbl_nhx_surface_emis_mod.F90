@@ -72,7 +72,7 @@ contains
 
     call marbl_comp_Hstar_nhx(num_elements, ph, sst, sss, Hstar_nhx)
 
-    K(:) = c1 / (c1 / kg_nh3(:) + Hstar_nhx / kw_nh3(:))
+    K(:) = (kg_nh3(:) * kw_nh3(:)) / (kw_nh3(:) + Hstar_nhx * kg_nh3(:))
     nhx_surface_emis(:) = (c1 - ifrac(:)) * K(:) * Hstar_nhx(:) * max(nh4(:),c0)
 
   end subroutine marbl_nhx_surface_emis_compute
