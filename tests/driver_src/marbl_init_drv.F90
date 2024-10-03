@@ -14,17 +14,18 @@ module marbl_init_drv
 
 Contains
 
-  subroutine test(marbl_instance, unit_system_opt, lshutdown, num_PAR_subcols)
+  subroutine test(marbl_instance, unit_system_opt, lshutdown, num_PAR_subcols, lhas_global_ops)
 
     type(marbl_interface_class), intent(inout) :: marbl_instance
     character(len=*),            intent(in)    :: unit_system_opt
     logical, optional,           intent(in)    :: lshutdown
     integer, optional,           intent(in)    :: num_PAR_subcols
+    logical, optional,           intent(in)    :: lhas_global_ops
 
     character(*), parameter      :: subname = 'marbl_init_drv:test'
     real(kind=r8), dimension(km) :: delta_z, zw, zt
     integer                      :: k, num_PAR_subcols_loc
-    logical                      :: lshutdown_loc
+    logical                      :: lshutdown_loc, lhas_global_ops_loc
 
     ! Run marbl_instance%shutdown? (Skip when running get_setting() from driver)
     if (present(lshutdown)) then
@@ -37,6 +38,12 @@ Contains
       num_PAR_subcols_loc = num_PAR_subcols
     else
       num_PAR_subcols_loc = 1
+    end if
+
+    if (present(lhas_global_ops)) then
+      lhas_global_ops_loc = lhas_global_ops
+    else
+      lhas_global_ops_loc = .false.
     end if
 
     ! Initialize levels
@@ -57,7 +64,8 @@ Contains
                              gcm_delta_z = delta_z,                     &
                              gcm_zw = zw,                               &
                              gcm_zt = zt,                               &
-                             unit_system_opt = unit_system_opt)
+                             unit_system_opt = unit_system_opt,         &
+                             lgcm_has_global_ops=lhas_global_ops_loc)
     if (marbl_instance%StatusLog%labort_marbl) then
       call marbl_instance%StatusLog%log_error_trace('marbl%init', subname)
       return

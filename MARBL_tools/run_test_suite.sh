@@ -136,6 +136,9 @@ if [ "${STATUS}" == "PASS" ]; then
   print_status "init.py" >> ${RESULTS_CACHE}
   # Initialize MARBL with settings from tests/input_files/settings/
   for settingsfile in `find ../../input_files/settings -type f`; do
+    if [ "`basename $settingsfile`" == "marbl_with_ladjust_bury_coeff.settings" ]; then
+      continue
+    fi
     (set -x ; ./init.py -s $settingsfile)
     STATUS=$(check_return $?)
     print_status "init.py ($(basename ${settingsfile}))" >> ${RESULTS_CACHE}
@@ -361,6 +364,12 @@ if [ "${STATUS}" == "PASS" ]; then
   (set -x ; ./requested_tracers.py)
   STATUS=$(check_return $?)
   print_status "requested_tracers.py" >> ${RESULTS_CACHE}
+
+  # Print all fields MARBL needs running means of
+  cd ${MARBL_ROOT}/tests/regression_tests/bury_coeff
+  (set -x ; ./bury_coeff.py)
+  STATUS=$(check_return $?)
+  print_status "bury_coeff.py" >> ${RESULTS_CACHE}
 
   # Print all output_for_GCM variables
   cd ${MARBL_ROOT}/tests/regression_tests/available_output
