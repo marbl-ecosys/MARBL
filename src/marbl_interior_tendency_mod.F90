@@ -90,6 +90,7 @@ module marbl_interior_tendency_mod
 
   public  :: marbl_interior_tendency_compute
   public  :: marbl_interior_tendency_adjust_bury_coeff
+  public  :: marbl_interior_tendency_compute_totChl
 
 contains
 
@@ -135,7 +136,6 @@ contains
     use marbl_interface_private_types, only : marbl_internal_timers_type
     use marbl_interface_private_types, only : marbl_timer_indexing_type
     use marbl_interface_private_types, only : marbl_interior_tendency_saved_state_indexing_type
-    use marbl_interface_public_types, only : ofg_ind
     use marbl_interface_public_types, only : marbl_diagnostics_type
     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_variables
     use marbl_interior_tendency_share_mod, only : marbl_interior_tendency_share_export_zooplankton
@@ -183,7 +183,7 @@ contains
     real(r8), dimension(size(tracers,1), domain%km) :: interior_restore
     real(r8), dimension(size(tracers,1), domain%km) :: tracer_local
 
-    integer (int_kind) :: auto_ind, k        ! indices for loops
+    integer (int_kind) :: k                  ! index for loops
 
     real (r8) :: surf_press(domain%km)       ! pressure in surface layer
     real (r8) :: temperature(domain%km)      ! in situ temperature
@@ -276,14 +276,7 @@ contains
     !  Compute Chlorophyll (if requested by GCM)
     !-----------------------------------------------------------------------
 
-    if (ofg_ind%total_Chl_id.ne.0) then
-      interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = c0
-      do auto_ind = 1,autotroph_cnt
-        interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = &
-            interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) &
-            + tracer_local(marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind,:)
-      end do
-    end if
+    call marbl_interior_tendency_compute_totChl(tracer_local, marbl_tracer_indices, interior_tendency_output)
 
     ! Verify forcing is consistent
     if (lcheck_forcing) &
@@ -766,6 +759,29 @@ contains
     end associate
 
   end subroutine marbl_interior_tendency_adjust_bury_coeff
+
+  !***********************************************************************
+
+  subroutine marbl_interior_tendency_compute_totChl(tracer_local, marbl_tracer_indices, interior_tendency_output)
+
+    use marbl_interface_public_types, only : ofg_ind
+
+    real(r8), dimension(:,:),        intent(in)    :: tracer_local
+    type(marbl_tracer_index_type),   intent(in)    :: marbl_tracer_indices
+    type(marbl_output_for_GCM_type), intent(inout) :: interior_tendency_output
+
+    integer (int_kind) :: auto_ind
+
+    if (ofg_ind%total_Chl_id.ne.0) then
+      interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = c0
+      do auto_ind = 1,autotroph_cnt
+        interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) = &
+            interior_tendency_output%outputs_for_GCM(ofg_ind%total_Chl_id)%forcing_field_1d(1,:) &
+            + tracer_local(marbl_tracer_indices%auto_inds(auto_ind)%Chl_ind,:)
+      end do
+    end if
+
+  end subroutine marbl_interior_tendency_compute_totChl
 
   !***********************************************************************
 
