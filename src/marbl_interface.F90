@@ -151,6 +151,7 @@ module marbl_interface
      procedure, public  :: extract_timing
      procedure, private :: glo_vars_init
      procedure, public  :: get_tracer_index
+     procedure, public  :: compute_totChl
      procedure, public  :: interior_tendency_compute
      procedure, public  :: surface_flux_compute
      procedure, public  :: set_global_scalars
@@ -188,6 +189,7 @@ module marbl_interface
   private :: reset_timers
   private :: extract_timing
   private :: glo_vars_init
+  private :: compute_totChl
   private :: interior_tendency_compute
   private :: surface_flux_compute
   private :: shutdown
@@ -969,6 +971,18 @@ contains
     end associate
 
   end subroutine glo_vars_init
+
+  !***********************************************************************
+
+  subroutine compute_totChl(this)
+
+    use marbl_interior_tendency_mod, only : marbl_interior_tendency_compute_totChl
+
+    class(marbl_interface_class), intent(inout) :: this
+
+    call marbl_interior_tendency_compute_totChl(this%tracers, this%tracer_indices, this%interior_tendency_output)
+
+  end subroutine compute_totChl
 
   !***********************************************************************
 
