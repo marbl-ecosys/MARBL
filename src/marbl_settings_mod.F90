@@ -178,7 +178,7 @@ module marbl_settings_mod
        DOCr_reminR0      = (c1/(365.0_r8*16000.0_r8)) * dps, & ! remin rate for refractory DOC, 1/16000yr
        DONr_reminR0      = (c1/(365.0_r8*9500.0_r8)) * dps,  & ! remin rate for refractory DON, 1/9500yr
        DOPr_reminR0      = (c1/(365.0_r8*5500.0_r8)) * dps,  & ! remin rate for refractory DOP, 1/5500yr
-       DOMr_reminR_photo = (c1/(365.0_r8*18.0_r8)) * dps       ! additional remin from photochemistry, 1/18yrs over top 10m
+       DOMr_reminR_photo = (c1/(365.0_r8*80.0_r8)) * dps       ! additional remin from photochemistry, 1/80yrs over top 10m
 
   real(r8), parameter :: &
        DOCprod_refract  = 0.01_r8,                   & ! fraction of DOCprod to refractory pool
