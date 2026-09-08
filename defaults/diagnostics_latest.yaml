@@ -1426,7 +1426,7 @@ POC_FLUX_IN :
       base_bio_on : .true.
    longname : POC Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : minimal
@@ -1435,7 +1435,7 @@ POC_sFLUX_IN :
       base_bio_on : .true.
    longname : POC sFlux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : never
    operator : average
    diag_mode : full
@@ -1444,7 +1444,7 @@ POC_hFLUX_IN :
       base_bio_on : .true.
    longname : POC hFlux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : never
    operator : average
    diag_mode : full
@@ -1480,7 +1480,7 @@ POP_FLUX_IN :
       base_bio_on : .true.
    longname : POP Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1516,7 +1516,7 @@ PON_FLUX_IN :
       base_bio_on : .true.
    longname : PON Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1552,7 +1552,7 @@ CaCO3_FLUX_IN :
       base_bio_on : .true.
    longname : CaCO3 Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : low
    operator : average
    diag_mode : full
@@ -1579,7 +1579,7 @@ CaCO3_ALT_CO2_FLUX_IN :
       base_bio_on : .true.
    longname : CaCO3 Flux into Cell, Alternative CO2
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : low
    operator : average
    diag_mode : full
@@ -1606,7 +1606,7 @@ SiO2_FLUX_IN :
       base_bio_on : .true.
    longname : SiO2 Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1633,7 +1633,7 @@ dust_FLUX_IN :
       base_bio_on : .true.
    longname : Dust Flux into Cell
    units : g/cm^2/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1651,7 +1651,7 @@ P_iron_FLUX_IN :
       base_bio_on : .true.
    longname : P_iron Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1799,7 +1799,7 @@ CISO_PO13C_FLUX_IN :
       ciso_on : .true.
    longname : PO13C Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1844,7 +1844,7 @@ CISO_Ca13CO3_FLUX_IN :
       ciso_on : .true.
    longname : Ca13CO3 flux into cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1907,7 +1907,7 @@ CISO_PO14C_FLUX_IN :
       ciso_on : .true.
    longname : PO14C Flux into Cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full
@@ -1952,7 +1952,7 @@ CISO_Ca14CO3_FLUX_IN :
       ciso_on : .true.
    longname : Ca14CO3 flux into cell
    units : mmol/m^3 cm/s
-   vertical_grid : layer_avg
+   vertical_grid : layer_iface
    frequency : medium
    operator : average
    diag_mode : full

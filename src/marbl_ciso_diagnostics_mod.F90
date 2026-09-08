@@ -272,7 +272,7 @@ contains
       lname    = 'PO13C Flux into Cell'
       sname    = 'CISO_PO13C_FLUX_IN'
       units    = unit_system%conc_flux_units
-      vgrid    = 'layer_avg'
+      vgrid    = 'layer_iface'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
           ind%CISO_PO13C_FLUX_IN, marbl_status_log)
@@ -332,7 +332,7 @@ contains
       lname    = 'Ca13CO3 flux into cell'
       sname    = 'CISO_Ca13CO3_FLUX_IN'
       units    = unit_system%conc_flux_units
-      vgrid    = 'layer_avg'
+      vgrid    = 'layer_iface'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
           ind%CISO_Ca13CO3_FLUX_IN, marbl_status_log)
@@ -416,7 +416,7 @@ contains
       lname    = 'PO14C Flux into Cell'
       sname    = 'CISO_PO14C_FLUX_IN'
       units    = unit_system%conc_flux_units
-      vgrid    = 'layer_avg'
+      vgrid    = 'layer_iface'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
           ind%CISO_PO14C_FLUX_IN, marbl_status_log)
@@ -476,7 +476,7 @@ contains
       lname    = 'Ca14CO3 flux into cell'
       sname    = 'CISO_Ca14CO3_FLUX_IN'
       units    = unit_system%conc_flux_units
-      vgrid    = 'layer_avg'
+      vgrid    = 'layer_iface'
       truncate = .false.
       call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
           ind%CISO_Ca14CO3_FLUX_IN, marbl_status_log)
@@ -1067,6 +1067,7 @@ contains
     character(len=char_len)     :: log_message
     integer (int_kind) :: k, n, auto_ind
     real (r8)          :: work(marbl_domain%km)
+    real(r8) :: P_Ca13CO3_sed_loss, P_Ca14CO3_sed_loss, PO13C_sed_loss, PO14C_sed_loss
     !-----------------------------------------------------------------------
 
     associate( &
@@ -1084,11 +1085,15 @@ contains
          zootot14C_ind => marbl_tracer_indices%zootot14C_ind     &
          )
 
-    diags(ind%calcToSed_13C)%field_2d(1) = sum(P_Ca13CO3%sed_loss)
-    diags(ind%calcToSed_14C)%field_2d(1) = sum(P_Ca14CO3%sed_loss)
+    P_Ca13CO3_sed_loss = sum(P_Ca13CO3%sed_loss)
+    P_Ca14CO3_sed_loss = sum(P_Ca14CO3%sed_loss)
+    diags(ind%calcToSed_13C)%field_2d(1) = P_Ca13CO3_sed_loss
+    diags(ind%calcToSed_14C)%field_2d(1) = P_Ca14CO3_sed_loss
 
-    diags(ind%pocToSed_13C)%field_2d(1)  = sum(PO13C%sed_loss)
-    diags(ind%pocToSed_14C)%field_2d(1)  = sum(PO14C%sed_loss)
+    PO13C_sed_loss = sum(PO13C%sed_loss)
+    PO14C_sed_loss = sum(PO14C%sed_loss)
+    diags(ind%pocToSed_13C)%field_2d(1)  = PO13C_sed_loss
+    diags(ind%pocToSed_14C)%field_2d(1)  = PO14C_sed_loss
 
     diags(ind%CISO_photo13C_TOT)%field_3d(:, 1) = sum(photo13C, dim=1)
     diags(ind%CISO_photo14C_TOT)%field_3d(:, 1) = sum(photo14C, dim=1)
@@ -1158,7 +1163,7 @@ contains
               full_depth_integral=diags(ind%CISO_Ca14CO3_form_zint(n))%field_2d(1))
     end do
 
-    do k = 1,km
+    do k = 1,kmt
        do n = 1, autotroph_cnt
           diags(ind%CISO_d13C(n))%field_3d(k, 1)                = autotroph_d13C(n,k)
           diags(ind%CISO_d14C(n))%field_3d(k, 1)                = autotroph_d14C(n,k)
@@ -1182,7 +1187,7 @@ contains
        end do  ! end loop over autotroph_cnt
     end do  ! end loop over km
 
-    do k = 1,km
+    do k = 1,kmt
        diags(ind%CISO_DIC_d13C)%field_3d(k, 1)        = DIC_d13C(k)
        diags(ind%CISO_DIC_d14C)%field_3d(k, 1)        = DIC_d14C(k)
 
@@ -1219,6 +1224,10 @@ contains
        diags(ind%CISO_PO13C_remin)%field_3d(k, 1)     = PO13C%remin(k)
        diags(ind%CISO_PO14C_remin)%field_3d(k, 1)     = PO14C%remin(k)
     end do
+    diags(ind%CISO_Ca13CO3_flux_in)%field_3d(kmt+1, 1) = P_Ca13CO3_sed_loss
+    diags(ind%CISO_Ca14CO3_flux_in)%field_3d(kmt+1, 1) = P_Ca14CO3_sed_loss
+    diags(ind%CISO_PO13C_flux_in)%field_3d(kmt+1, 1)   = PO13C_sed_loss
+    diags(ind%CISO_PO14C_flux_in)%field_3d(kmt+1, 1)   = PO14C_sed_loss
 
     end associate
 

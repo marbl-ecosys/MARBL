@@ -94,7 +94,7 @@ def _reduce_to_matching_variables(ds_base, ds_new):
     new_vars = list(set(new_vars) - common_vars)
     if base_vars:
         header_fail = True
-        ds_base = ds_base.drop(base_vars)
+        ds_base = ds_base.drop_vars(base_vars)
         logger.info("The following variables are in the baseline file but not the new file:")
         base_vars.sort()
         for var in base_vars:
@@ -102,7 +102,7 @@ def _reduce_to_matching_variables(ds_base, ds_new):
         logger.info("")
     if new_vars:
         header_fail = True
-        ds_new = ds_new.drop(new_vars)
+        ds_new = ds_new.drop_vars(new_vars)
         logger.info("The following variables are in the new file but not the baseline file:")
         new_vars.sort()
         for var in new_vars:
@@ -141,7 +141,7 @@ def _reduce_to_matching_variables(ds_base, ds_new):
             header_fail = True
             failed_vars.append(var)
 
-    return header_fail, ds_base.drop(failed_vars), ds_new.drop(failed_vars)
+    return header_fail, ds_base.drop_vars(failed_vars), ds_new.drop_vars(failed_vars)
 
 ##################
 

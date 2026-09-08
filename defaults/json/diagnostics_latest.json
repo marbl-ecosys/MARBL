@@ -637,7 +637,7 @@
       "longname": "Ca13CO3 flux into cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "CISO_Ca13CO3_PROD": {
       "dependencies": {
@@ -670,7 +670,7 @@
       "longname": "Ca14CO3 flux into cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "CISO_Ca14CO3_PROD": {
       "dependencies": {
@@ -923,7 +923,7 @@
       "longname": "PO13C Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "CISO_PO13C_PROD": {
       "dependencies": {
@@ -956,7 +956,7 @@
       "longname": "PO14C Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "CISO_PO14C_PROD": {
       "dependencies": {
@@ -1301,7 +1301,7 @@
       "longname": "CaCO3 Flux into Cell, Alternative CO2",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "CaCO3_ALT_CO2_PROD": {
       "dependencies": {
@@ -1345,7 +1345,7 @@
       "longname": "CaCO3 Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "CaCO3_PROD": {
       "dependencies": {
@@ -2240,7 +2240,7 @@
       "longname": "POC Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "POC_PROD": {
       "dependencies": {
@@ -2350,7 +2350,7 @@
       "longname": "POC hFlux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "POC_sFLUX_IN": {
       "dependencies": {
@@ -2361,7 +2361,7 @@
       "longname": "POC sFlux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "PON_FLUX_((particulate_flux_ref_depth_str))": {
       "dependencies": {
@@ -2383,7 +2383,7 @@
       "longname": "PON Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "PON_PROD": {
       "dependencies": {
@@ -2438,7 +2438,7 @@
       "longname": "POP Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "POP_PROD": {
       "dependencies": {
@@ -2527,7 +2527,7 @@
       "longname": "P_iron Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "P_iron_PROD": {
       "dependencies": {
@@ -2604,7 +2604,7 @@
       "longname": "SiO2 Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "SiO2_PROD": {
       "dependencies": {
@@ -2786,7 +2786,7 @@
       "longname": "Dust Flux into Cell",
       "operator": "average",
       "units": "g/cm^2/s",
-      "vertical_grid": "layer_avg"
+      "vertical_grid": "layer_iface"
    },
    "dust_REMIN": {
       "dependencies": {

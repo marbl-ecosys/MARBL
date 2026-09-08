@@ -145,6 +145,8 @@ if __name__ == "__main__":
         netcdf_dict["longname"] = ds[var].attrs["long_name"]
         if "num_levels" in ds[var].dims:
             netcdf_dict["vertical_grid"] = "layer_avg"
+        elif "num_ifaces" in ds[var].dims:
+            netcdf_dict["vertical_grid"] = "layer_iface"
         else:
             netcdf_dict["vertical_grid"] = "none"
         json_dict = {key: str(json_in[var][key]) for key in ["units", "longname", "vertical_grid"]}

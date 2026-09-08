@@ -63,6 +63,7 @@ module marbl_io_mod
     real(r8)                              :: ref_depth_2d ! Not all 2D fields are surface fields
     real(r8), allocatable, dimension(:,:) :: field_3d     ! dimension: num_levels x num_cols
     character(len=char_len)               :: short_name
+    character(len=char_len)               :: vertical_grid
   end type single_diag_type
 
   type, private :: many_diags_type
@@ -713,16 +714,22 @@ contains
     character(len=char_len) :: log_message, varname, long_name, units
     integer :: n
     integer :: num_levels, num_cols, num_tracers
-    integer :: dimid_num_levels, dimid_num_cols
+    integer :: dimid_num_levels, dimid_num_ifaces, dimid_num_cols
 
     num_tracers = size(marbl_instances(1)%tracer_metadata)
 
     ! netCDF dimensions
     ! 1) num_levels = number of levels (domain should be the same for all columns)
+    !    num_ifaces = number of interfaces (num_levels + 1)
     num_levels = marbl_instances(1)%domain%km
     call marbl_netcdf_def_dim(ncid_out, 'num_levels', num_levels, driver_status_log, dimid_out=dimid_num_levels)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_def_dim(num_levels)', subname)
+      return
+    end if
+    call marbl_netcdf_def_dim(ncid_out, 'num_ifaces', num_levels+1, driver_status_log, dimid_out=dimid_num_ifaces)
+    if (driver_status_log%labort_marbl) then
+      call driver_status_log%log_error_trace('marbl_netcdf_def_dim(num_ifaces)', subname)
       return
     end if
 
@@ -757,7 +764,7 @@ contains
     else
       units = 'm'
     end if
-    call marbl_netcdf_def_var(ncid_out, 'zw', 'double', (/dimid_num_levels/), &
+    call marbl_netcdf_def_var(ncid_out, 'zw', 'double', (/dimid_num_ifaces/), &
                               "cell interface depth", units, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_def_var(zw)', subname)
@@ -927,8 +934,9 @@ contains
     character(len=*), parameter :: subname = 'marbl_netcdf_mod:marbl_io_write_history'
     character(len=char_len) :: log_message
     character(len=char_len) :: varname
-    integer :: col_id, varid, n
+    integer :: col_id, varid, k, n
     real(r8), dimension(size(active_level_cnt)) :: bot_depth
+    real(r8), dimension(size(marbl_instance%domain%zw)+1) :: zw
 
     ! 1) Domain variables
     call marbl_netcdf_inq_varid(ncid_out, 'zt', varid, driver_status_log)
@@ -949,7 +957,11 @@ contains
       return
     end if
 
-    call marbl_netcdf_put_var(ncid_out, varid, marbl_instance%domain%zw, driver_status_log)
+    zw(1) = 0._r8
+    do k=1,size(marbl_instance%domain%zw)
+      zw(k+1) = marbl_instance%domain%zw(k)
+    end do
+    call marbl_netcdf_put_var(ncid_out, varid, zw, driver_status_log)
     if (driver_status_log%labort_marbl) then
       call driver_status_log%log_error_trace('marbl_netcdf_put_var(zw)', subname)
       return
@@ -1128,6 +1140,10 @@ contains
         case ('layer_avg')
           allocate(dimids(2))
           dimids = dimids_all
+        case ('layer_iface')
+          allocate(dimids(2))
+          dimids(1) = dimids_all(1)+1 ! one more interface than level
+          dimids(2) = dimids_all(2)
         case DEFAULT
           write(log_message, '(3A)') "'", trim(diag%diags(n)%vertical_grid), &
                 "' is not a valid vertical grid"
@@ -1206,7 +1222,11 @@ contains
           call marbl_netcdf_put_var(ncid_out, varid, diag_buffer%diags(n)%field_2d(:), driver_status_log)
         end if
       else if (allocated(diag_buffer%diags(n)%field_3d)) then
-        call marbl_netcdf_put_var(ncid_out, varid, diag_buffer%diags(n)%field_3d(:,:), active_level_cnt, driver_status_log)
+        if (trim(diag_buffer%diags(n)%vertical_grid) == "layer_iface") then
+          call marbl_netcdf_put_var(ncid_out, varid, diag_buffer%diags(n)%field_3d(:,:), active_level_cnt+1, driver_status_log)
+        else
+          call marbl_netcdf_put_var(ncid_out, varid, diag_buffer%diags(n)%field_3d(:,:), active_level_cnt, driver_status_log)
+        end if
       end if
       if (driver_status_log%labort_MARBL) then
         write(log_message, "(A,I0,A)") "marbl_netcdf_put_var(buffer index", n, ")"
@@ -1234,6 +1254,7 @@ contains
     allocate(self%diags(self%num_diags))
     do n=1, self%num_diags
       self%diags(n)%short_name = diags_in%diags(n)%short_name
+      self%diags(n)%vertical_grid = diags_in%diags(n)%vertical_grid
       if (allocated(diags_in%diags(n)%field_2d)) then
         allocate(self%diags(n)%field_2d(num_cols))
       else if (allocated(diags_in%diags(n)%field_3d)) then

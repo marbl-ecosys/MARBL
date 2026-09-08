@@ -2319,7 +2319,7 @@ contains
         lname = 'POC Flux into Cell'
         sname = 'POC_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%POC_FLUX_IN, marbl_status_log)
@@ -2331,7 +2331,7 @@ contains
         lname = 'POC sFlux into Cell'
         sname = 'POC_sFLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%POC_sFLUX_IN, marbl_status_log)
@@ -2343,7 +2343,7 @@ contains
         lname = 'POC hFlux into Cell'
         sname = 'POC_hFLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%POC_hFLUX_IN, marbl_status_log)
@@ -2391,7 +2391,7 @@ contains
         lname = 'POP Flux into Cell'
         sname = 'POP_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%POP_FLUX_IN, marbl_status_log)
@@ -2439,7 +2439,7 @@ contains
         lname = 'PON Flux into Cell'
         sname = 'PON_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
              ind%PON_FLUX_IN, marbl_status_log)
@@ -2487,7 +2487,7 @@ contains
         lname = 'CaCO3 Flux into Cell'
         sname = 'CaCO3_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%CaCO3_FLUX_IN, marbl_status_log)
@@ -2523,7 +2523,7 @@ contains
         lname = 'CaCO3 Flux into Cell, Alternative CO2'
         sname = 'CaCO3_ALT_CO2_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%CaCO3_ALT_CO2_FLUX_IN, marbl_status_log)
@@ -2559,7 +2559,7 @@ contains
         lname = 'SiO2 Flux into Cell'
         sname = 'SiO2_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%SiO2_FLUX_IN, marbl_status_log)
@@ -2595,7 +2595,7 @@ contains
         lname = 'Dust Flux into Cell'
         sname = 'dust_FLUX_IN'
         write(units, "(4A)") trim(unit_system%M), '/', trim(unit_system%L), '^2/s'
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%dust_FLUX_IN, marbl_status_log)
@@ -2619,7 +2619,7 @@ contains
         lname = 'P_iron Flux into Cell'
         sname = 'P_iron_FLUX_IN'
         units = unit_system%conc_flux_units
-        vgrid = 'layer_avg'
+        vgrid = 'layer_iface'
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%P_iron_FLUX_IN, marbl_status_log)
@@ -3920,6 +3920,8 @@ contains
     type(unit_system_type)                             , intent(in)    :: unit_system
     type(marbl_diagnostics_type)                       , intent(inout) :: marbl_interior_tendency_diags
 
+    real(r8) :: sed_loss, rPOC_to_floor
+
     associate(                                                       &
          ind             => marbl_interior_tendency_diag_ind,        &
          diags           => marbl_interior_tendency_diags%diags,     &
@@ -3940,11 +3942,28 @@ contains
        diags(ind%P_REMIN_SCALEF)%field_3d(:, 1) = &
             interior_tendency_forcings(interior_tendency_forcing_ind%p_remin_scalef_id)%field_1d(1,:)
     endif
+
+    ! POC diagnostics
+    sed_loss = sum(POC%sed_loss)
     diags(ind%POC_FLUX_at_ref_depth)%field_2d(1) = POC%flux_at_ref_depth
-    diags(ind%POC_FLUX_IN)%field_3d(:, 1)        = POC%sflux_in + POC%hflux_in
-    diags(ind%POC_sFLUX_IN)%field_3d(:, 1)       = POC%sflux_in
-    diags(ind%POC_hFLUX_IN)%field_3d(:, 1)       = POC%hflux_in
-    diags(ind%POC_PROD)%field_3d(:, 1)           = POC%prod
+    diags(ind%POC_FLUX_IN)%field_3d(1:kmt, 1)    = POC%sflux_in(1:kmt) + POC%hflux_in(1:kmt)
+    diags(ind%POC_FLUX_IN)%field_3d(kmt+1, 1)    = sed_loss
+    diags(ind%POC_sFLUX_IN)%field_3d(1:kmt, 1)   = POC%sflux_in(1:kmt)
+    diags(ind%POC_hFLUX_IN)%field_3d(1:kmt, 1)   = POC%hflux_in(1:kmt)
+    if (POC%to_floor > 0) then
+       rPOC_to_floor = c1 / POC%to_floor
+       diags(ind%POC_sFLUX_IN)%field_3d(kmt+1, 1) = (POC%sflux_out(kmt) * rPOC_to_floor) * sed_loss
+       diags(ind%POC_hFLUX_IN)%field_3d(kmt+1, 1) = (POC%hflux_out(kmt) * rPOC_to_floor) * sed_loss
+    else
+       rPOC_to_floor = c0
+       diags(ind%POC_sFLUX_IN)%field_3d(kmt+1, 1) = c0
+       diags(ind%POC_hFLUX_IN)%field_3d(kmt+1, 1) = c0
+    endif
+    diags(ind%POC_PROD)%field_3d(:, 1) = POC%prod
+    diags(ind%pocToFloor)%field_2d(1)  = POC%to_floor
+    diags(ind%pocToSed)%field_2d(1)    = sed_loss
+
+    ! POC integrals
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%POC_PROD)%field_3d(:, 1), &
          delta_z, kmt, unit_system, full_depth_integral=diags(ind%POC_PROD_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_PROD_zint_100m)%field_2d(1))
@@ -3957,21 +3976,37 @@ contains
          delta_z, kmt, unit_system, full_depth_integral=diags(ind%POC_REMIN_DIC_zint)%field_2d(1), &
          near_surface_integral=diags(ind%POC_REMIN_DIC_zint_100m)%field_2d(1))
 
+    ! POP diagnostics
+    sed_loss = sum(POP%sed_loss)
     diags(ind%POP_FLUX_at_ref_depth)%field_2d(1) = POP%flux_at_ref_depth
-    diags(ind%POP_FLUX_IN)%field_3d(:, 1)        = POP%sflux_in + POP%hflux_in
+    diags(ind%POP_FLUX_IN)%field_3d(1:kmt, 1)    = POP%sflux_in(1:kmt) + POP%hflux_in(1:kmt)
+    diags(ind%POP_FLUX_IN)%field_3d(kmt+1, 1)    = sed_loss
     diags(ind%POP_PROD)%field_3d(:, 1)           = POP%prod
     diags(ind%POP_REMIN_DOPr)%field_3d(:, 1)     = POP%remin * POPremin_refract
     diags(ind%POP_REMIN_PO4)%field_3d(:, 1)      = POP%remin * (c1 - POPremin_refract)
+    diags(ind%popToSed)%field_2d(1)              = sed_loss
 
+    ! PON and other nitrogen diagnostics
+    sed_loss = sum(PON%sed_loss)
     diags(ind%PON_FLUX_at_ref_depth)%field_2d(1) = PON%flux_at_ref_depth
-    diags(ind%PON_FLUX_IN)%field_3d(:, 1)        = PON%sflux_in + PON%hflux_in
+    diags(ind%PON_FLUX_IN)%field_3d(1:kmt, 1)    = PON%sflux_in(1:kmt) + PON%hflux_in(1:kmt)
+    diags(ind%PON_FLUX_IN)%field_3d(kmt+1, 1)    = sed_loss
     diags(ind%PON_PROD)%field_3d(:, 1)           = PON%prod
     diags(ind%PON_REMIN_DONr)%field_3d(:, 1)     = PON%remin * PONremin_refract
     diags(ind%PON_REMIN_NH4)%field_3d(:, 1)      = PON%remin * (c1 - PONremin_refract)
+    diags(ind%ponToSed)%field_2d(1)              = sed_loss
+    diags(ind%SedDenitrif)%field_2d(1)           = sum(sed_denitrif * delta_z)
 
+    ! CaCO3 diagnostics
+    sed_loss = sum(P_CaCO3%sed_loss)
     diags(ind%CaCO3_FLUX_at_ref_depth)%field_2d(1) = P_CaCO3%flux_at_ref_depth
-    diags(ind%CaCO3_FLUX_IN)%field_3d(:, 1)        = P_CaCO3%sflux_in + P_CaCO3%hflux_in
+    diags(ind%CaCO3_FLUX_IN)%field_3d(1:kmt, 1)    = P_CaCO3%sflux_in(1:kmt) + P_CaCO3%hflux_in(1:kmt)
+    diags(ind%CaCO3_FLUX_IN)%field_3d(kmt+1, 1)    = sed_loss
     diags(ind%CaCO3_PROD)%field_3d(:, 1)           = P_CaCO3%prod
+    diags(ind%calcToFloor)%field_2d(1)             = P_CaCO3%to_floor
+    diags(ind%calcToSed)%field_2d(1)               = sed_loss
+
+    ! CaCO3 integrals
     call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%CaCO3_PROD)%field_3d(:, 1), &
          delta_z, kmt, unit_system, full_depth_integral=diags(ind%CaCO3_PROD_zint)%field_2d(1), &
          near_surface_integral=diags(ind%CaCO3_PROD_zint_100m)%field_2d(1))
@@ -3980,35 +4015,41 @@ contains
          delta_z, kmt, unit_system, full_depth_integral=diags(ind%CaCO3_REMIN_zint)%field_2d(1), &
          near_surface_integral=diags(ind%CaCO3_REMIN_zint_100m)%field_2d(1))
 
-    diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(:, 1) = P_CaCO3_ALT_CO2%sflux_in + P_CaCO3_ALT_CO2%hflux_in
-    diags(ind%CaCO3_ALT_CO2_PROD)%field_3d(:, 1)    = P_CaCO3_ALT_CO2%prod
-    diags(ind%CaCO3_ALT_CO2_REMIN)%field_3d(:, 1)   = P_CaCO3_ALT_CO2%remin
+    ! CaCO3_ALT_CO2 diagnostics
+    sed_loss = sum(P_CaCO3_ALT_CO2%sed_loss)
+    diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(1:kmt, 1) = P_CaCO3_ALT_CO2%sflux_in(1:kmt) + &
+                                                          P_CaCO3_ALT_CO2%hflux_in(1:kmt)
+    diags(ind%CaCO3_ALT_CO2_FLUX_IN)%field_3d(kmt+1, 1) = sed_loss
+    diags(ind%CaCO3_ALT_CO2_PROD)%field_3d(:, 1)        = P_CaCO3_ALT_CO2%prod
+    diags(ind%CaCO3_ALT_CO2_REMIN)%field_3d(:, 1)       = P_CaCO3_ALT_CO2%remin
+    diags(ind%calcToSed_ALT_CO2)%field_2d(1)            = sed_loss
 
+    ! SiO2 diagnostics
+    sed_loss = sum(P_SiO2%sed_loss)
     diags(ind%SiO2_FLUX_at_ref_depth)%field_2d(1) = P_SiO2%flux_at_ref_depth
-    diags(ind%SiO2_FLUX_IN)%field_3d(:, 1)        = P_SiO2%sflux_in + P_SiO2%hflux_in
+    diags(ind%SiO2_FLUX_IN)%field_3d(1:kmt, 1)    = P_SiO2%sflux_in(1:kmt) + P_SiO2%hflux_in(1:kmt)
+    diags(ind%SiO2_FLUX_IN)%field_3d(kmt+1, 1)    = sed_loss
     diags(ind%SiO2_PROD)%field_3d(:, 1)           = P_SiO2%prod
     diags(ind%SiO2_REMIN)%field_3d(:, 1)          = P_SiO2%remin
+    diags(ind%bsiToSed)%field_2d(1)               = sed_loss
 
-    diags(ind%dust_FLUX_IN)%field_3d(:, 1) = (dust%sflux_in + dust%hflux_in)
-    diags(ind%dust_REMIN)%field_3d(:, 1)   = dust%remin
+    ! dust diagnostics
+    sed_loss = sum(dust%sed_loss)
+    diags(ind%dust_FLUX_IN)%field_3d(1:kmt, 1) = (dust%sflux_in(1:kmt) + dust%hflux_in(1:kmt))
+    diags(ind%dust_FLUX_IN)%field_3d(kmt+1, 1) = sed_loss
+    diags(ind%dust_REMIN)%field_3d(:, 1)       = dust%remin
+    diags(ind%dustToSed)%field_2d(1)           = sed_loss
 
+    ! P_iron diagnostics
+    sed_loss = sum(P_iron%sed_loss)
     diags(ind%P_iron_FLUX_at_ref_depth)%field_2d(1) = P_iron%flux_at_ref_depth
-    diags(ind%P_iron_FLUX_IN)%field_3d(:, 1)        = P_iron%sflux_in + P_iron%hflux_in
+    diags(ind%P_iron_FLUX_IN)%field_3d(1:kmt, 1)    = P_iron%sflux_in(1:kmt) + P_iron%hflux_in(1:kmt)
+    diags(ind%P_iron_FLUX_IN)%field_3d(kmt+1, 1)        = sed_loss
     diags(ind%P_iron_PROD)%field_3d(:, 1)           = P_iron%prod
     diags(ind%P_iron_REMIN)%field_3d(:, 1)          = P_iron%remin
+    diags(ind%pfeToSed)%field_2d(1)                 = sed_loss
 
-    diags(ind%calcToFloor)%field_2d(1)       = P_CaCO3%to_floor
-    diags(ind%calcToSed)%field_2d(1)         = sum(P_CaCO3%sed_loss)
-    diags(ind%calcToSed_ALT_CO2)%field_2d(1) = sum(P_CaCO3_ALT_CO2%sed_loss)
-    diags(ind%bsiToSed)%field_2d(1)          = sum(P_SiO2%sed_loss)
-    diags(ind%pocToFloor)%field_2d(1)        = POC%to_floor
-    diags(ind%pocToSed)%field_2d(1)          = sum(POC%sed_loss)
-    diags(ind%SedDenitrif)%field_2d(1)       = sum(sed_denitrif * delta_z)
     diags(ind%OtherRemin)%field_2d(1)        = sum(other_remin * delta_z)
-    diags(ind%ponToSed)%field_2d(1)          = sum(PON%sed_loss)
-    diags(ind%popToSed)%field_2d(1)          = sum(POP%sed_loss)
-    diags(ind%dustToSed)%field_2d(1)         = sum(dust%sed_loss)
-    diags(ind%pfeToSed)%field_2d(1)          = sum(P_iron%sed_loss)
 
     end associate
 
