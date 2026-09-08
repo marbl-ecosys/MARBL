@@ -3008,6 +3008,7 @@ contains
           O2_loc                   => tracer_local(marbl_tracer_indices%o2_ind,k),      &
           O2_loc_col               => tracer_local(marbl_tracer_indices%o2_ind,:),      &
           NO3_loc                  => tracer_local(marbl_tracer_indices%no3_ind,k),     &
+          NO3_loc_col              => tracer_local(marbl_tracer_indices%no3_ind,:),     &
           POC_bury_coeff           => marbl_particulate_share%POC_bury_coeff,           & ! IN/OUT
           POP_bury_coeff           => marbl_particulate_share%POP_bury_coeff,           & ! IN/OUT
           bSi_bury_coeff           => marbl_particulate_share%bSi_bury_coeff            & ! IN/OUT
@@ -3458,6 +3459,11 @@ contains
            sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC%to_floor &
                 * (0.06_r8 + 0.19_r8 * 0.99_r8**(O2_loc-NO3_loc)) * 1.5_r8
 
+           ! downscale sed_denitrif where NO3 is low, to avoid pushing NO3 negative
+           where (NO3_loc_col(1:k) < c1)
+              sed_denitrif(1:k) = NO3_loc_col(1:k) * sed_denitrif(1:k)
+           endwhere
+
            flux_alt = POC%to_floor*(unit_system%conc_flux2mmol_m2s * (mpercm**2))*spy ! convert to mmol/cm^2/year
            other_remin(1:k) = min(bot_flux_to_tend(1:k) * &
                                   min(0.1_r8 + flux_alt, 0.5_r8) * (POC%to_floor - POC%sed_loss(k)), &
@@ -3773,6 +3779,9 @@ contains
         work = min(max(work, c0), c1)
         denitrif(k) = work * ((DOC_remin(k) + DOCr_remin(k) + POC_remin(k) * (c1 - POCremin_refract) &
                  - other_remin(k)) / denitrif_C_N(k)  - sed_denitrif(k))
+
+        ! downscale denitrif where NO3 is low, to avoid pushing NO3 negative
+        if (NO3_loc(k) < c1) denitrif(k) = NO3_loc(k) * denitrif(k)
       end do
 
     end associate
