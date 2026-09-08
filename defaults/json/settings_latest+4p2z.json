@@ -325,7 +325,7 @@
                "datatype": "real",
                "default_value": {
                   "((autotroph_sname)) == \"cocco\"": 3.1e-05,
-                  "((autotroph_sname)) == \"diat\"": 5e-05,
+                  "((autotroph_sname)) == \"diat\"": 4e-05,
                   "((autotroph_sname)) == \"diaz\"": 4.5e-05,
                   "((autotroph_sname)) == \"sp\"": 3e-05,
                   "default": "1e34"
@@ -455,7 +455,7 @@
                "datatype": "real",
                "default_value": {
                   "((autotroph_sname)) == \"cocco\"": 0.13,
-                  "((autotroph_sname)) == \"diat\"": 0.16,
+                  "((autotroph_sname)) == \"diat\"": 0.14,
                   "((autotroph_sname)) == \"diaz\"": 0.1,
                   "((autotroph_sname)) == \"sp\"": 0.1,
                   "default": "1e34"
@@ -521,7 +521,7 @@
             "thetaN_max": {
                "datatype": "real",
                "default_value": {
-                  "((autotroph_sname)) == \"cocco\"": 2.0,
+                  "((autotroph_sname)) == \"cocco\"": 2.1,
                   "((autotroph_sname)) == \"diat\"": 3.2,
                   "((autotroph_sname)) == \"diaz\"": 2.2,
                   "((autotroph_sname)) == \"sp\"": 2,
@@ -575,7 +575,7 @@
                "default_value": {
                   "((grazer_sname)) == \"cocco_mesozoo\"": 0.27,
                   "((grazer_sname)) == \"cocco_microzoo\"": 0.27,
-                  "((grazer_sname)) == \"diat_mesozoo\"": 0.25,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.38,
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.4,
                   "((grazer_sname)) == \"diaz_microzoo\"": 0.1,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.27,
@@ -607,7 +607,7 @@
             "graze_poc": {
                "datatype": "real",
                "default_value": {
-                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.12,
+                  "((grazer_sname)) == \"cocco_mesozoo\"": 0.15,
                   "((grazer_sname)) == \"cocco_microzoo\"": 0.18,
                   "((grazer_sname)) == \"diat_mesozoo\"": 0.25,
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.15,
@@ -688,10 +688,10 @@
                "datatype": "real",
                "default_value": {
                   "((grazer_sname)) == \"cocco_mesozoo\"": 2.9,
-                  "((grazer_sname)) == \"cocco_microzoo\"": 2.25,
-                  "((grazer_sname)) == \"diat_mesozoo\"": 0.8,
-                  "((grazer_sname)) == \"diaz_mesozoo\"": 1.3,
-                  "((grazer_sname)) == \"diaz_microzoo\"": 1.3,
+                  "((grazer_sname)) == \"cocco_microzoo\"": 2.3,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.87,
+                  "((grazer_sname)) == \"diaz_mesozoo\"": 1.5,
+                  "((grazer_sname)) == \"diaz_microzoo\"": 1.5,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 1.3,
                   "((grazer_sname)) == \"null\"": 0,
                   "((grazer_sname)) == \"sp_microzoo\"": 1.35,
@@ -706,7 +706,7 @@
                "default_value": {
                   "((grazer_sname)) == \"cocco_mesozoo\"": 0.7,
                   "((grazer_sname)) == \"cocco_microzoo\"": 1.6,
-                  "((grazer_sname)) == \"diat_mesozoo\"": 1.05,
+                  "((grazer_sname)) == \"diat_mesozoo\"": 0.93,
                   "((grazer_sname)) == \"diaz_mesozoo\"": 0.5,
                   "((grazer_sname)) == \"diaz_microzoo\"": 1,
                   "((grazer_sname)) == \"microzoo_mesozoo\"": 0.18,
@@ -1165,7 +1165,7 @@
       },
       "POM_bury_frac_max": {
          "datatype": "real",
-         "default_value": 0.8,
+         "default_value": 0.9,
          "dependencies": "base_bio_on",
          "longname": "maximum bury fraction for POM",
          "subcategory": "5. general parameters (bury coeffs)",
@@ -1281,7 +1281,7 @@
       },
       "f_graze_CaCO3_remin": {
          "datatype": "real",
-         "default_value": 0.7,
+         "default_value": 0.6,
          "dependencies": "base_bio_on",
          "longname": "Fraction of spCaCO3 grazing which is remineralized in zooplankton guts",
          "subcategory": "5. general parameters",
@@ -1576,7 +1576,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 1.1
+            "default": 2.33
          },
          "dependencies": "base_bio_on",
          "longname": "Initial scale factor for burial of POC",
@@ -1587,7 +1587,7 @@
          "datatype": "real",
          "default_value": {
             "GRID == \"CESM_x3\"": 5.0,
-            "default": 1.1
+            "default": 2.33
          },
          "dependencies": "base_bio_on",
          "longname": "Initial scale factor for burial of POP",
