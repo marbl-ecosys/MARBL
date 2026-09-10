@@ -849,6 +849,42 @@ contains
           return
         end if
 
+        lname = 'd[POC burial]/d[POC burial coefficient]'
+        sname = 'd_POC_bury_d_bury_coeff'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%d_POC_bury_d_bury_coeff, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'd[POP burial]/d[POP burial coefficient]'
+        sname = 'd_POP_bury_d_bury_coeff'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%d_POP_bury_d_bury_coeff, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'd[bSi burial]/d[bSi burial coefficient]'
+        sname = 'd_bSi_bury_d_bury_coeff'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%d_bSi_bury_d_bury_coeff, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
         ! Autotroph 2D diags
         if (.not.ind%lallocated()) then
           allocate(ind%N_lim_surf(autotroph_cnt))
@@ -4050,6 +4086,10 @@ contains
     diags(ind%pfeToSed)%field_2d(1)                 = sed_loss
 
     diags(ind%OtherRemin)%field_2d(1)        = sum(other_remin * delta_z)
+
+    diags(ind%d_POC_bury_d_bury_coeff)%field_2d(1) = POC%d_bury_d_bury_coeff
+    diags(ind%d_POP_bury_d_bury_coeff)%field_2d(1) = POP%d_bury_d_bury_coeff
+    diags(ind%d_bSi_bury_d_bury_coeff)%field_2d(1) = P_SiO2%d_bury_d_bury_coeff
 
     end associate
 

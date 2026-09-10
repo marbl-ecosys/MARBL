@@ -2727,6 +2727,28 @@
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
    },
+   "d_POC_bury_d_bury_coeff": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "never",
+      "longname": "d[POC burial]/d[POC burial coefficient]",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
+   },
+   "d_POP_bury_d_bury_coeff": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "never",
+      "longname": "d[POP burial]/d[POP burial coefficient]",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
+      "vertical_grid": "none"
+   },
    "d_SF_ABIO_DI14C_d_ABIO_DI14C": {
       "dependencies": {
          "abio_dic_on": ".true.",
@@ -2764,6 +2786,17 @@
       "longname": "Derivative of ABIO_FG_DIC wrt ABIO_DIC",
       "operator": "average",
       "units": "cm/s",
+      "vertical_grid": "none"
+   },
+   "d_bSi_bury_d_bury_coeff": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "never",
+      "longname": "d[bSi burial]/d[bSi burial coefficient]",
+      "operator": "average",
+      "units": "nmol/cm^2/s",
       "vertical_grid": "none"
    },
    "dustToSed": {

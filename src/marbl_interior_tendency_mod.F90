@@ -3429,6 +3429,16 @@ contains
 
            ! first compute burial efficiency, then compute loss to sediments
            bury_frac = 0.013_r8 + 0.53_r8 * flux_alt*flux_alt / (7.0_r8 + flux_alt)**2
+           if (POC_bury_coeff * bury_frac < POM_bury_frac_max) then
+              POC%d_bury_d_bury_coeff = POC%to_floor * bury_frac
+           else
+              POC%d_bury_d_bury_coeff = c0
+           end if
+           if (POP_bury_coeff * bury_frac < POM_bury_frac_max) then
+              POP%d_bury_d_bury_coeff = POP%to_floor * bury_frac
+           else
+              POP%d_bury_d_bury_coeff = c0
+           end if
            if (p_remin_scalef /= c1) bury_frac = c1 - p_remin_scalef * (c1 - bury_frac)
            POC%sed_loss(k) = POC%to_floor * min(POM_bury_frac_max, POC_bury_coeff * bury_frac)
 
@@ -3440,20 +3450,12 @@ contains
 
            if (ladjust_bury_coeff) then
               glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_POC_bury) = POC%sed_loss(k)
-              if (POC_bury_coeff * bury_frac < POM_bury_frac_max) then
-                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = &
-                      POC%to_floor * bury_frac
-              else
-                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = c0
-              endif
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POC_bury_d_bury_coeff) = &
+                   POC%d_bury_d_bury_coeff
 
               glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_POP_bury) = POP%sed_loss(k)
-              if (POP_bury_coeff * bury_frac < POM_bury_frac_max) then
-                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = &
-                      POP%to_floor * bury_frac
-              else
-                 glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = c0
-              endif
+              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_POP_bury_d_bury_coeff) = &
+                   POP%d_bury_d_bury_coeff
            endif
 
            sed_denitrif(1:k) = bot_flux_to_tend(1:k) * parm_sed_denitrif_coeff * POC%to_floor &
@@ -3506,18 +3508,16 @@ contains
         if (p_remin_scalef /= c1) bury_frac = c1 - p_remin_scalef * (c1 - bury_frac)
         if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
            P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_coeff * bury_frac
+           P_SiO2%d_bury_d_bury_coeff = P_SiO2%to_floor * bury_frac
         else
            P_SiO2%sed_loss(k) = P_SiO2%to_floor * bSi_bury_frac_max
+           P_SiO2%d_bury_d_bury_coeff = c0
         endif
 
         if (ladjust_bury_coeff) then
            glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_bSi_bury) = P_SiO2%sed_loss(k)
-           if (bSi_bury_coeff * bury_frac < bSi_bury_frac_max) then
-              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = &
-                   P_SiO2%to_floor * bury_frac
-           else
-              glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = c0
-           endif
+           glo_avg_fields_interior_tendency(glo_avg_field_ind_interior_tendency_d_bSi_bury_d_bury_coeff) = &
+                P_SiO2%d_bury_d_bury_coeff
         endif
 
         P_CaCO3%to_floor         = P_CaCO3%sflux_out(k)         + P_CaCO3%hflux_out(k)

@@ -849,6 +849,33 @@ pfeToSed :
    frequency : medium
    operator : average
    diag_mode : minimal
+d_POC_bury_d_bury_coeff :
+   dependencies :
+      base_bio_on : .true.
+   longname : d[POC burial]/d[POC burial coefficient]
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+   diag_mode : full
+d_POP_bury_d_bury_coeff :
+   dependencies :
+      base_bio_on : .true.
+   longname : d[POP burial]/d[POP burial coefficient]
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+   diag_mode : full
+d_bSi_bury_d_bury_coeff :
+   dependencies :
+      base_bio_on : .true.
+   longname : d[bSi burial]/d[bSi burial coefficient]
+   units : nmol/cm^2/s
+   vertical_grid : none
+   frequency : never
+   operator : average
+   diag_mode : full
 CaCO3_form_zint :
    dependencies :
       base_bio_on : .true.
