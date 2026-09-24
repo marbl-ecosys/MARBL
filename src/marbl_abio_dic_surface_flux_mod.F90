@@ -74,6 +74,7 @@ contains
     type(co2calc_state_type),                           intent(inout) :: co2calc_state
     type(marbl_log_type),                               intent(inout) :: marbl_status_log
 
+    character(len=*), parameter :: subname = 'marbl_abio_dic_surface_flux_mod:marbl_abio_dic_surface_flux_compute'
     real(r8) :: alk_surf(num_elements)     ! local alkalinity
     real(r8) :: SiO2(num_elements)         ! Abiotic silicate
     real(r8) :: PO4(num_elements)          ! Abiotic phosphate
@@ -190,6 +191,11 @@ contains
           ph = ph_surf, &
           marbl_status_log = marbl_status_log)
 
+      if (marbl_status_log%labort_marbl) then
+        call marbl_status_log%log_error_trace('marbl_co2calc_surface() with dic', subname)
+        return
+      end if
+
       fg_dic(:) = pv_co2(:) * dco2star(:)
       fg_di14c(:) = pv_co2(:) * ((dco2star(:) + co2star(:)) * R14C_atm(:) - co2star(:) * R14C_ocn(:))
       surface_fluxes(:, dic_ind) = surface_fluxes(:, dic_ind) + fg_dic(:)
@@ -221,6 +227,11 @@ contains
             pco2surf = pco2surf_pert, &
             dpco2 = dpco2_pert, &
             marbl_status_log = marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('marbl_co2calc_surface() with dic+1', subname)
+          return
+        end if
+
         call marbl_co2calc_surface(&
             num_elements  = num_elements, &
             lcomp_co2calc_coeffs = .false., &
@@ -244,6 +255,11 @@ contains
             pco2surf = pco2surf_pert, &
             dpco2 = dpco2_pert, &
             marbl_status_log = marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_status_log%log_error_trace('marbl_co2calc_surface() with dic-1', subname)
+          return
+        end if
+
         derivative_terms(:,1) = -p5 * (co2star_pert_p1(:) - co2star_pert_m1(:)) * pv_co2(:)
         where (tracers_at_surface(:,dic_ind) > 0)
           derivative_terms(:,2) = -p5 * (co2star_pert_p1(:) / (tracers_at_surface(:,dic_ind) + c1) &

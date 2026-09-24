@@ -230,6 +230,11 @@ contains
          co2calc_state            = co2calc_state, &
          marbl_status_log         = marbl_status_log)
 
+    if (marbl_status_log%labort_marbl) then
+      call marbl_status_log%log_error_trace('marbl_abio_dic_surface_flux_compute', subname)
+      return
+    end if
+
     !-----------------------------------------------------------------------
 
     ! Return if not using base biotic tracers
