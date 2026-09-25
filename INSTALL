@@ -29,3 +29,47 @@ And when linking
 
 -L$(LIB_DIR) -lmarbl
 
+-----------------------------------
+| BUILDING THE LIBRARY WITH CMAKE |
+-----------------------------------
+
+MARBL can also be built with CMake 3.24 or newer, in a separate build
+directory (in-source builds would overwrite the Makefiles, so they are refused):
+
+$ cmake -S . -B build [-D<option>=<value> ...]
+$ cmake --build build
+$ cmake --install build --prefix [install location]
+
+To choose the compiler, set FC for the first configure (e.g. FC=ifx cmake ...)
+or pass -DCMAKE_Fortran_COMPILER=[compiler].
+
+This installs libmarbl.a in [prefix]/lib (lib64 or lib/[multiarch] on some
+systems), the *.mod files in [prefix]/include/marbl, and a CMake package, so
+another CMake project can use
+
+find_package(MARBL REQUIRED)
+target_link_libraries(<target> PRIVATE MARBL::marbl)
+
+A CMake project can instead build MARBL as part of its own build with
+add_subdirectory(); by default MARBL then adds none of its own compiler flags
+and does not build the stand-alone driver.
+
+Options:
+
+MARBL_USE_MPI            Use MPI_Wtime() for MARBL's timers; the driver is then
+                         marbl-mpi.exe, and the installed package requires MPI
+                         (default: OFF)
+MARBL_USE_DEFAULT_FLAGS  Add the per-compiler flags from the Makefiles
+                         (default: ON when MARBL is the top-level project)
+MARBL_BUILD_DRIVER       Build the stand-alone driver in build/driver_exe
+                         (default: ON when MARBL is the top-level project)
+MARBL_DRIVER_NETCDF      Build the driver with netCDF output; netCDF-Fortran
+                         is found with pkg-config (default: OFF)
+MARBL_INSTALL            Generate install rules (default: ON)
+
+With a single-configuration generator such as Unix Makefiles or Ninja, a
+top-level build defaults to CMAKE_BUILD_TYPE=RelWithDebInfo, which is -O2 -g
+with gfortran and ifx. To treat warnings as errors with gfortran, as the gnu
+targets in the Makefiles do, add -DCMAKE_COMPILE_WARNING_AS_ERROR=ON (MARBL
+does not yet compile without warnings under ifx). The test suite in tests/
+still builds with the Makefiles.
