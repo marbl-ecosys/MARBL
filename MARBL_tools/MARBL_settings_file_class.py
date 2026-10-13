@@ -439,7 +439,20 @@ def _translate_JSON_value(value, datatype, units, unit_system, from_input_dict=F
         # if variable is a real but value is unicode evaluate it
         if datatype == "real":
             if isinstance(value, str):
-                return "%24.16e" % (eval(value)*_get_scale_factor(units, unit_system, from_input_dict))
+                # Some values of real variables in the MARBL settings YAML / JSON file are treated
+                # as strings. They may be an expression that has to be evaluated or just a value
+                # written in exponential form. Output should be an exponential with no trailing
+                # zeros (exception: integer multiples of powers of ten will have a single decimal
+                # place, e.g. 1.0e+03 instead of 1e+03)
+                true_value = eval(value) * _get_scale_factor(units, unit_system, from_input_dict)
+                if true_value == 0.:
+                    return 0
+                for n in range(1,16):
+                    str_value = f"%{8+n}.{n}e"%true_value
+                    rel_diff = (eval(str_value) - true_value)/true_value
+                    if rel_diff < 1e-15 and rel_diff > -1e-15:
+                        return str_value
+                return "%24.16e" % true_value
             else:
                 return value*_get_scale_factor(units, unit_system, from_input_dict)
         # if variable is an integer but value is unicode convert it
