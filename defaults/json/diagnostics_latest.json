@@ -1695,6 +1695,14 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "DOP_((autotroph_sname))_uptake_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) DOP Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "DOP_loss_P_bal": {
       "dependencies": {
          "base_bio_on": ".true."
@@ -1738,6 +1746,25 @@
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "DOP_uptake_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total DOP Uptake",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "DOP_uptake_TOT_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total DOP Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "DOPr_remin": {
       "dependencies": {
@@ -2318,6 +2345,33 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "PO4_((autotroph_sname))_uptake_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) PO4 Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "PO4_uptake_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total PO4 Uptake",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "PO4_uptake_TOT_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total PO4 Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "POC_FLUX_((particulate_flux_ref_depth_str))": {
       "dependencies": {
@@ -3410,6 +3464,33 @@
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
    },
+   "photoNH4_((autotroph_sname))_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) NH4 Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoNH4_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total NH4 Uptake",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "photoNH4_TOT_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total NH4 Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "photoNO3_((autotroph_sname))": {
       "diag_mode": "full",
       "frequency": "medium",
@@ -3418,6 +3499,33 @@
       "truncate": true,
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "photoNO3_((autotroph_sname))_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "((autotroph_lname)) NO3 Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
+   "photoNO3_TOT": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total NO3 Uptake",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "layer_avg"
+   },
+   "photoNO3_TOT_zint": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Total NO3 Uptake Vertical Integral",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
    },
    "pocToFloor": {
       "dependencies": {

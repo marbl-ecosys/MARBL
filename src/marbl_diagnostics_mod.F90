@@ -584,6 +584,54 @@ contains
           return
         end if
 
+        lname = 'Total NO3 Uptake Vertical Integral'
+        sname = 'photoNO3_TOT_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoNO3_TOT_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total NH4 Uptake Vertical Integral'
+        sname = 'photoNH4_TOT_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoNH4_TOT_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total DOP Uptake Vertical Integral'
+        sname = 'DOP_uptake_TOT_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOP_uptake_TOT_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total PO4 Uptake Vertical Integral'
+        sname = 'PO4_uptake_TOT_zint'
+        units = unit_system%conc_flux_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PO4_uptake_TOT_zint, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
         lname = 'Vertical Integral of DOC Production'
         sname = 'DOC_prod_zint'
         units = unit_system%conc_flux_units
@@ -999,6 +1047,10 @@ contains
           allocate(ind%photoC_zint_100m(autotroph_cnt))
           allocate(ind%photoC_NO3_zint(autotroph_cnt))
           allocate(ind%photoFe_zint(autotroph_cnt))
+          allocate(ind%photoNO3_zint(autotroph_cnt))
+          allocate(ind%photoNH4_zint(autotroph_cnt))
+          allocate(ind%DOP_uptake_zint(autotroph_cnt))
+          allocate(ind%PO4_uptake_zint(autotroph_cnt))
           allocate(ind%bSi_form_zint(autotroph_cnt))
           allocate(ind%CaCO3_form_zint(autotroph_cnt))
           allocate(ind%CaCO3_form_zint_100m(autotroph_cnt))
@@ -1215,6 +1267,54 @@ contains
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
               ind%photoFe_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' NO3 Uptake Vertical Integral'
+          sname = 'photoNO3_' // trim(autotroph_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoNO3_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' NH4 Uptake Vertical Integral'
+          sname = 'photoNH4_' // trim(autotroph_settings(n)%sname) // '_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%photoNH4_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' DOP Uptake Vertical Integral'
+          sname = 'DOP_' // trim(autotroph_settings(n)%sname) // '_uptake_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%DOP_uptake_zint(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(autotroph_settings(n)%lname) // ' PO4 Uptake Vertical Integral'
+          sname = 'PO4_' // trim(autotroph_settings(n)%sname) // '_uptake_zint'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%PO4_uptake_zint(n), marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
             return
@@ -2051,6 +2151,54 @@ contains
         truncate = .not. lecovars_full_depth_tavg
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%photoFe_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total NO3 Uptake'
+        sname = 'photoNO3_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoNO3_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total NH4 Uptake'
+        sname = 'photoNH4_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoNH4_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total DOP Uptake'
+        sname = 'DOP_uptake_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%DOP_uptake_TOT, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Total PO4 Uptake'
+        sname = 'PO4_uptake_TOT'
+        units = unit_system%conc_tend_units
+        vgrid = 'layer_avg'
+        truncate = .not. lecovars_full_depth_tavg
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%PO4_uptake_TOT, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -3959,6 +4107,10 @@ contains
     diags(ind%photoC_TOT)%field_3d(:, 1) = c0
     diags(ind%photoC_NO3_TOT)%field_3d(:, 1) = c0
     diags(ind%photoFe_TOT)%field_3d(:, 1) = c0
+    diags(ind%photoNO3_TOT)%field_3d(:, 1) = c0
+    diags(ind%photoNH4_TOT)%field_3d(:, 1) = c0
+    diags(ind%DOP_uptake_TOT)%field_3d(:, 1) = c0
+    diags(ind%PO4_uptake_TOT)%field_3d(:, 1) = c0
     diags(ind%tot_bSi_form_zint)%field_2d(1) = c0
     diags(ind%tot_CaCO3_form_zint)%field_2d(1) = c0
     diags(ind%tot_CaCO3_form_zint_100m)%field_2d(1) = c0
@@ -3967,6 +4119,10 @@ contains
     diags(ind%photoC_TOT_zint_100m)%field_2d(1) = c0
     diags(ind%photoC_NO3_TOT_zint)%field_2d(1) = c0
     diags(ind%photoFe_TOT_zint)%field_2d(1) = c0
+    diags(ind%photoNO3_TOT_zint)%field_2d(1) = c0
+    diags(ind%photoNH4_TOT_zint)%field_2d(1) = c0
+    diags(ind%DOP_uptake_TOT_zint)%field_2d(1) = c0
+    diags(ind%PO4_uptake_TOT_zint)%field_2d(1) = c0
 
     do n = 1, autotroph_cnt
        ! compute biomass weighted average of limitation terms over 0..100m
@@ -4028,19 +4184,51 @@ contains
          diags(ind%Qn(n))%field_3d(:, 1)        = autotroph_derived_terms%Qn(n,:)
        end if
 
-       diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_derived_terms%NO3_V(n,:)
-       diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_derived_terms%NH4_V(n,:)
-       diags(ind%PO4_uptake(n))%field_3d(:, 1)  = autotroph_derived_terms%PO4_V(n,:)
-       diags(ind%DOP_uptake(n))%field_3d(:, 1)  = autotroph_derived_terms%DOP_V(n,:)
-       diags(ind%photoFE(n))%field_3d(:, 1)     = autotroph_derived_terms%photoFe(n,:)
+       diags(ind%photoFe(n))%field_3d(:, 1)     = autotroph_derived_terms%photoFe(n,:)
        diags(ind%photoFe_TOT)%field_3d(:, 1)    = diags(ind%photoFe_TOT)%field_3d(:, 1) + &
             autotroph_derived_terms%photoFe(n,:)
+       diags(ind%photoNO3(n))%field_3d(:, 1)    = autotroph_derived_terms%NO3_V(n,:)
+       diags(ind%photoNO3_TOT)%field_3d(:, 1)   = diags(ind%photoNO3_TOT)%field_3d(:, 1) + &
+            autotroph_derived_terms%NO3_V(n,:)
+       diags(ind%photoNH4(n))%field_3d(:, 1)    = autotroph_derived_terms%NH4_V(n,:)
+       diags(ind%photoNH4_TOT)%field_3d(:, 1)   = diags(ind%photoNH4_TOT)%field_3d(:, 1) + &
+            autotroph_derived_terms%NH4_V(n,:)
+       diags(ind%DOP_uptake(n))%field_3d(:, 1)  = autotroph_derived_terms%DOP_V(n,:)
+       diags(ind%DOP_uptake_TOT)%field_3d(:, 1) = diags(ind%DOP_uptake_TOT)%field_3d(:, 1) + &
+            autotroph_derived_terms%DOP_V(n,:)
+       diags(ind%PO4_uptake(n))%field_3d(:, 1)  = autotroph_derived_terms%PO4_V(n,:)
+       diags(ind%PO4_uptake_TOT)%field_3d(:, 1) = diags(ind%PO4_uptake_TOT)%field_3d(:, 1) + &
+            autotroph_derived_terms%PO4_V(n,:)
 
        call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%photoFe(n,:), &
             delta_z, kmt, unit_system, full_depth_integral=diags(ind%photoFe_zint(n))%field_2d(1))
 
        diags(ind%photoFe_TOT_zint)%field_2d(1) = diags(ind%photoFe_TOT_zint)%field_2d(1) + &
             diags(ind%photoFe_zint(n))%field_2d(1)
+
+       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%NO3_V(n,:), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%photoNO3_zint(n))%field_2d(1))
+
+       diags(ind%photoNO3_TOT_zint)%field_2d(1) = diags(ind%photoNO3_TOT_zint)%field_2d(1) + &
+            diags(ind%photoNO3_zint(n))%field_2d(1)
+
+       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%NH4_V(n,:), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%photoNH4_zint(n))%field_2d(1))
+
+       diags(ind%photoNH4_TOT_zint)%field_2d(1) = diags(ind%photoNH4_TOT_zint)%field_2d(1) + &
+            diags(ind%photoNH4_zint(n))%field_2d(1)
+
+       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%DOP_V(n,:), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%DOP_uptake_zint(n))%field_2d(1))
+
+       diags(ind%DOP_uptake_TOT_zint)%field_2d(1) = diags(ind%DOP_uptake_TOT_zint)%field_2d(1) + &
+            diags(ind%DOP_uptake_zint(n))%field_2d(1)
+
+       call marbl_diagnostics_share_compute_vertical_integrals(autotroph_derived_terms%PO4_V(n,:), &
+            delta_z, kmt, unit_system, full_depth_integral=diags(ind%PO4_uptake_zint(n))%field_2d(1))
+
+       diags(ind%PO4_uptake_TOT_zint)%field_2d(1) = diags(ind%PO4_uptake_TOT_zint)%field_2d(1) + &
+            diags(ind%PO4_uptake_zint(n))%field_2d(1)
 
        if (ind%bSi_form(n).ne.-1) then
           diags(ind%bSi_form(n))%field_3d(:, 1)  = autotroph_derived_terms%photoSi(n,:)

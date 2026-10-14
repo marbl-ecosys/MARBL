@@ -538,6 +538,10 @@ module marbl_interface_private_types
     integer(int_kind) :: photoC_NO3_TOT_zint
     integer(int_kind) :: photoC_NO3_TOT_zint_100m
     integer(int_kind) :: photoFe_TOT_zint
+    integer(int_kind) :: photoNO3_TOT_zint
+    integer(int_kind) :: photoNH4_TOT_zint
+    integer(int_kind) :: DOP_uptake_TOT_zint
+    integer(int_kind) :: PO4_uptake_TOT_zint
     integer(int_kind) :: DOC_prod_zint
     integer(int_kind) :: DOC_prod_zint_100m
     integer(int_kind) :: DOC_remin_zint
@@ -591,6 +595,10 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: photoC_zint_100m(:)
     integer(int_kind), allocatable :: photoC_NO3_zint(:)
     integer(int_kind), allocatable :: photoFe_zint(:)
+    integer(int_kind), allocatable :: photoNO3_zint(:)
+    integer(int_kind), allocatable :: photoNH4_zint(:)
+    integer(int_kind), allocatable :: DOP_uptake_zint(:)
+    integer(int_kind), allocatable :: PO4_uptake_zint(:)
     integer(int_kind), allocatable :: bSi_form_zint(:)
     integer(int_kind), allocatable :: CaCO3_form_zint(:)
     integer(int_kind), allocatable :: CaCO3_form_zint_100m(:)
@@ -660,6 +668,10 @@ module marbl_interface_private_types
     integer(int_kind) :: photoC_TOT
     integer(int_kind) :: photoC_NO3_TOT
     integer(int_kind) :: photoFe_TOT
+    integer(int_kind) :: photoNO3_TOT
+    integer(int_kind) :: photoNH4_TOT
+    integer(int_kind) :: DOP_uptake_TOT
+    integer(int_kind) :: PO4_uptake_TOT
     integer(int_kind) :: DOC_prod
     integer(int_kind) :: DOC_remin
     integer(int_kind) :: DOCr_remin
@@ -2041,6 +2053,10 @@ contains
         deallocate(this%photoC_zint_100m)
         deallocate(this%photoC_NO3_zint)
         deallocate(this%photoFe_zint)
+        deallocate(this%photoNO3_zint)
+        deallocate(this%photoNH4_zint)
+        deallocate(this%DOP_uptake_zint)
+        deallocate(this%PO4_uptake_zint)
         deallocate(this%bSi_form_zint)
         deallocate(this%CaCO3_form_zint)
         deallocate(this%CaCO3_form_zint_100m)

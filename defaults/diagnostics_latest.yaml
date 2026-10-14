@@ -641,6 +641,34 @@ photoFe_TOT_zint :
    frequency : medium
    operator : average
    diag_mode : full
+photoNO3_TOT_zint :
+   longname : Total NO3 Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+photoNH4_TOT_zint :
+   longname : Total NH4 Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+DOP_uptake_TOT_zint :
+   longname : Total DOP Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+PO4_uptake_TOT_zint :
+   longname : Total PO4 Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
 DOC_prod_zint :
    dependencies :
       base_bio_on : .true.
@@ -1184,6 +1212,42 @@ photoFe_TOT :
    dependencies :
       base_bio_on : .true.
    longname : Total Fe Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+   diag_mode : full
+photoNO3_TOT :
+   dependencies :
+      base_bio_on : .true.
+   longname : Total NO3 Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+   diag_mode : full
+photoNH4_TOT :
+   dependencies :
+      base_bio_on : .true.
+   longname : Total NH4 Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+   diag_mode : full
+DOP_uptake_TOT :
+   dependencies :
+      base_bio_on : .true.
+   longname : Total DOP Uptake
+   units : mmol/m^3/s
+   vertical_grid : layer_avg
+   frequency : medium
+   operator : average
+   diag_mode : full
+PO4_uptake_TOT :
+   dependencies :
+      base_bio_on : .true.
+   longname : Total PO4 Uptake
    units : mmol/m^3/s
    vertical_grid : layer_avg
    frequency : medium
@@ -2314,6 +2378,34 @@ photoC_NO3_((autotroph_sname))_zint :
    diag_mode : full
 photoFe_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) Fe Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+photoNO3_((autotroph_sname))_zint :
+   longname : ((autotroph_lname)) NO3 Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+photoNH4_((autotroph_sname))_zint :
+   longname : ((autotroph_lname)) NH4 Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+DOP_((autotroph_sname))_uptake_zint :
+   longname : ((autotroph_lname)) DOP Uptake Vertical Integral
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+PO4_((autotroph_sname))_uptake_zint :
+   longname : ((autotroph_lname)) PO4 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
