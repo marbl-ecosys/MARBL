@@ -446,7 +446,7 @@ def _translate_JSON_value(value, datatype, units, unit_system, from_input_dict=F
                 # place, e.g. 1.0e+03 instead of 1e+03)
                 true_value = eval(value) * _get_scale_factor(units, unit_system, from_input_dict)
                 if true_value == 0.:
-                    return 0
+                    return "0.0"
                 for n in range(1,16):
                     str_value = f"%{8+n}.{n}e"%true_value
                     rel_diff = (eval(str_value) - true_value)/true_value
