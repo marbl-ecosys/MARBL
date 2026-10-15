@@ -1314,6 +1314,17 @@
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
    },
+   "CO3_surf": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Surface Carbonate Ion Concentration",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
    "CaCO3_ALT_CO2_FLUX_IN": {
       "dependencies": {
          "base_bio_on": ".true."
@@ -2913,6 +2924,17 @@
       "units": "mmol/m^3",
       "vertical_grid": "layer_avg"
    },
+   "co3_sat_arag_surf": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Surface CO3 concentration at aragonite saturation",
+      "operator": "average",
+      "units": "mmol/m^3",
+      "vertical_grid": "none"
+   },
    "co3_sat_calc": {
       "dependencies": {
          "base_bio_on": ".true."
@@ -3396,6 +3418,17 @@
       "operator": "average",
       "units": "mmol/m^3/s",
       "vertical_grid": "layer_avg"
+   },
+   "photoC_TOT_surf": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "Surface Total C Fixation",
+      "operator": "average",
+      "units": "mmol/m^3/s",
+      "vertical_grid": "none"
    },
    "photoC_TOT_zint": {
       "dependencies": {

@@ -531,8 +531,11 @@ module marbl_interface_private_types
     ! General 2D diags
     integer(int_kind) :: zsatcalc
     integer(int_kind) :: zsatarag
+    integer(int_kind) :: CO3_surf
+    integer(int_kind) :: co3_sat_arag_surf
     integer(int_kind) :: O2_ZMIN
     integer(int_kind) :: O2_ZMIN_DEPTH
+    integer(int_kind) :: photoC_TOT_surf
     integer(int_kind) :: photoC_TOT_zint
     integer(int_kind) :: photoC_TOT_zint_100m
     integer(int_kind) :: photoC_NO3_TOT_zint

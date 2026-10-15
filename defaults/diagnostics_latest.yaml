@@ -580,6 +580,24 @@ zsatarag :
    frequency : medium
    operator : average
    diag_mode : full
+CO3_surf :
+   dependencies :
+      base_bio_on : .true.
+   longname : Surface Carbonate Ion Concentration
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
+co3_sat_arag_surf :
+   dependencies :
+      base_bio_on : .true.
+   longname : Surface CO3 concentration at aragonite saturation
+   units : mmol/m^3
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
 O2_ZMIN :
    dependencies :
       base_bio_on : .true.
@@ -598,6 +616,15 @@ O2_ZMIN_DEPTH :
    frequency : medium
    operator : average
    diag_mode : minimal
+photoC_TOT_surf :
+   dependencies :
+      base_bio_on : .true.
+   longname : Surface Total C Fixation
+   units : mmol/m^3/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
 photoC_TOT_zint :
    dependencies :
       base_bio_on : .true.

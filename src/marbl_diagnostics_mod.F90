@@ -500,6 +500,30 @@ contains
           return
         end if
 
+        lname = 'Surface Carbonate Ion Concentration'
+        sname = 'CO3_surf'
+        units = unit_system%conc_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%CO3_surf, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Surface CO3 concentration at aragonite saturation'
+        sname = 'co3_sat_arag_surf'
+        units = unit_system%conc_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%co3_sat_arag_surf, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
         lname = 'Vertical Minimum of O2'
         sname = 'O2_ZMIN'
         units = unit_system%conc_units
@@ -519,6 +543,18 @@ contains
         truncate = .false.
         call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
             ind%O2_ZMIN_DEPTH, marbl_status_log)
+        if (marbl_status_log%labort_marbl) then
+          call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+          return
+        end if
+
+        lname = 'Surface Total C Fixation'
+        sname = 'photoC_TOT_surf'
+        units = unit_system%conc_tend_units
+        vgrid = 'none'
+        truncate = .false.
+        call diags%add_diagnostic(lname, sname, units, vgrid, truncate,     &
+            ind%photoC_TOT_surf, marbl_status_log)
         if (marbl_status_log%labort_marbl) then
           call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
           return
@@ -3988,6 +4024,9 @@ contains
     diags(ind%co3_sat_calc)%field_3d(:, 1)  = carbonate%CO3_sat_calcite(:)
     diags(ind%co3_sat_arag)%field_3d(:, 1)  = carbonate%CO3_sat_aragonite(:)
 
+    diags(ind%CO3_surf)%field_2d(1)         = carbonate%CO3(1)
+    diags(ind%co3_sat_arag_surf)%field_2d(1)= carbonate%CO3_sat_aragonite(1)
+
     end associate
 
   end subroutine store_diagnostics_carbonate
@@ -4353,6 +4392,8 @@ contains
             delta_z, kmt, unit_system, full_depth_integral=diags(ind%auto_agg_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%auto_agg_zint_100m(n))%field_2d(1))
     end do ! do n
+
+    diags(ind%photoC_TOT_surf)%field_2d(1) = diags(ind%photoC_TOT)%field_3d(1, 1)
 
     end associate
 
