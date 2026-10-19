@@ -1919,7 +1919,8 @@ contains
          Zprime   => zooplankton_derived_terms%Zprime(:,:),  & !(zooplankton_cnt)
          zoo_loss => zooplankton_derived_terms%zoo_loss(:,:), & !(zooplankton_cnt) output
          zoo_loss_bulk => zooplankton_derived_terms%zoo_loss_bulk(:,:), & !(zooplankton_cnt) output
-         zoo_loss_basal => zooplankton_derived_terms%zoo_loss_basal(:,:) & !(zooplankton_cnt) output
+         zoo_loss_basal => zooplankton_derived_terms%zoo_loss_basal(:,:), & !(zooplankton_cnt) output
+         zoo_loss_nonlinear => zooplankton_derived_terms%zoo_loss_nonlinear(:,:) & !(zooplankton_cnt) output
          )
 
       !  calculate the loss threshold interpolation factor
@@ -1931,8 +1932,9 @@ contains
 
         zoo_loss_basal(zoo_ind,:) = zooplankton_settings(zoo_ind)%basal_respiration_rate * Zprime(zoo_ind,:) * Tfunc_zoo(zoo_ind,:)
 
+        zoo_loss_nonlinear(zoo_ind,:) = zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp
         zoo_loss_bulk(zoo_ind,:) = (zooplankton_settings(zoo_ind)%z_mort_0 * Zprime(zoo_ind,:) + &
-                              zooplankton_settings(zoo_ind)%z_mort2_0 * Zprime(zoo_ind,:)**zoo_mort2_exp) * Tfunc_zoo(zoo_ind,:)
+                                    zoo_loss_nonlinear(zoo_ind,:)) * Tfunc_zoo(zoo_ind,:)
 
         zoo_loss(zoo_ind,:) = zoo_loss_basal(zoo_ind,:) + zoo_loss_bulk(zoo_ind,:)
 
