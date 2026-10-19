@@ -365,6 +365,14 @@
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
+   "((zooplankton_sname))_loss_nonlinear_zint_150m": {
+      "diag_mode": "full",
+      "frequency": "medium",
+      "longname": "((zooplankton_lname)) Loss from Nonlinear Mortality Vertical Integral, 0-150m",
+      "operator": "average",
+      "units": "mmol/m^3 cm/s",
+      "vertical_grid": "none"
+   },
    "((zooplankton_sname))_loss_poc": {
       "diag_mode": "full",
       "frequency": "never",

@@ -2663,6 +2663,13 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    frequency : medium
    operator : average
    diag_mode : full
+((zooplankton_sname))_loss_nonlinear_zint_150m :
+   longname : ((zooplankton_lname)) Loss from Nonlinear Mortality Vertical Integral, 0-150m
+   units : mmol/m^3 cm/s
+   vertical_grid : none
+   frequency : medium
+   operator : average
+   diag_mode : full
 ((zooplankton_sname))_loss_poc_zint :
    longname : ((zooplankton_lname)) Loss to POC Vertical Integral
    units : mmol/m^3 cm/s
