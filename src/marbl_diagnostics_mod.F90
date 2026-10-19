@@ -4210,11 +4210,6 @@ contains
        call marbl_diagnostics_share_compute_vertical_integrals(zooplankton_derived_terms%zoo_loss_nonlinear(n,:), &
             delta_z, kmt, unit_system, near_surface_integral=diags(ind%zoo_loss_nonlinear_zint_150m(n))%field_2d(1), &
             shallow_depth=150._r8*unit_system%m2len)
-        do m=1,15
-          print*, zooplankton_derived_terms%zoo_loss_basal(n,m), zooplankton_derived_terms%zoo_loss_bulk(n,m), &
-                  zooplankton_derived_terms%zoo_loss_nonlinear(n,m)
-        end do
-        print*, '----'
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_doc(n))%field_3d(:, 1), &
             delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_doc_zint(n))%field_2d(1), &
