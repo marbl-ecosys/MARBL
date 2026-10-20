@@ -38,8 +38,29 @@ RESULTS_CACHE=${MARBL_ROOT}/MARBL_tools/.test_suite.cache
 FAILURE_CACHE=${MARBL_ROOT}/MARBL_tools/.test_suite.failures.cache
 TEST_CNT=0
 FAIL_CNT=0
+GEN_BASELINES=0
 echo "Test Results:" > ${RESULTS_CACHE}
 echo "Failed Tests:" > ${FAILURE_CACHE}
+
+###############################
+# Parse commandline arguments #
+###############################
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    "--update-baselines")
+      GEN_BASELINES=1
+    ;;
+    * )
+      echo "'$1' is not a valid option"
+      exit 1
+    ;;
+  esac
+  shift
+done
+if [ ${GEN_BASELINES} -eq 1 ]; then
+  echo "Baselines will be updated before comparison is done"
+fi
 
 #########
 # TESTS #
@@ -185,7 +206,11 @@ if [ "${STATUS}" == "PASS" ]; then
     # Compare netCDF output to baseline
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history.nc
+    if [ ${GEN_BASELINES} -eq 1 ]; then
+      cp ${HIST_ROOT}/history_1inst.nc ${BASELINE}
+    fi
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs) vs baseline (cgs))" >> ${RESULTS_CACHE}
 
@@ -206,7 +231,11 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_4p2z.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history_4p2z.nc
+    if [ ${GEN_BASELINES} -eq 1 ]; then
+      cp ${HIST_ROOT}/history_1inst.nc ${BASELINE}
+    fi
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, 4p2z) vs baseline (cgs, 4p2z))" >> ${RESULTS_CACHE}
 
@@ -226,7 +255,8 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_4p2z.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history_4p2z.nc
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (mks, 4p2z) vs baseline (cgs, 4p2z))" >> ${RESULTS_CACHE}
   fi
@@ -242,7 +272,11 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio_only.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history_with_abio_only.nc
+    if [ ${GEN_BASELINES} -eq 1 ]; then
+      cp ${HIST_ROOT}/history_1inst.nc ${BASELINE}
+    fi
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
 
@@ -262,7 +296,8 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_abio_only.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history_with_abio_only.nc
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (mks, with abio) vs baseline (cgs, with abio))" >> ${RESULTS_CACHE}
   fi
@@ -278,7 +313,11 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_ciso.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history_with_ciso.nc
+    if [ ${GEN_BASELINES} -eq 1 ]; then
+      cp ${HIST_ROOT}/history_1inst.nc ${BASELINE}
+    fi
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (cgs, with ciso) vs baseline (cgs, with ciso))" >> ${RESULTS_CACHE}
 
@@ -298,7 +337,8 @@ if [ "${STATUS}" == "PASS" ]; then
     cd ${MARBL_ROOT}/MARBL_tools
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
     HIST_ROOT=${MARBL_ROOT}/tests/regression_tests/call_compute_subroutines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history_with_ciso.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history_with_ciso.nc
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (mks, with ciso) vs baseline (cgs, with ciso))" >> ${RESULTS_CACHE}
   fi
@@ -340,7 +380,8 @@ if [ "${STATUS}" == "PASS" ]; then
     print_status "netCDF Comparison (5 inst vs 1 inst, mks)" >> ${RESULTS_CACHE}
 
     BASE_ROOT=${MARBL_ROOT}/tests/input_files/baselines
-    (set -x ; ./netcdf_comparison.py -b ${BASE_ROOT}/call_compute_subroutines.history.nc -n ${HIST_ROOT}/history_1inst.nc --strict loose)
+    BASELINE=${BASE_ROOT}/call_compute_subroutines.history.nc
+    (set -x ; ./netcdf_comparison.py -b ${BASELINE} -n ${HIST_ROOT}/history_1inst.nc --strict loose)
     STATUS=$(check_return $?)
     print_status "netCDF Comparison (1 inst (mks) vs baseline (cgs))" >> ${RESULTS_CACHE}
   fi
