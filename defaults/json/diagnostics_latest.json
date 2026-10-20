@@ -14,7 +14,7 @@
       "dependencies": {
          "((autotroph_is_carbon_limited))": true
       },
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "((autotroph_lname)) C Limitation, Surface",
       "operator": "average",
@@ -64,7 +64,7 @@
       "vertical_grid": "none"
    },
    "((autotroph_sname))_Fe_lim_surf": {
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "((autotroph_lname)) Fe Limitation, Surface",
       "operator": "average",
@@ -83,7 +83,7 @@
       "vertical_grid": "none"
    },
    "((autotroph_sname))_N_lim_surf": {
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": {
          "((autotroph_Nfixer))": "never",
          "default": "medium"
@@ -97,7 +97,7 @@
       "dependencies": {
          "((autotroph_Nfixer))": true
       },
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "((autotroph_lname)) N Fixation",
       "operator": "average",
@@ -125,7 +125,7 @@
       "vertical_grid": "none"
    },
    "((autotroph_sname))_P_lim_surf": {
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "((autotroph_lname)) P Limitation, Surface",
       "operator": "average",
@@ -171,7 +171,7 @@
       "dependencies": {
          "((autotroph_silicifier))": true
       },
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "((autotroph_lname)) SiO3 Limitation, Surface",
       "operator": "average",
@@ -512,7 +512,7 @@
          "abio_dic_on": ".true.",
          "lflux_gas_co2": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Surface Gas Flux of Abiotic DI14C",
       "operator": "average",
@@ -571,7 +571,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Apparent O2 Utilization",
       "operator": "average",
@@ -582,7 +582,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Atmospheric Alternative CO2",
       "operator": "average",
@@ -593,7 +593,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Atmospheric CO2",
       "operator": "average",
@@ -1318,8 +1318,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": "cmip7",
+      "frequency": "high",
       "longname": "Surface Carbonate Ion Concentration",
       "operator": "average",
       "units": "mmol/m^3",
@@ -1373,8 +1373,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "low",
+      "diag_mode": "cmip7",
+      "frequency": "medium",
       "longname": "CaCO3 Flux into Cell",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -1462,7 +1462,7 @@
          "base_bio_on": ".true."
       },
       "diag_mode": [
-         "full",
+         "cmip7",
          "full"
       ],
       "frequency": [
@@ -1525,7 +1525,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "minimal",
       "frequency": "medium",
       "longname": "Denitrification Vertical Integral",
       "operator": "average",
@@ -1547,10 +1547,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DOC Production",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1580,10 +1589,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DOC Remineralization",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1613,10 +1631,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DOCr Remineralization",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1657,10 +1684,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DON Production",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1690,10 +1726,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DONr Remineralization",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1740,10 +1785,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DOP Production",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1770,7 +1824,7 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_uptake_TOT_zint": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total DOP Uptake Vertical Integral",
       "operator": "average",
@@ -1792,10 +1846,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of DOPr Remineralization",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -1834,7 +1897,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "D pCO2, Alternative CO2",
       "operator": "average",
@@ -1847,7 +1910,7 @@
          "lflux_gas_o2": ".true."
       },
       "dependencies_or": true,
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Atmospheric Pressure",
       "operator": "average",
@@ -1883,7 +1946,7 @@
       },
       "dependencies_or": true,
       "diag_mode": [
-         "full",
+         "cmip7",
          "full"
       ],
       "frequency": [
@@ -1902,8 +1965,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "never",
+      "diag_mode": "cmip7",
+      "frequency": "low",
       "longname": "Iron Red Sediment Flux",
       "operator": "average",
       "units": "nmol/cm^2/s",
@@ -1913,8 +1976,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "never",
+      "diag_mode": "cmip7",
+      "frequency": "low",
       "longname": "Iron Sediment Flux",
       "operator": "average",
       "units": "nmol/cm^2/s",
@@ -1924,8 +1987,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "never",
+      "diag_mode": "cmip7",
+      "frequency": "low",
       "longname": "Iron Vent Flux",
       "operator": "average",
       "units": "nmol/cm^2/s",
@@ -1935,7 +1998,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "DIC Surface Gas Flux, Alternative CO2",
       "operator": "average",
@@ -2231,7 +2294,7 @@
          "base_bio_on": ".true."
       },
       "diag_mode": "minimal",
-      "frequency": "never",
+      "frequency": "medium",
       "longname": "Total N Fixation Vertical Integral",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
@@ -2286,10 +2349,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
-      "frequency": "medium",
+      "diag_mode": [
+         "minimal",
+         "cmip7"
+      ],
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "Vertical Minimum of O2",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3",
       "vertical_grid": "none"
    },
@@ -2330,10 +2402,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "cmip7"
+      ],
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "Surface pH",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": 1,
       "vertical_grid": "none"
    },
@@ -2341,7 +2422,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Surface pH, Alternative CO2",
       "operator": "average",
@@ -2377,7 +2458,7 @@
       "vertical_grid": "layer_avg"
    },
    "PO4_uptake_TOT_zint": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total PO4 Uptake Vertical Integral",
       "operator": "average",
@@ -2487,10 +2568,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of POC Remineralization routed to DOCr",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -2531,7 +2621,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "PON Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -2575,10 +2665,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of PON Remineralization routed to DONr",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -2597,7 +2696,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "POP Flux at ((particulate_flux_ref_depth_str))",
       "operator": "average",
@@ -2641,10 +2740,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": [
+         "cmip7",
+         "full"
+      ],
+      "frequency": [
+         "low",
+         "medium"
+      ],
       "longname": "Vertical Integral of POP Remineralization routed to DOPr",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -2763,7 +2871,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "nitrogen loss in Sediments",
       "operator": "average",
@@ -2796,7 +2904,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "SiO2 Production",
       "operator": "average",
@@ -2818,7 +2926,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "biogenic Si Flux Hitting Sea Floor",
       "operator": "average",
@@ -2840,7 +2948,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total Si Uptake Vertical Integral",
       "operator": "average",
@@ -2851,7 +2959,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "biogenic Si Flux to Sediments",
       "operator": "average",
@@ -2862,8 +2970,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "never",
+      "diag_mode": "cmip7",
+      "frequency": "medium",
       "longname": "CaCO3 Flux Hitting Sea Floor",
       "operator": "average",
       "units": "nmol/cm^2/s",
@@ -2906,7 +3014,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "CaCO3 Flux to Sediments, Alternative CO2",
       "operator": "average",
@@ -2928,8 +3036,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "medium",
+      "diag_mode": "cmip7",
+      "frequency": "high",
       "longname": "Surface CO3 concentration at aragonite saturation",
       "operator": "average",
       "units": "mmol/m^3",
@@ -2989,7 +3097,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
+      "diag_mode": "full",
       "frequency": "medium",
       "longname": "dust Flux to Sediments",
       "operator": "average",
@@ -3240,8 +3348,8 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
-      "frequency": "low",
+      "diag_mode": "cmip7",
+      "frequency": "medium",
       "longname": "Total Autotroph Grazing",
       "operator": "average",
       "units": "mmol/m^3/s",
@@ -3284,7 +3392,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "pH",
       "operator": "average",
@@ -3306,7 +3414,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "pfe Flux Hitting Sea Floor",
       "operator": "average",
@@ -3317,7 +3425,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "pFe Flux to Sediments",
       "operator": "average",
@@ -3351,7 +3459,7 @@
       "vertical_grid": "none"
    },
    "photoC_((autotroph_sname))_zint_100m": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "((autotroph_lname)) C Fixation Vertical Integral, 0-100m",
       "operator": "average",
@@ -3390,7 +3498,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total C Fixation from NO3 Vertical Integral",
       "operator": "average",
@@ -3412,7 +3520,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total C Fixation",
       "operator": "average",
@@ -3423,7 +3531,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Surface Total C Fixation",
       "operator": "average",
@@ -3434,10 +3542,19 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "minimal",
-      "frequency": "medium",
+      "diag_mode": [
+         "minimal",
+         "cmip7"
+      ],
+      "frequency": [
+         "medium",
+         "high"
+      ],
       "longname": "Total C Fixation Vertical Integral",
-      "operator": "average",
+      "operator": [
+         "average",
+         "average"
+      ],
       "units": "mmol/m^3 cm/s",
       "vertical_grid": "none"
    },
@@ -3481,7 +3598,7 @@
       "vertical_grid": "layer_avg"
    },
    "photoFe_TOT_zint": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total Fe Uptake Vertical Integral",
       "operator": "average",
@@ -3517,7 +3634,7 @@
       "vertical_grid": "layer_avg"
    },
    "photoNH4_TOT_zint": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total NH4 Uptake Vertical Integral",
       "operator": "average",
@@ -3553,7 +3670,7 @@
       "vertical_grid": "layer_avg"
    },
    "photoNO3_TOT_zint": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total NO3 Uptake Vertical Integral",
       "operator": "average",
@@ -3565,8 +3682,8 @@
          "base_bio_on": ".true."
       },
       "diag_mode": [
-         "full",
-         "full"
+         "cmip7",
+         "cmip7"
       ],
       "frequency": [
          "medium",
@@ -3617,7 +3734,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "nitrogen Flux Hitting Sea Floor",
       "operator": "average",
@@ -3628,7 +3745,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "nitrogen burial Flux to Sediments",
       "operator": "average",
@@ -3639,7 +3756,7 @@
       "dependencies": {
          "base_bio_on": ".true."
       },
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "phosphorus Flux Hitting Sea Floor",
       "operator": "average",

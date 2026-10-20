@@ -53,7 +53,7 @@ ECOSYS_XKW :
       - average
       - average
    diag_mode :
-      - full
+      - cmip7
       - full
 ECOSYS_ATM_PRESS :
    dependencies :
@@ -65,7 +65,7 @@ ECOSYS_ATM_PRESS :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 PV_CO2 :
    dependencies :
       lflux_gas_co2 : .true.
@@ -175,7 +175,7 @@ DpCO2_ALT_CO2 :
    longname : D pCO2, Alternative CO2
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 FG_CO2 : &FG_CO2 # rename ind%DIC_GAS_FLUX -> ind%FG_CO2
    dependencies :
       base_bio_on : .true.
@@ -196,19 +196,28 @@ FG_ALT_CO2 : # rename ind%DIC_GAS_FLUX_ALT_CO2 -> ind%FG_ALT_CO2
    longname : DIC Surface Gas Flux, Alternative CO2
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 PH : &PH
    dependencies :
       base_bio_on : .true.
    longname : Surface pH
    units : 1
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - cmip7
 PH_ALT_CO2 :
    << : *PH
    longname : Surface pH, Alternative CO2
+   frequency : medium
+   operator : average
+   diag_mode : cmip7
 ATM_CO2 : &ATM_CO2
    dependencies :
       base_bio_on : .true.
@@ -217,7 +226,7 @@ ATM_CO2 : &ATM_CO2
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 ATM_ALT_CO2 :
    << : *ATM_CO2
    longname : Atmospheric Alternative CO2
@@ -370,7 +379,7 @@ ABIO_FG_DI14C :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 d_SF_ABIO_DIC_d_ABIO_DIC :
    dependencies :
       abio_dic_on : .true.
@@ -586,27 +595,33 @@ CO3_surf :
    longname : Surface Carbonate Ion Concentration
    units : mmol/m^3
    vertical_grid : none
-   frequency : medium
+   frequency : high
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 co3_sat_arag_surf :
    dependencies :
       base_bio_on : .true.
    longname : Surface CO3 concentration at aragonite saturation
    units : mmol/m^3
    vertical_grid : none
-   frequency : medium
+   frequency : high
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 O2_ZMIN :
    dependencies :
       base_bio_on : .true.
    longname : Vertical Minimum of O2
    units : mmol/m^3
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : minimal
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
+   diag_mode :
+      - minimal
+      - cmip7
 O2_ZMIN_DEPTH :
    dependencies :
       base_bio_on : .true.
@@ -624,16 +639,22 @@ photoC_TOT_surf :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoC_TOT_zint :
    dependencies :
       base_bio_on : .true.
    longname : Total C Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : minimal
+   frequency :
+      - medium
+      - high
+   operator :
+      - average
+      - average
+   diag_mode :
+      - minimal
+      - cmip7
 photoC_TOT_zint_100m :
    dependencies :
       base_bio_on : .true.
@@ -651,7 +672,7 @@ photoC_NO3_TOT_zint :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoC_NO3_TOT_zint_100m :
    dependencies :
       base_bio_on : .true.
@@ -667,44 +688,50 @@ photoFe_TOT_zint :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoNO3_TOT_zint :
    longname : Total NO3 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoNH4_TOT_zint :
    longname : Total NH4 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 DOP_uptake_TOT_zint :
    longname : Total DOP Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 PO4_uptake_TOT_zint :
    longname : Total PO4 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 DOC_prod_zint :
    dependencies :
       base_bio_on : .true.
    longname : Vertical Integral of DOC Production
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 DOC_prod_zint_100m :
    dependencies :
       base_bio_on : .true.
@@ -720,9 +747,15 @@ DOC_remin_zint :
    longname : Vertical Integral of DOC Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 DOC_remin_zint_100m :
    dependencies :
       base_bio_on : .true.
@@ -738,9 +771,15 @@ DOCr_remin_zint :
    longname : Vertical Integral of DOCr Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 DOCr_remin_zint_100m :
    dependencies :
       base_bio_on : .true.
@@ -756,36 +795,60 @@ DON_prod_zint :
    longname : Vertical Integral of DON Production
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 DONr_remin_zint :
    dependencies :
       base_bio_on : .true.
    longname : Vertical Integral of DONr Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 DOP_prod_zint :
    dependencies :
       base_bio_on : .true.
    longname : Vertical Integral of DOP Production
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 DOPr_remin_zint :
    dependencies :
       base_bio_on : .true.
    longname : Vertical Integral of DOPr Remineralization
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 NITRIF_zint :
    dependencies :
       base_bio_on : .true.
@@ -803,14 +866,14 @@ DENITRIF_zint :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : minimal
 Nfix_zint :
    dependencies :
       base_bio_on : .true.
    longname : Total N Fixation Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : never
+   frequency : medium
    operator : average
    diag_mode : minimal
 Jint_Ctot :
@@ -866,9 +929,9 @@ calcToFloor :
    longname : CaCO3 Flux Hitting Sea Floor
    units : nmol/cm^2/s
    vertical_grid : none
-   frequency : never
+   frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 calcToSed :
    dependencies :
       base_bio_on : .true.
@@ -886,7 +949,7 @@ calcToSed_ALT_CO2 :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 pocToFloor :
    dependencies :
       base_bio_on : .true.
@@ -900,8 +963,8 @@ pocToFloor :
       - average
       - average
    diag_mode :
-      - full
-      - full
+      - cmip7
+      - cmip7
 pocToSed :
    dependencies :
       base_bio_on : .true.
@@ -919,7 +982,7 @@ ponToFloor :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 ponToSed :
    dependencies :
       base_bio_on : .true.
@@ -928,7 +991,7 @@ ponToSed :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 SedDenitrif :
    dependencies :
       base_bio_on : .true.
@@ -937,7 +1000,7 @@ SedDenitrif :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 OtherRemin :
    dependencies :
       base_bio_on : .true.
@@ -955,7 +1018,7 @@ popToFloor :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 popToSed :
    dependencies :
       base_bio_on : .true.
@@ -973,7 +1036,7 @@ bSiToFloor :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : cmip7
 bsiToSed :
    dependencies :
       base_bio_on : .true.
@@ -982,7 +1045,7 @@ bsiToSed :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 dustToSed :
    dependencies :
       base_bio_on : .true.
@@ -991,7 +1054,7 @@ dustToSed :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 pfeToFloor :
    dependencies :
       base_bio_on : .true.
@@ -1000,7 +1063,7 @@ pfeToFloor :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : cmip7
 pfeToSed :
    dependencies :
       base_bio_on : .true.
@@ -1009,7 +1072,7 @@ pfeToSed :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : cmip7
 bSi_form_zint :
    dependencies :
       base_bio_on : .true.
@@ -1018,7 +1081,7 @@ bSi_form_zint :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 CaCO3_form_zint :
    dependencies :
       base_bio_on : .true.
@@ -1032,7 +1095,7 @@ CaCO3_form_zint :
       - average
       - average
    diag_mode :
-      - full
+      - cmip7
       - full
 CaCO3_form_zint_100m :
    dependencies :
@@ -1089,7 +1152,7 @@ pH_3D :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 CO3_ALT_CO2 :
    dependencies :
       base_bio_on : .true.
@@ -1198,7 +1261,7 @@ AOU :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 PAR_avg :
    dependencies :
       base_bio_on : .true.
@@ -1214,9 +1277,9 @@ graze_auto_TOT :
    longname : Total Autotroph Grazing
    units : mmol/m^3/s
    vertical_grid : layer_avg
-   frequency : low
+   frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoC_TOT :
    dependencies :
       base_bio_on : .true.
@@ -1225,7 +1288,7 @@ photoC_TOT :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoC_NO3_TOT :
    dependencies :
       base_bio_on : .true.
@@ -1457,27 +1520,27 @@ FESEDFLUX :
    longname : Iron Sediment Flux
    units : nmol/cm^2/s
    vertical_grid : layer_avg
-   frequency : never
+   frequency : low
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 FEREDSEDFLUX :
    dependencies :
       base_bio_on : .true.
    longname : Iron Red Sediment Flux
    units : nmol/cm^2/s
    vertical_grid : layer_avg
-   frequency : never
+   frequency : low
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 FEVENTFLUX :
    dependencies :
       base_bio_on : .true.
    longname : Iron Vent Flux
    units : nmol/cm^2/s
    vertical_grid : layer_avg
-   frequency : never
+   frequency : low
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 
 # Particulate 2D diags
 POC_FLUX_((particulate_flux_ref_depth_str)) :
@@ -1497,7 +1560,7 @@ POP_FLUX_((particulate_flux_ref_depth_str)) :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 PON_FLUX_((particulate_flux_ref_depth_str)) :
    dependencies :
       base_bio_on : .true.
@@ -1506,7 +1569,7 @@ PON_FLUX_((particulate_flux_ref_depth_str)) :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 CaCO3_FLUX_((particulate_flux_ref_depth_str)) :
    dependencies :
       base_bio_on : .true.
@@ -1558,9 +1621,15 @@ POC_REMIN_DOCr_zint :
    longname : Vertical Integral of POC Remineralization routed to DOCr
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 POC_REMIN_DOCr_zint_100m :
    dependencies :
       base_bio_on : .true.
@@ -1594,18 +1663,30 @@ PON_REMIN_DONr_zint :
    longname : Vertical Integral of PON Remineralization routed to DONr
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 POP_REMIN_DOPr_zint :
    dependencies :
       base_bio_on : .true.
    longname : Vertical Integral of POP Remineralization routed to DOPr
    units : mmol/m^3 cm/s
    vertical_grid : none
-   frequency : medium
-   operator : average
-   diag_mode : full
+   frequency :
+      - low
+      - medium
+   operator :
+      - average
+      - average
+   diag_mode :
+      - cmip7
+      - full
 CaCO3_PROD_zint :
    dependencies :
       base_bio_on : .true.
@@ -1786,9 +1867,9 @@ CaCO3_FLUX_IN :
    longname : CaCO3 Flux into Cell
    units : mmol/m^3 cm/s
    vertical_grid : layer_iface
-   frequency : low
+   frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 CaCO3_PROD :
    dependencies :
       base_bio_on : .true.
@@ -1851,7 +1932,7 @@ SiO2_PROD :
    vertical_grid : layer_avg
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 SiO2_REMIN :
    dependencies :
       base_bio_on : .true.
@@ -2288,7 +2369,7 @@ CISO_eps_dic_g :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 ((autotroph_sname))_C_lim_Cweight_avg_100m :
    dependencies :
       ((autotroph_is_carbon_limited)) : true
@@ -2306,7 +2387,7 @@ CISO_eps_dic_g :
       default : medium
       ((autotroph_Nfixer)) : never
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 ((autotroph_sname))_N_lim_Cweight_avg_100m :
    longname : ((autotroph_lname)) N Limitation, carbon biomass weighted average over 0-100m
    units : 1
@@ -2322,7 +2403,7 @@ CISO_eps_dic_g :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 ((autotroph_sname))_P_lim_Cweight_avg_100m :
    longname : ((autotroph_lname)) P Limitation, carbon biomass weighted average over 0-100m
    units : 1
@@ -2336,7 +2417,7 @@ CISO_eps_dic_g :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 ((autotroph_sname))_Fe_lim_Cweight_avg_100m :
    longname : ((autotroph_lname)) Fe Limitation, carbon biomass weighted average over 0-100m
    units : 1
@@ -2352,7 +2433,7 @@ CISO_eps_dic_g :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 ((autotroph_sname))_SiO3_lim_Cweight_avg_100m :
    dependencies :
       ((autotroph_silicifier)) : true
@@ -2395,7 +2476,7 @@ photoC_((autotroph_sname))_zint_100m :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 photoC_NO3_((autotroph_sname))_zint :
    longname : ((autotroph_lname)) C Fixation from NO3 Vertical Integral
    units : mmol/m^3 cm/s
@@ -2769,7 +2850,7 @@ graze_((autotroph_sname))_((zooplankton_sname)) :
    truncate : true
    frequency : medium
    operator : average
-   diag_mode : minimal
+   diag_mode : full
 
 # ciso module
 CISO_((autotroph_sname))_Ca13CO3_form :
