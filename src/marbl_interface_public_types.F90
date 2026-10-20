@@ -131,7 +131,7 @@ module marbl_interface_public_types
   !*****************************************************************************
 
   type, public :: marbl_output_for_GCM_registry_type
-    type(marbl_output_for_GCM_linked_list_type), pointer :: registered_outputs
+    type(marbl_output_for_GCM_linked_list_type), pointer :: registered_outputs => NULL()
   contains
     procedure, public  :: create_registry
     procedure, private :: add_registry_entry
