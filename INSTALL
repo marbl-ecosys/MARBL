@@ -43,6 +43,16 @@ $ cmake --install build --prefix [install location]
 To choose the compiler, set FC for the first configure (e.g. FC=ifx cmake ...)
 or pass -DCMAKE_Fortran_COMPILER=[compiler].
 
+The equivalent of make clean is
+
+$ cmake --build build --target clean
+
+which removes the object files, *.mod files, libmarbl.a and the driver, but
+keeps the configuration: the compiler and the options below. To start over,
+e.g. with another compiler, delete the build directory instead:
+
+$ rm -rf build
+
 This installs libmarbl.a in [prefix]/lib (lib64 or lib/[multiarch] on some
 systems), the *.mod files in [prefix]/include/marbl, and a CMake package, so
 another CMake project can use
@@ -66,10 +76,15 @@ MARBL_BUILD_DRIVER       Build the stand-alone driver in build/driver_exe
 MARBL_DRIVER_NETCDF      Build the driver with netCDF output; netCDF-Fortran
                          is found with pkg-config (default: OFF)
 MARBL_INSTALL            Generate install rules (default: ON)
+CMAKE_BUILD_TYPE         Build type for single-configuration generators such
+                         as Unix Makefiles or Ninja (default: RelWithDebInfo,
+                         which is -O2 -g with gfortran and ifx, when MARBL is
+                         the top-level project)
+CMAKE_COMPILE_WARNING_AS_ERROR
+                         Treat warnings as errors, as the gnu targets in the
+                         Makefiles do; MARBL does not yet compile without
+                         warnings under ifx (default: OFF)
 
-With a single-configuration generator such as Unix Makefiles or Ninja, a
-top-level build defaults to CMAKE_BUILD_TYPE=RelWithDebInfo, which is -O2 -g
-with gfortran and ifx. To treat warnings as errors with gfortran, as the gnu
-targets in the Makefiles do, add -DCMAKE_COMPILE_WARNING_AS_ERROR=ON (MARBL
-does not yet compile without warnings under ifx). The test suite in tests/
-still builds with the Makefiles.
+The last two are CMake's own variables rather than MARBL options.
+
+The test suite in tests/ still builds with the Makefiles.
