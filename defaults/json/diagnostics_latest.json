@@ -429,8 +429,8 @@
       "vertical_grid": "none"
    },
    "((zooplankton_sname))_loss_zint_150m": {
-      "diag_mode": "full",
-      "frequency": "high",
+      "diag_mode": "cmip7",
+      "frequency": "medium",
       "longname": "((zooplankton_lname)) Loss Vertical Integral, 0-150m",
       "operator": "average",
       "units": "mmol/m^3 cm/s",
