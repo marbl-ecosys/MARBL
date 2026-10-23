@@ -1,0 +1,44 @@
+name: MARBL CMake build
+on: [push, pull_request]
+jobs:
+  CMake-Build:
+    runs-on: ubuntu-latest
+
+    strategy:
+        matrix:
+            use-mpi:
+                - 'OFF'
+                - 'ON'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Load Environment
+        run: |
+          sudo apt-get update
+          sudo apt install make gfortran pkg-config libnetcdff-dev openmpi-bin libopenmpi-dev
+      - name: Build library and driver
+        run: |
+          cmake --version
+          cmake -S . -B build -DMARBL_USE_MPI=${{ matrix.use-mpi }} -DMARBL_DRIVER_NETCDF=ON -DCMAKE_COMPILE_WARNING_AS_ERROR=ON
+          cmake --build build --parallel
+      - name: Run driver
+        run: |
+          cd tests/regression_tests/call_compute_subroutines
+          settings=../../input_files/settings/marbl_with_o2_consumption_scalef.settings
+          if [ "${{ matrix.use-mpi }}" == "ON" ]; then
+            mpirun -n 2 ../../../build/driver_exe/marbl-mpi.exe -n test.nml -u cgs -s $settings
+          else
+            ../../../build/driver_exe/marbl.exe -n test.nml -u cgs -s $settings
+          fi
+          test -s history_1inst.nc
+      - name: Install library
+        run: |
+          cmake --install build --prefix ${{ runner.temp }}/marbl
+      - name: Build against the installed library
+        run: |
+          mkdir ${{ runner.temp }}/consumer && cd ${{ runner.temp }}/consumer
+          printf 'program consumer\n  use marbl_interface, only : marbl_interface_class\n  type(marbl_interface_class) :: marbl_instance\nend program consumer\n' > consumer.F90
+          printf 'cmake_minimum_required(VERSION 3.24)\nproject(consumer LANGUAGES Fortran)\nfind_package(MARBL REQUIRED)\nadd_executable(consumer consumer.F90)\ntarget_link_libraries(consumer PRIVATE MARBL::marbl)\n' > CMakeLists.txt
+          cmake -S . -B build -DCMAKE_PREFIX_PATH=${{ runner.temp }}/marbl
+          cmake --build build
