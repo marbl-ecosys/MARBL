@@ -683,6 +683,8 @@ photoC_NO3_TOT_zint_100m :
    operator : average
    diag_mode : full
 photoFe_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total Fe Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -690,6 +692,8 @@ photoFe_TOT_zint :
    operator : average
    diag_mode : cmip7
 photoNO3_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total NO3 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -697,6 +701,8 @@ photoNO3_TOT_zint :
    operator : average
    diag_mode : cmip7
 photoNH4_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total NH4 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -704,6 +710,8 @@ photoNH4_TOT_zint :
    operator : average
    diag_mode : cmip7
 DOP_uptake_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total DOP Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none
@@ -711,6 +719,8 @@ DOP_uptake_TOT_zint :
    operator : average
    diag_mode : cmip7
 PO4_uptake_TOT_zint :
+   dependencies :
+      base_bio_on : .true.
    longname : Total PO4 Uptake Vertical Integral
    units : mmol/m^3 cm/s
    vertical_grid : none

@@ -1824,6 +1824,9 @@
       "vertical_grid": "layer_avg"
    },
    "DOP_uptake_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total DOP Uptake Vertical Integral",
@@ -2458,6 +2461,9 @@
       "vertical_grid": "layer_avg"
    },
    "PO4_uptake_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total PO4 Uptake Vertical Integral",
@@ -3598,6 +3604,9 @@
       "vertical_grid": "layer_avg"
    },
    "photoFe_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total Fe Uptake Vertical Integral",
@@ -3634,6 +3643,9 @@
       "vertical_grid": "layer_avg"
    },
    "photoNH4_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total NH4 Uptake Vertical Integral",
@@ -3670,6 +3682,9 @@
       "vertical_grid": "layer_avg"
    },
    "photoNO3_TOT_zint": {
+      "dependencies": {
+         "base_bio_on": ".true."
+      },
       "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "Total NO3 Uptake Vertical Integral",
