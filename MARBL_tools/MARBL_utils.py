@@ -14,7 +14,7 @@ def valid_diag_modes():
         diagnostics with lower index as well (e.g. "diag_mode = full"
         will also provide diagnostics defined with minimal diag mode)
     """
-    return ['none', 'minimal', 'full']
+    return ['none', 'minimal', 'cmip7', 'full']
 
 ################################################################################
 
