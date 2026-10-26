@@ -3046,7 +3046,7 @@ CISO_mui_to_co2star_((autotroph_sname)) :
    vertical_grid : none
    frequency : medium
    operator : average
-   diag_mode : full
+   diag_mode : cmip7
 ((zooplankton_sname))_loss_poc_zint :
    longname : ((zooplankton_lname)) Loss to POC Vertical Integral
    units : mmol/m^3 cm/s

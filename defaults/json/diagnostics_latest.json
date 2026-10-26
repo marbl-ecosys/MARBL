@@ -388,7 +388,7 @@
       "vertical_grid": "none"
    },
    "((zooplankton_sname))_loss_nonlinear_zint_150m": {
-      "diag_mode": "full",
+      "diag_mode": "cmip7",
       "frequency": "medium",
       "longname": "((zooplankton_lname)) Loss from Nonlinear Mortality Vertical Integral, 0-150m",
       "operator": "average",
