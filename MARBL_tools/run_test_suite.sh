@@ -51,6 +51,10 @@ while [ $# -gt 0 ]; do
     "--update-baselines")
       GEN_BASELINES=1
     ;;
+    "-h" | "--help" )
+      echo "Use --update-baselines to generate new baselines for comparison tests."
+      exit 0
+    ;;
     * )
       echo "'$1' is not a valid option"
       exit 1
