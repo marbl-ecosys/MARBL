@@ -331,16 +331,16 @@ if __name__ == "__main__":
     ds_base_in, ds_new_in = _open_files(args.baseline, args.new_file)
     loose_check = (args.strict == 'loose')
     if loose_check:
-        rtol = args.rtol
-        atol = args.atol
-        thres = args.thres
+        rtol_loc = args.rtol
+        atol_loc = args.atol
+        thres_loc = args.thres
     else:
-        rtol = 0
-        atol = DEFAULT_TOLS['atol']
-        thres = 0
+        rtol_loc = 0
+        atol_loc = DEFAULT_TOLS['atol']
+        thres_loc = 0
 
-    header_fail, comp_fail = ds_comparison(ds_base_in, ds_new_in, rtol, atol, thres)
-    if header_fail or comp_fail:
+    header_fail_loc, comp_fail = ds_comparison(ds_base_in, ds_new_in, rtol_loc, atol_loc, thres_loc)
+    if header_fail_loc or comp_fail:
         LOGGER.error("Differences found between files!")
         if not comp_fail:
             LOGGER.error("Only differences are variable dimensions or names!")
