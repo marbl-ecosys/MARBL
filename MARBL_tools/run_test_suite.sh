@@ -112,7 +112,10 @@ STATUS=$(check_return $?)
 print_status "MARBL_generate_diagnostics_file.py --diag-mode none -o marbl.diags.none" >> ${RESULTS_CACHE}
 (set -x ; ./MARBL_generate_diagnostics_file.py --diag-mode minimal -o marbl.diags.minimal)
 STATUS=$(check_return $?)
-print_status "MARBL_generate_diagnostics_file.py --diag-mode minimal marbl.diags.minimal" >> ${RESULTS_CACHE}
+print_status "MARBL_generate_diagnostics_file.py --diag-mode minimal -o marbl.diags.minimal" >> ${RESULTS_CACHE}
+(set -x ; ./MARBL_generate_diagnostics_file.py --diag-mode cmip7 -o marbl.diags.cmip7)
+STATUS=$(check_return $?)
+print_status "MARBL_generate_diagnostics_file.py --diag-mode cmip7 -o marbl.diags.cmip7" >> ${RESULTS_CACHE}
 (set -x ; ./MARBL_generate_diagnostics_file.py)
 STATUS=$(check_return $?)
 print_status "MARBL_generate_diagnostics_file.py" >> ${RESULTS_CACHE}

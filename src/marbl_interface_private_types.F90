@@ -532,18 +532,32 @@ module marbl_interface_private_types
     ! General 2D diags
     integer(int_kind) :: zsatcalc
     integer(int_kind) :: zsatarag
+    integer(int_kind) :: CO3_surf
+    integer(int_kind) :: co3_sat_arag_surf
     integer(int_kind) :: O2_ZMIN
     integer(int_kind) :: O2_ZMIN_DEPTH
+    integer(int_kind) :: photoC_TOT_surf
     integer(int_kind) :: photoC_TOT_zint
     integer(int_kind) :: photoC_TOT_zint_100m
     integer(int_kind) :: photoC_NO3_TOT_zint
     integer(int_kind) :: photoC_NO3_TOT_zint_100m
+    integer(int_kind) :: photoFe_TOT_zint
+    integer(int_kind) :: photoNO3_TOT_zint
+    integer(int_kind) :: photoNH4_TOT_zint
+    integer(int_kind) :: DOP_uptake_TOT_zint
+    integer(int_kind) :: PO4_uptake_TOT_zint
     integer(int_kind) :: DOC_prod_zint
     integer(int_kind) :: DOC_prod_zint_100m
     integer(int_kind) :: DOC_remin_zint
     integer(int_kind) :: DOC_remin_zint_100m
     integer(int_kind) :: DOCr_remin_zint
     integer(int_kind) :: DOCr_remin_zint_100m
+    integer(int_kind) :: DON_prod_zint
+    integer(int_kind) :: DONr_remin_zint
+    integer(int_kind) :: DOP_prod_zint
+    integer(int_kind) :: DOPr_remin_zint
+    integer(int_kind) :: NITRIF_zint
+    integer(int_kind) :: DENITRIF_zint
     integer(int_kind) :: Jint_Ctot
     integer(int_kind) :: Jint_Ntot
     integer(int_kind) :: Jint_Ptot
@@ -556,12 +570,16 @@ module marbl_interface_private_types
     integer(int_kind) :: calcToSed_ALT_CO2
     integer(int_kind) :: pocToFloor
     integer(int_kind) :: pocToSed
+    integer(int_kind) :: ponToFloor
     integer(int_kind) :: ponToSed
     integer(int_kind) :: SedDenitrif
     integer(int_kind) :: OtherRemin
+    integer(int_kind) :: popToFloor
     integer(int_kind) :: popToSed
+    integer(int_kind) :: bSiToFloor
     integer(int_kind) :: bsiToSed
     integer(int_kind) :: dustToSed
+    integer(int_kind) :: pfeToFloor
     integer(int_kind) :: pfeToSed
 
     ! Autotroph 2D diags
@@ -580,8 +598,15 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: photoC_zint(:)
     integer(int_kind), allocatable :: photoC_zint_100m(:)
     integer(int_kind), allocatable :: photoC_NO3_zint(:)
+    integer(int_kind), allocatable :: photoFe_zint(:)
+    integer(int_kind), allocatable :: photoNO3_zint(:)
+    integer(int_kind), allocatable :: photoNH4_zint(:)
+    integer(int_kind), allocatable :: DOP_uptake_zint(:)
+    integer(int_kind), allocatable :: PO4_uptake_zint(:)
+    integer(int_kind), allocatable :: bSi_form_zint(:)
     integer(int_kind), allocatable :: CaCO3_form_zint(:)
     integer(int_kind), allocatable :: CaCO3_form_zint_100m(:)
+    integer(int_kind), allocatable :: Nfix_zint(:)
     integer(int_kind), allocatable :: auto_graze_zint(:)
     integer(int_kind), allocatable :: auto_graze_zint_100m(:)
     integer(int_kind), allocatable :: auto_graze_poc_zint(:)
@@ -598,8 +623,10 @@ module marbl_interface_private_types
     integer(int_kind), allocatable :: auto_loss_doc_zint_100m(:)
     integer(int_kind), allocatable :: auto_agg_zint(:)
     integer(int_kind), allocatable :: auto_agg_zint_100m(:)
+    integer(int_kind) :: tot_bSi_form_zint
     integer(int_kind) :: tot_CaCO3_form_zint
     integer(int_kind) :: tot_CaCO3_form_zint_100m
+    integer(int_kind) :: tot_Nfix_zint
 
     ! Zooplankton 2D diags
     integer(int_kind), allocatable :: zoo_loss_zint(:)
@@ -645,6 +672,11 @@ module marbl_interface_private_types
     integer(int_kind) :: auto_graze_TOT
     integer(int_kind) :: photoC_TOT
     integer(int_kind) :: photoC_NO3_TOT
+    integer(int_kind) :: photoFe_TOT
+    integer(int_kind) :: photoNO3_TOT
+    integer(int_kind) :: photoNH4_TOT
+    integer(int_kind) :: DOP_uptake_TOT
+    integer(int_kind) :: PO4_uptake_TOT
     integer(int_kind) :: DOC_prod
     integer(int_kind) :: DOC_remin
     integer(int_kind) :: DOCr_remin
@@ -681,6 +713,8 @@ module marbl_interface_private_types
     integer(int_kind) :: POC_REMIN_DOCr_zint_100m
     integer(int_kind) :: POC_REMIN_DIC_zint
     integer(int_kind) :: POC_REMIN_DIC_zint_100m
+    integer(int_kind) :: PON_REMIN_DONr_zint
+    integer(int_kind) :: POP_REMIN_DOPr_zint
     integer(int_kind) :: CaCO3_PROD_zint
     integer(int_kind) :: CaCO3_PROD_zint_100m
     integer(int_kind) :: CaCO3_REMIN_zint
@@ -2025,8 +2059,15 @@ contains
         deallocate(this%photoC_zint)
         deallocate(this%photoC_zint_100m)
         deallocate(this%photoC_NO3_zint)
+        deallocate(this%photoFe_zint)
+        deallocate(this%photoNO3_zint)
+        deallocate(this%photoNH4_zint)
+        deallocate(this%DOP_uptake_zint)
+        deallocate(this%PO4_uptake_zint)
+        deallocate(this%bSi_form_zint)
         deallocate(this%CaCO3_form_zint)
         deallocate(this%CaCO3_form_zint_100m)
+        deallocate(this%Nfix_zint)
         deallocate(this%auto_graze_zint)
         deallocate(this%auto_graze_zint_100m)
         deallocate(this%auto_graze_poc_zint)
