@@ -348,5 +348,5 @@ if __name__ == "__main__":
 
     if loose_check:
         LOGGER.info("PASS: All variables match and are within specified tolerance.")
-
-    LOGGER.info("PASS: All variables match and have exactly the same values.")
+    else:
+        LOGGER.info("PASS: All variables match and have exactly the same values.")
