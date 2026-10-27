@@ -1674,6 +1674,7 @@ contains
           allocate(ind%zoo_loss_zint_150m(zooplankton_cnt))
           allocate(ind%zoo_loss_basal_zint(zooplankton_cnt))
           allocate(ind%zoo_loss_basal_zint_100m(zooplankton_cnt))
+          allocate(ind%zoo_loss_nonlinear_zint_150m(zooplankton_cnt))
           allocate(ind%zoo_loss_poc_zint(zooplankton_cnt))
           allocate(ind%zoo_loss_poc_zint_100m(zooplankton_cnt))
           allocate(ind%zoo_loss_doc_zint(zooplankton_cnt))
@@ -1745,6 +1746,18 @@ contains
           truncate = .false.
           call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
               ind%zoo_loss_basal_zint_100m(n), marbl_status_log)
+          if (marbl_status_log%labort_marbl) then
+            call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
+            return
+          end if
+
+          lname = trim(zooplankton_settings(n)%lname) // ' Loss from Nonlinear Mortality Vertical Integral, 0-150m'
+          sname = trim(zooplankton_settings(n)%sname) // '_loss_nonlinear_zint_150m'
+          units = unit_system%conc_flux_units
+          vgrid = 'none'
+          truncate = .false.
+          call diags%add_diagnostic(lname, sname, units, vgrid, truncate,  &
+              ind%zoo_loss_nonlinear_zint_150m(n), marbl_status_log)
           if (marbl_status_log%labort_marbl) then
             call marbl_logging_add_diagnostics_error(marbl_status_log, sname, subname)
             return
@@ -4705,6 +4718,10 @@ contains
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_poc(n))%field_3d(:, 1), &
             delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_poc_zint(n))%field_2d(1), &
             near_surface_integral=diags(ind%zoo_loss_poc_zint_100m(n))%field_2d(1))
+
+       call marbl_diagnostics_share_compute_vertical_integrals(zooplankton_derived_terms%zoo_loss_nonlinear(n,:), &
+            delta_z, kmt, unit_system, near_surface_integral=diags(ind%zoo_loss_nonlinear_zint_150m(n))%field_2d(1), &
+            shallow_depth=150._r8*unit_system%m2len)
 
        call marbl_diagnostics_share_compute_vertical_integrals(diags(ind%zoo_loss_doc(n))%field_3d(:, 1), &
             delta_z, kmt, unit_system, full_depth_integral=diags(ind%zoo_loss_doc_zint(n))%field_2d(1), &
