@@ -32,28 +32,17 @@ DEFAULT_TOLS = {'rtol' : 1e-8, 'atol' : 1e-16, 'thres' : 1e-16}
 
 ##################
 
-def ds_comparison_exact(ds_base, ds_new):
-    """
-        Compare baseline to new_file using xarray
-        Will only pass if two files are identical (bfb)
-        (run with --strict=exact)
-    """
-    # Compare remaining variables
-    return ds_comparison_loose(ds_base, ds_new, rtol=0, thres=0)
-
-##################
-
-def ds_comparison_loose(ds_base, ds_new, rtol=DEFAULT_TOLS['rtol'], atol=DEFAULT_TOLS['atol'],
-                        thres=DEFAULT_TOLS['thres']):
+def ds_comparison(ds_base, ds_new, rtol=DEFAULT_TOLS['rtol'], atol=DEFAULT_TOLS['atol'],
+                  thres=DEFAULT_TOLS['thres']):
     """
         Compare baseline to new_file using xarray
         Will pass if two files are within specified tolerance
-        (run with --strict=loose)
+        (set rtol=0 and thres=0 for exact comparison)
     """
     header_fail, ds_base, ds_new = _reduce_to_matching_variables(ds_base, ds_new)
 
     # Compare remaining variables
-    return  _variable_check_loose(ds_base, ds_new, rtol, atol, thres) or header_fail
+    return  header_fail, _variable_check_loose(ds_base, ds_new, rtol, atol, thres)
 
 ##################
 
@@ -340,13 +329,24 @@ if __name__ == "__main__":
 
     args = _parse_args()
     ds_base_in, ds_new_in = _open_files(args.baseline, args.new_file)
-    if args.strict == 'loose':
-        if ds_comparison_loose(ds_base_in, ds_new_in, args.rtol, args.atol, args.thres):
-            LOGGER.error("Differences found between files!")
-            os.sys.exit(1)
+    loose_check = (args.strict == 'loose')
+    if loose_check:
+        rtol_loc = args.rtol
+        atol_loc = args.atol
+        thres_loc = args.thres
+    else:
+        rtol_loc = 0
+        atol_loc = DEFAULT_TOLS['atol']
+        thres_loc = 0
+
+    header_fail_loc, comp_fail = ds_comparison(ds_base_in, ds_new_in, rtol_loc, atol_loc, thres_loc)
+    if header_fail_loc or comp_fail:
+        LOGGER.error("Differences found between files!")
+        if not comp_fail:
+            LOGGER.error("Only differences are variable dimensions or names!")
+        os.sys.exit(1)
+
+    if loose_check:
         LOGGER.info("PASS: All variables match and are within specified tolerance.")
-    if args.strict == 'exact':
-        if ds_comparison_exact(ds_base_in, ds_new_in):
-            LOGGER.error("Differences found between files!")
-            os.sys.exit(1)
+    else:
         LOGGER.info("PASS: All variables match and have exactly the same values.")

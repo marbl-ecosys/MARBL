@@ -3,4 +3,5 @@
 ChangeLog
 *ChangeLog
 **/*.swp
+.ipynb_checkpoints/
 /build/

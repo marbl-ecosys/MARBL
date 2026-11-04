@@ -14,13 +14,15 @@ From the command line
 
 usage: MARBL_generate_diagnostics_file.py [-h] [-f DEFAULT_SETTINGS_FILE]
                                           [-j DEFAULT_DIAGNOSTICS_FILE]
-                                          [-v {GCM,settings_file}] [-g GRID]
+                                          [-v {settings_file,GCM}] [-g GRID]
                                           [-s SETTINGS_FILE_IN]
                                           [-o DIAGNOSTICS_FILE_OUT]
+                                          [-u {cgs,mks}]
+                                          [-m {none,minimal,cmip7,full}] [-a]
 
 Generate a MARBL settings file from a JSON file
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
   -f DEFAULT_SETTINGS_FILE, --default_settings_file DEFAULT_SETTINGS_FILE
                         Location of JSON-formatted MARBL settings
@@ -30,7 +32,7 @@ optional arguments:
                         Location of JSON-formatted MARBL diagnostics
                         configuration file (default: $MARBLROOT/
                         defaults/json/diagnostics_latest.json)
-  -v {GCM,settings_file}, --saved_state_vars_source {GCM,settings_file}
+  -v {settings_file,GCM}, --saved_state_vars_source {settings_file,GCM}
                         Source of initial value for saved state vars that can
                         come from GCM or settings file (default:
                         settings_file)
@@ -42,6 +44,8 @@ optional arguments:
                         Name of file to be written (default: marbl.diags)
   -u {cgs,mks}, --unit_system {cgs,mks}
                         Unit system for parameter values (default: cgs)
+  -m {none,minimal,cmip7,full}, --diag-mode {none,minimal,cmip7,full}
+                        Level of output to include (default: full)
   -a, --append          Append to existing diagnostics file (default: False)
 """
 
